@@ -7,11 +7,12 @@ requires-python = ">=3.10"
 dependencies = [
     "click>=8.2.0",
     "requests>=2.32.3",
+    "toml>=0.10.2",
 ]
 
 [project.scripts]
-timetagger = "better_timetagger_cli.__main__:main"
-t = "better_timetagger_cli.__main__:main"
+timetagger = "better_timetagger_cli.cli:cli"
+t = "better_timetagger_cli.cli:cli"
 
 [dependency-groups]
 dev = [
@@ -21,7 +22,7 @@ dev = [
 ]
 
 [tool.ruff]
-line-length = 100
+line-length = 160
 
 [tool.ruff.lint]
 select = [

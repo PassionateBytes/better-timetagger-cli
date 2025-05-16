@@ -3,6 +3,8 @@ import click
 from better_timetagger_cli import __version__
 from better_timetagger_cli.lib.click_utils import AliasedGroup
 
+from .setup import setup
+
 
 @click.group(
     cls=AliasedGroup,
@@ -30,3 +32,6 @@ def cli(ctx: click.Context) -> None:
     if ctx.invoked_subcommand is not None:
         _before_command()
         ctx.call_on_close(_after_command)
+
+
+cli.add_command(setup)
