@@ -1,0 +1,39 @@
+[project]
+name = "better-timetagger-cli"
+version = "0.1.0"
+description = "A better command line tool for TimeTagger. This is a more ergonomic version of the original timetagger-cli, providing better user experience and additional features."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.2.0",
+    "requests>=2.32.3",
+]
+
+[project.scripts]
+timetagger = "better_timetagger_cli.__main__:main"
+t = "better_timetagger_cli.__main__:main"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.15.0",
+    "pytest>=8.3.5",
+    "ruff>=0.11.10",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E", # pycodestyle
+    "F", # pyflakes
+    "I", # isort
+    "UP", # pyupgrade
+    "Q", # quotes
+    "B", # bugbear
+    "N", # pep8-naming
+]
+ignore = ["E203", "E501"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
