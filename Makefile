@@ -2,7 +2,7 @@
 
 format:
 	uv run ruff format .
-	uv run ruff check --select I --fix .
+	uv run ruff check --select I,F401 --fix .
 
 lint:
 	uv run ruff check .
