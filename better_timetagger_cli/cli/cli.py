@@ -11,14 +11,14 @@ from .setup import setup
 )
 @click.version_option(
     version=__version__,
-    prog_name="Developer Toolkit",
+    prog_name="(Better) TimeTagger CLI",
 )
 @click.pass_context
 def cli(ctx: click.Context) -> None:
     """
-    Better TimeTagger CLI
+    (Better) TimeTagger CLI
 
-    A command line interface for TimeTagger.
+    A command line interface for TimeTagger with a focus on functionality and usage ergonomics.
     """
 
     def _before_command():
