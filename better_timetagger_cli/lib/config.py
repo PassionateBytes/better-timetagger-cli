@@ -1,7 +1,6 @@
 import os
 import sys
-from typing import Any, TypedDict
-from webbrowser import get
+from typing import TypedDict
 
 import click
 import toml
@@ -9,27 +8,30 @@ import toml
 from .utils import user_config_dir
 
 CONFIG_FILE_NAME = "config.toml"
+LEGACY_CONFIG_FILE_NAME = "config.txt"
 
 DEFAULT_CONFIG = """
 # Configuration for Better-TimeTagger-CLI
 # Clear or remove this file to reset to factory defaults.
 
-# Set the API URL
-api_url = "https://timetagger.app/api/v2/"  # public instance
-# api_url = "http://localhost:8080/timetagger/api/v2/"  # local instance
-# api_url = "https://timetagger.example.net/timetagger/api/v2/"  # self-hosted instance
+### API BASE URL
+# This is the base URL of the TimeTagger API for your instance.
+# api_url = "http://localhost:8080/timetagger/api/v2/"    # -> local instance
+# api_url = "https://your.domain.net/timetagger/api/v2/"  # -> self-hosted instance
+api_url = "https://timetagger.app/api/v2/"                # -> public instance
 
-# Set your API Token
-# Go to the account page, copy the token, paste it here (between the quotes).
-api_token = ""
+### API TOKEN
+# You find your api token in the TimeTagger web application, on the account page.
+api_token = "<your api token>"
 
-# SSL Certificate Verification
+### SSL CERTIFICATE VERIFICATION
 # If you're self-hosting, you might need to set your own self-signed certificate or disable the verification of SSL certificate.
 # Disabling the certificate verification is a potentially risky action that might expose your application to attacks.
-# You can set the path to a self signed certificate for verification and validation:
+# You can set the path to a self signed certificate for verification and validation.
 # For more information, visit: https://letsencrypt.org/docs/certificates-for-localhost/
-ssl_verify = true
-# ssl_verify = "path/to/certificate"  # self-signed certificate
+# ssl_verify = "path/to/certificate"  # -> path to self-signed certificate
+# ssl_verify = false                  # -> disables SSL verification
+ssl_verify = true                     # -> enables SSL verification
 """.lstrip().replace("\r\n", "\n")
 
 if sys.platform.startswith("win"):
@@ -42,58 +44,78 @@ class ConfigDict(TypedDict):
     ssl_verify: bool | str
 
 
-def get_config_path() -> str:
+def get_config_path(*, legacy: bool = False) -> str:
     """
     Get the path to the config file.
+
+    Args:
+        legacy (bool): If True, return the path to the legacy config file.
 
     Returns:
         The path to the config file.
     """
-    return os.path.join(user_config_dir("timetagger_cli"), CONFIG_FILE_NAME)
+    config_file_name = LEGACY_CONFIG_FILE_NAME if legacy else CONFIG_FILE_NAME
+    return os.path.join(user_config_dir("timetagger_cli"), config_file_name)
 
 
-def load_config() -> ConfigDict:
+def load_config(*, legacy: bool = False) -> ConfigDict:
     """
     Load and validate the config from the filesystem.
 
+    Args:
+        legacy (bool): If True, load the legacy config file.
+
     Raises:
-        RuntimeError: If the config file is not found or if the config is invalid.
+        click.Abort: If the config file is not found or if the config is invalid.
 
     Returns:
         The loaded configuration as a dictionary.
     """
-    filename = get_config_path()
-
-    if not os.path.isfile(filename):
-        raise click.Abort("Failed to load configuration file. Run 'timetagger setup' to fix.")
-
-    with open(filename, "rb") as f:
-        config = toml.loads(f.read().decode())
-
-    if "api_url" not in config:
-        raise click.Abort("Failed to load config. Parameter 'api_url' not set. Run 'timetagger setup' to fix.")
-    if not config["api_url"].startswith(("http://", "https://")):
-        raise click.Abort("Failed to load config. Parameter 'api_url' must start with 'http://' or 'https://'. Run 'timetagger setup' to fix.")
-    if "api_token" not in config:
-        raise click.Abort("Failed to load config. Parameter 'api_token' not set. Run 'timetagger setup' to fix.")
-    if "ssl_verify" not in config:
-        config |= {"ssl_verify": True}
-
-    return config
-
-
-def write_default_config() -> None:
-    """
-    Write the default config to the config file.
-    """
-    filename = get_config_path()
+    filepath = get_config_path(legacy=legacy)
 
     try:
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
-        with open(filename, "wb") as f:
-            f.write(DEFAULT_CONFIG.encode())
-        # Config file contains user secret so it should not be readable to others
-        os.chmod(filename, 0o640)
+        with open(filepath, "rb") as f:
+            config = toml.loads(f.read().decode())
+
+        if "api_url" not in config:
+            raise click.Abort("Failed to load config. Parameter 'api_url' not set. Run 'timetagger setup' to fix.")
+        if not config["api_url"].startswith(("http://", "https://")):
+            raise click.Abort("Failed to load config. Parameter 'api_url' must start with 'http://' or 'https://'. Run 'timetagger setup' to fix.")
+        if "api_token" not in config:
+            raise click.Abort("Failed to load config. Parameter 'api_token' not set. Run 'timetagger setup' to fix.")
+        if "ssl_verify" not in config:
+            config |= {"ssl_verify": True}
+
+        return config
+
+    except Exception as e:
+        raise click.Abort(f"Failed to load config file: {e.__class__.__name__} - {e}") from e
+
+
+def write_default_config(filepath: str) -> None:
+    """
+    Write the default config to the config file.
+
+    If the legacy config file exists, its content is used to create the new config file.
+    Otherwise, a default configuration is created.
+
+    Args:
+        filepath (str): The path to the config file.
+    """
+    # load content from legacy config file if it exists and is valid
+    try:
+        load_config(legacy=True)
+        with open(get_config_path(legacy=True), "rb") as f:
+            config_content = f.read().decode()
+    except click.Abort:
+        config_content = DEFAULT_CONFIG
+
+    # write default config file
+    try:
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        with open(filepath, "wb") as f:
+            f.write(config_content.encode())
+        os.chmod(filepath, 0o640)
     except Exception as e:  # pragma: no cover
         print(f"Could not write default config file: {e}")
 
@@ -106,18 +128,12 @@ def prepare_config_file() -> str:
     Returns:
         The path to the configuration file.
     """
-    filename = get_config_path()
+    filepath = get_config_path()
 
     try:
-        if os.path.isfile(filename):
-            with open(filename, "rb") as f:
-                text = f.read().strip()
-            if not text:
-                write_default_config()
-        else:
-            write_default_config()
-        os.chmod(filename, 0o640)
-    except Exception as e:  # pragma: no cover
-        raise click.Abort(f"Failed to create default config file: {e.__class__.__name__} - {e}") from e
+        load_config()
+    except click.Abort:
+        write_default_config(filepath)
 
-    return filename
+    os.chmod(filepath, 0o640)
+    return filepath
