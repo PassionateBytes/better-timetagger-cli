@@ -77,13 +77,13 @@ def load_config(*, legacy: bool = False) -> ConfigDict:
         with open(filepath, "rb") as f:
             config = toml.loads(f.read().decode())
 
-        if "api_url" not in config:
+        if "api_url" not in config or not config["api_url"]:
             raise click.Abort("Failed to load config. Parameter 'api_url' not set. Run 'timetagger setup' to fix.")
         if not config["api_url"].startswith(("http://", "https://")):
             raise click.Abort("Failed to load config. Parameter 'api_url' must start with 'http://' or 'https://'. Run 'timetagger setup' to fix.")
-        if "api_token" not in config:
+        if "api_token" not in config or not config["api_token"]:
             raise click.Abort("Failed to load config. Parameter 'api_token' not set. Run 'timetagger setup' to fix.")
-        if "ssl_verify" not in config:
+        if "ssl_verify" not in config or not config["ssl_verify"]:
             config |= {"ssl_verify": True}
 
         return config
