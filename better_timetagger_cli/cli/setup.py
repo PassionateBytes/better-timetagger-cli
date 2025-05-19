@@ -17,6 +17,6 @@ def setup(editor: str | None) -> None:
     Edit the configuration file for the TimeTagger CLI.
     """
     filename = prepare_config_file()
-    print(f"Config file:  {filename}")
-    print("Edit the configuration, then save the file.")
+    click.echo(f"Config file:  {filename}")
+    click.echo("Edit the configuration, then save the file.")
     open_file(filename, editor=editor)
