@@ -117,7 +117,7 @@ def write_default_config(filepath: str) -> None:
             f.write(config_content.encode())
         os.chmod(filepath, 0o640)
     except Exception as e:  # pragma: no cover
-        print(f"Could not write default config file: {e}")
+        raise click.Abort(f"Could not write default config file: {e.__class__.__name__} - {e}") from e
 
 
 def prepare_config_file() -> str:
