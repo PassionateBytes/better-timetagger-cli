@@ -9,6 +9,7 @@ from .setup import setup
 
 @click.group(
     cls=AliasedGroup,
+    context_settings={"help_option_names": ["-h", "--help"]},
 )
 @click.version_option(
     version=__version__,
