@@ -1,12 +1,13 @@
 import json
 from collections.abc import Generator
-from time import sleep
+from time import sleep, time
 from typing import Literal, cast
 
 import click
 import requests
 
 from .config import load_config
+from .rich_utils import console
 from .types import GetRecordsResponse, GetSettingsResponse, GetUpdatesResponse, PutRecordsResponse, PutSettingsResponse, Record, Settings
 
 
@@ -26,24 +27,29 @@ def _request(
     Returns:
         The JSON-decoded response from the API.
     """
+    try:
+        config = load_config()
+        url = config["api_url"].rstrip("/") + "/" + path.lstrip("/")
+        token = config["api_token"].strip()
+        ssl_verify = config["ssl_verify"]
 
-    config = load_config()
-    url = config["api_url"].rstrip("/") + "/" + path.lstrip("/")
-    token = config["api_token"].strip()
-    ssl_verify = config["ssl_verify"]
+        headers = {"authtoken": token}
+        response = requests.request(method.upper(), url, json=body, headers=headers, verify=ssl_verify)
 
-    headers = {"authtoken": token}
-    response = requests.request(method.upper(), url, json=body, headers=headers, verify=ssl_verify)
+    except Exception as e:
+        console.print(f"[red]API request failed: {e.__class__.__name__}[/red]\n[dim red]{e}[/dim red]")
+        raise click.Abort from e
 
-    if response.status_code == 200:
-        return response.json()
-    else:
+    if response.status_code != 200:
         response_text = response.text
         try:
             response_text = json.dumps(response.json(), indent=2)
         except json.JSONDecodeError:
             pass
-        raise click.ClickException(f"API request failed with status code: {response.status_code}\n{response_text}")
+        console.print(f"[red]API request failed with status code: {response.status_code}[/red]\n[dim red]{response_text}[/dim red]")
+        raise click.Abort
+
+    return response.json()
 
 
 def get_records(start: int, end: int, include_partial_match: bool = True) -> GetRecordsResponse:
@@ -62,6 +68,24 @@ def get_records(start: int, end: int, include_partial_match: bool = True) -> Get
     timestamp_2 = max(start, end) if include_partial_match else min(start, end)
     response = _request("GET", f"records?timerange={timestamp_1}-{timestamp_2}")
     return cast(GetRecordsResponse, response)
+
+
+def get_runnning_records() -> GetRecordsResponse:
+    """
+    Calls TimeTagger API to get currently running records.
+
+    This searches for records who's timerange matches (roughly) the current time.
+    The range is set to +/-35 minutes, to account for time drift between the server and client.
+
+    Returns:
+        A dictionary containing the running records from the API.
+    """
+    now = int(time())
+    t1 = now - 35 * 60
+    t2 = now + 35 * 60
+    response = get_records(t1, t2)
+    response["records"] = [r for r in response["records"] if r["t1"] == r["t2"]]
+    return response
 
 
 def put_records(records: list[Record]) -> PutRecordsResponse:

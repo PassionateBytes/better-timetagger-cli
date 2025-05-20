@@ -1,4 +1,5 @@
 import os
+import secrets
 import subprocess
 import sys
 from datetime import datetime
@@ -186,3 +187,21 @@ def print_records_csv(records: list[Record]) -> None:
                 stopped = stopped.split(" ", 1)[1]
         description = " " + r.get("ds", "")
         click.echo(f"{started},{stopped},{duration},{description}")
+
+
+def generate_uid(length: int = 8) -> str:
+    """
+    Generate a unique id for records, in the form of an 8-character string.
+
+    The value is used to uniquely identify the record of one user.
+    Assuming a user who has been creating 100 records a day, for 20 years (about 1M records),
+    the chance of a collision for a new record is about 1 in 50 milion.
+
+    Args:
+        length: The length of the random string to generate. Default is 8.
+
+    Returns:
+        A string of 8 random characters.
+    """
+    chars = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    return "".join([secrets.choice(chars) for i in range(length)])

@@ -5,6 +5,7 @@ from typing import TypedDict
 import click
 import toml
 
+from .rich_utils import console
 from .utils import user_config_dir
 
 CONFIG_FILE_NAME = "config.toml"
@@ -89,7 +90,8 @@ def load_config(*, legacy: bool = False) -> ConfigDict:
         return config
 
     except Exception as e:
-        raise click.ClickException(f"Failed to load config file: {e.__class__.__name__} - {e}") from e
+        console.print(f"[red]Failed to load config file: {e.__class__.__name__}[/red]\n[dim red]{e}[/dim red]")
+        raise click.Abort from e
 
 
 def write_default_config(filepath: str) -> None:
@@ -117,7 +119,8 @@ def write_default_config(filepath: str) -> None:
             f.write(config_content.encode())
         os.chmod(filepath, 0o640)
     except Exception as e:  # pragma: no cover
-        raise click.ClickException(f"Could not write default config file: {e.__class__.__name__} - {e}") from e
+        console.print(f"[red]Could not write default config file: {e.__class__.__name__}[/red]\n[dim red]{e}[/dim red]")
+        raise click.Abort from e
 
 
 def prepare_config_file() -> str:

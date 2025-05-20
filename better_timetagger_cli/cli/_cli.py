@@ -6,6 +6,7 @@ from better_timetagger_cli.lib.click_utils import AliasedGroup
 from .app import app
 from .diagnose import diagnose
 from .setup import setup
+from .start import start
 from .status import status
 
 
@@ -42,4 +43,5 @@ def cli(ctx: click.Context) -> None:
 cli.add_command(app)
 cli.add_command(diagnose)
 cli.add_command(setup)
+cli.add_command(start)
 cli.add_command(status)
