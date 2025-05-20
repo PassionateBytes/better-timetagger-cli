@@ -1,4 +1,6 @@
 import json
+from collections.abc import Generator
+from time import sleep
 from typing import Literal, cast
 
 import click
@@ -113,3 +115,24 @@ def get_updates(since: int = 0) -> GetUpdatesResponse:
     """
     response = _request("GET", f"updates?since={since}")
     return cast(GetRecordsResponse, response)
+
+
+def continuous_updates(since: int = 0, delay: int = 2) -> Generator[GetUpdatesResponse, None]:
+    """
+    Generator that continually polls TimeTagger API using `GET /updates?since={since}`, using the last call's `server_time` value as the new `since` value.
+
+    This allows continuous monitoring of server updates.
+
+    Args:
+        since: The timestamp to get updates since. Defaults to 0. Should typically use the last call's `server_time` value.
+        delay: The minimul delay in seconds between requests. Defaults to 2 second.
+
+    Yields:
+        A dictionary containing the updates from the API.
+    """
+
+    while True:
+        response = get_updates(since)
+        since = response["server_time"]
+        yield response
+        sleep(delay)
