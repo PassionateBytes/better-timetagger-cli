@@ -2,9 +2,12 @@ from datetime import datetime, timedelta
 from time import time
 
 import click
+from rich.box import SIMPLE
+from rich.table import Table
 
 from better_timetagger_cli.lib.api import get_records
-from better_timetagger_cli.lib.utils import print_records, readable_duration, total_time
+from better_timetagger_cli.lib.rich_utils import console, styled_padded
+from better_timetagger_cli.lib.utils import readable_duration, total_time
 
 
 @click.command()
@@ -45,19 +48,16 @@ def status() -> None:
     total_day = total_time(day_records, today, tomorrow)
 
     # Report
-    click.echo()
-    click.echo(f"Total hours this month: {readable_duration(total_month)}")
-    click.echo(f"Total hours this week: {readable_duration(total_week)}")
-    click.echo(f"Total hours today: {readable_duration(total_day)}")
-    click.echo()
-    if not running_records:
-        click.echo("Running: N/A")
-    elif len(running_records) == 1:
-        r = running_records[0]
-        duration = now - running_records[0]["t1"]
-        click.echo(f"Running: {readable_duration(duration)} - {r.get('ds')}")
-    else:
-        click.echo(f"There are {len(running_records)} running timers.")
-    click.echo()
-    click.echo("Todays records:")
-    print_records(day_records)
+    table = Table(show_header=False, box=SIMPLE)
+    table.add_column(justify="right", style="cyan", no_wrap=True)
+    table.add_column(justify="left", style="magenta")
+    table.add_row("Total this month:", readable_duration(total_month))
+    table.add_row("Total this week:", readable_duration(total_week))
+    table.add_row("Total today:", readable_duration(total_day))
+    table.add_section()
+    table.add_row("Records this month:", styled_padded(len(month_records)))
+    table.add_row("Records this week:", styled_padded(len(week_records)))
+    table.add_row("Records today:", styled_padded(len(day_records)))
+    table.add_section()
+    table.add_row("Running:", styled_padded(len(running_records)))
+    console.print(table)

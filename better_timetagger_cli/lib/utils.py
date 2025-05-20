@@ -123,7 +123,7 @@ def readable_duration(nsecs) -> str:
         A string representing the duration in 'HH:MM' format.
     """
     m = round(nsecs / 60)
-    return f"{m // 60:.0f}:{m % 60:02.0f}"
+    return f"{m // 60:02.0f}:{m % 60:02.0f}"
 
 
 def print_records(records: list[Record]) -> None:
