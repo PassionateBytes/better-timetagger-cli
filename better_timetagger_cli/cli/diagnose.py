@@ -2,8 +2,13 @@ import time
 from datetime import datetime, timedelta
 
 import click
+from rich.box import SIMPLE
+from rich.live import Live
+from rich.table import Table
 
 from better_timetagger_cli.lib.api import get_updates, put_records
+from better_timetagger_cli.lib.rich_utils import console
+from better_timetagger_cli.lib.utils import readable_time
 
 
 @click.command()
@@ -17,11 +22,6 @@ def diagnose(fix: bool) -> None:
     """
     Load all records and perform diagnostics to detect issues.
     """
-
-    def show_record(prefix, r):
-        dt1 = datetime.fromtimestamp(r["t1"])
-        dt2 = datetime.fromtimestamp(r["t2"])
-        click.echo(f"{prefix}: {r['key']}, from {dt1} to {dt2}")
 
     # Get records and sort by t1
     records = get_updates()["records"]
@@ -55,34 +55,41 @@ def diagnose(fix: bool) -> None:
             ndays = round(abs(time.time() - t1) / 86400)
             suspicious_records.append((f"running for about {ndays} days", r))
 
-    suspicious_records.sort()
-    wrong_records.sort()
-
-    # Show records
-    if wrong_records:
-        click.echo("Erroneous Records:")
-        for prefix, r in wrong_records:
-            show_record(prefix + ":", r)
-
-    if suspicious_records:
-        click.echo("Suspicious Records:")
-        for prefix, r in suspicious_records:
-            show_record(prefix + ":", r)
+    suspicious_records.sort(key=lambda r: r[1]["t1"])
+    wrong_records.sort(key=lambda r: r[1]["t1"])
 
     if not wrong_records and not suspicious_records:
-        click.echo("All records are valid.")
+        console.print("[green]All records are valid.")
+        return
+
+    def render_table(fixed_idx: int = -1) -> Table:
+        table = Table(show_header=False, box=SIMPLE)
+        table.add_column(justify="left", style="red")
+        table.add_column(justify="left", style="magenta")
+        table.add_column(justify="left", style="green")
+        for i, (prefix, r) in enumerate(wrong_records):
+            if i <= fixed_idx:
+                table.add_row(f"{prefix}:", f"Record '{r['key']}' from {readable_time(r['t1'])} to {readable_time(r['t2'])}", "...fixed!")
+            else:
+                table.add_row(f"{prefix}:", f"Record '{r['key']}' from {readable_time(r['t1'])} to {readable_time(r['t2'])}")
+        for prefix, r in suspicious_records:
+            table.add_row(f"[yellow]{prefix}:", f"Record '{r['key']}' from {readable_time(r['t1'])} to {readable_time(r['t2'])}")
+        return table
 
     # Fixing wrong records
     if fix:
-        for prefix, r in wrong_records:
-            if "t1 larger than t2" in prefix:
-                r["t1"], r["t2"] = r["t2"], r["t1"]
-                put_records([r])
-            else:
-                dt = abs(r["t1"] - r["t2"])
-                if dt > 86400 * 1.2:
-                    dt = 3600
-                r["t1"] = int(time.time())
-                r["t2"] = r["t1"] + dt
-                put_records([r])
-            click.echo(f"Updated {r['key']}")
+        with Live(console=console) as live:
+            for i, (_, r) in enumerate(wrong_records):
+                if t1 > t2:
+                    r["t1"], r["t2"] = r["t2"], r["t1"]
+                    put_records([r])
+                elif (t1 < 0 or t2 < 0) or (datetime.fromtimestamp(r["t2"]) > very_late_date):
+                    dt = abs(r["t1"] - r["t2"])
+                    if dt > 86400 * 1.2:
+                        dt = 3600
+                    r["t1"] = int(time.time())
+                    r["t2"] = r["t1"] + dt
+                    put_records([r])
+                live.update(render_table(i))
+    else:
+        console.print(render_table())
