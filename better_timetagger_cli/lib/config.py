@@ -66,7 +66,7 @@ def load_config(*, legacy: bool = False) -> ConfigDict:
         legacy (bool): If True, load the legacy config file.
 
     Raises:
-        click.Abort: If the config file is not found or if the config is invalid.
+        click.ClickException: If the config file is not found or if the config is invalid.
 
     Returns:
         The loaded configuration as a dictionary.
@@ -78,18 +78,18 @@ def load_config(*, legacy: bool = False) -> ConfigDict:
             config = toml.loads(f.read().decode())
 
         if "api_url" not in config or not config["api_url"]:
-            raise click.Abort("Failed to load config. Parameter 'api_url' not set. Run 'timetagger setup' to fix.")
+            raise click.ClickException("Failed to load config. Parameter 'api_url' not set. Run 'timetagger setup' to fix.")
         if not config["api_url"].startswith(("http://", "https://")):
-            raise click.Abort("Failed to load config. Parameter 'api_url' must start with 'http://' or 'https://'. Run 'timetagger setup' to fix.")
+            raise click.ClickException("Failed to load config. Parameter 'api_url' must start with 'http://' or 'https://'. Run 'timetagger setup' to fix.")
         if "api_token" not in config or not config["api_token"]:
-            raise click.Abort("Failed to load config. Parameter 'api_token' not set. Run 'timetagger setup' to fix.")
+            raise click.ClickException("Failed to load config. Parameter 'api_token' not set. Run 'timetagger setup' to fix.")
         if "ssl_verify" not in config or not config["ssl_verify"]:
             config |= {"ssl_verify": True}
 
         return config
 
     except Exception as e:
-        raise click.Abort(f"Failed to load config file: {e.__class__.__name__} - {e}") from e
+        raise click.ClickException(f"Failed to load config file: {e.__class__.__name__} - {e}") from e
 
 
 def write_default_config(filepath: str) -> None:
@@ -107,7 +107,7 @@ def write_default_config(filepath: str) -> None:
         load_config(legacy=True)
         with open(get_config_path(legacy=True), "rb") as f:
             config_content = f.read().decode()
-    except click.Abort:
+    except click.ClickException:
         config_content = DEFAULT_CONFIG
 
     # write default config file
@@ -117,7 +117,7 @@ def write_default_config(filepath: str) -> None:
             f.write(config_content.encode())
         os.chmod(filepath, 0o640)
     except Exception as e:  # pragma: no cover
-        raise click.Abort(f"Could not write default config file: {e.__class__.__name__} - {e}") from e
+        raise click.ClickException(f"Could not write default config file: {e.__class__.__name__} - {e}") from e
 
 
 def prepare_config_file() -> str:
@@ -132,7 +132,7 @@ def prepare_config_file() -> str:
 
     try:
         load_config()
-    except click.Abort:
+    except click.ClickException:
         write_default_config(filepath)
 
     os.chmod(filepath, 0o640)

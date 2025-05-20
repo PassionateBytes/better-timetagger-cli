@@ -43,10 +43,10 @@ def _request(
             response_text = json.dumps(response.json(), indent=2)
         except json.JSONDecodeError:
             pass
-        raise click.Abort(f"API request failed with status code: {response.status_code}\n{response_text}")
+        raise click.ClickException(f"API request failed with status code: {response.status_code}\n{response_text}")
 
 
-def get_records(start: int, end: int, include_partial_match: True) -> GetRecordsResponse:
+def get_records(start: int, end: int, include_partial_match: bool = True) -> GetRecordsResponse:
     """
     Calls TimeTagger API using `GET /records?timerange={start}-{end}` and returns the response.
 
@@ -60,7 +60,7 @@ def get_records(start: int, end: int, include_partial_match: True) -> GetRecords
     """
     timestamp_1 = min(start, end) if include_partial_match else max(start, end)
     timestamp_2 = max(start, end) if include_partial_match else min(start, end)
-    response = _request("GET", f"updates?timerange={timestamp_1}-{timestamp_2}")
+    response = _request("GET", f"records?timerange={timestamp_1}-{timestamp_2}")
     return cast(GetRecordsResponse, response)
 
 
