@@ -2,9 +2,8 @@ import time
 from datetime import datetime, timedelta
 
 import click
-from tqdm import tqdm
 
-from better_timetagger_cli.lib import api
+from better_timetagger_cli.lib.api import get_updates, put_records
 
 
 @click.command()
@@ -25,8 +24,7 @@ def diagnose(fix: bool) -> None:
         click.echo(f"{prefix}: {r['key']}, from {dt1} to {dt2}")
 
     # Get records and sort by t1
-    ob = api.request("GET", "updates?since=0")
-    records = ob["records"]
+    records = get_updates()["records"]
     records = sorted(records, key=lambda r: r["t1"])
 
     # Prep
@@ -39,7 +37,7 @@ def diagnose(fix: bool) -> None:
     wrong_records = []
 
     # Add tqdm progress bar
-    for r in tqdm(records, desc="Validating Records", bar_format="{l_bar}{bar}|{n_fmt}/{total_fmt}"):
+    for r in records:
         t1, t2 = r["t1"], r["t2"]
         if t1 < 0 or t2 < 0:
             wrong_records.append(("negative timestamp", r))
@@ -76,15 +74,15 @@ def diagnose(fix: bool) -> None:
 
     # Fixing wrong records
     if fix:
-        for prefix, r in tqdm(wrong_records, desc="Fixing Records", bar_format="{l_bar}{bar}|{n_fmt}/{total_fmt}"):
+        for prefix, r in wrong_records:
             if "t1 larger than t2" in prefix:
                 r["t1"], r["t2"] = r["t2"], r["t1"]
-                api.request("PUT", "records", [r])
+                put_records([r])
             else:
                 dt = abs(r["t1"] - r["t2"])
                 if dt > 86400 * 1.2:
                     dt = 3600
                 r["t1"] = int(time.time())
                 r["t2"] = r["t1"] + dt
-                api.request("PUT", "records", [r])
+                put_records([r])
             click.echo(f"Updated {r['key']}")
