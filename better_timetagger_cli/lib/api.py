@@ -1,3 +1,4 @@
+import json
 from typing import Literal, cast
 
 import click
@@ -35,7 +36,12 @@ def _request(
     if response.status_code == 200:
         return response.json()
     else:
-        raise click.Abort(f"API request failed with status code {response.status_code}!\n{response.text}")
+        response_text = response.text
+        try:
+            response_text = json.dumps(response.json(), indent=2)
+        except json.JSONDecodeError:
+            pass
+        raise click.Abort(f"API request failed with status code: {response.status_code}\n{response_text}")
 
 
 def get_records(start: int, end: int, include_partial_match: True) -> GetRecordsResponse:
