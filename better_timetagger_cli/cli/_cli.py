@@ -8,6 +8,7 @@ from .diagnose import diagnose
 from .setup import setup
 from .start import start
 from .status import status
+from .stop import stop
 
 
 @click.group(
@@ -45,3 +46,4 @@ cli.add_command(diagnose)
 cli.add_command(setup)
 cli.add_command(start)
 cli.add_command(status)
+cli.add_command(stop)
