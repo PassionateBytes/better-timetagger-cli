@@ -7,7 +7,7 @@ from better_timetagger_cli.lib.click_utils import abort
 from better_timetagger_cli.lib.utils import generate_uid, print_records
 
 
-@click.command()
+@click.command(("start", "check-in", "in"))
 @click.option(
     "-k",
     "--keep",
@@ -25,6 +25,8 @@ from better_timetagger_cli.lib.utils import generate_uid, print_records
 def start(keep: bool, tag: list[str], description: list[str]) -> None:
     """
     Start timer with the given description.
+
+    Command aliases: 'check-in', 'in'
     """
     tags = [f"#{t}" if not t.startswith("#") else t for t in tag]
     description_string = f"{' '.join(description)} {' '.join(tags)}"
