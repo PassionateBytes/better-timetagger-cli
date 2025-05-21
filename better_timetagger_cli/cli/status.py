@@ -16,16 +16,15 @@ def status() -> None:
     Get an overview of today, this week and this month.
     """
 
-    now = int(time())
-    d = datetime.fromtimestamp(now)
-
     # Relevant dates
-    today = datetime(d.year, d.month, d.day)
+    now = int(time())
+    now_dt = datetime.fromtimestamp(now)
+    today = datetime(now_dt.year, now_dt.month, now_dt.day)
     tomorrow = today + timedelta(1)
     last_monday = today - timedelta(today.weekday())
     next_monday = last_monday + timedelta(7)
-    first_of_this_month = datetime(d.year, d.month, 1)
-    first_of_next_month = datetime(d.year, d.month + 1, 1) if d.month < 12 else datetime(d.year + 1, 1, 1)
+    first_of_this_month = datetime(now_dt.year, now_dt.month, 1)
+    first_of_next_month = datetime(now_dt.year, now_dt.month + 1, 1) if now_dt.month < 12 else datetime(now_dt.year + 1, 1, 1)
 
     # Convert to timestamps
     t_day1 = int(today.timestamp())
@@ -36,8 +35,8 @@ def status() -> None:
     t_month2 = int(first_of_next_month.timestamp())
 
     # Collect records
-    records = get_records(t_month1, t_month2)["records"]
-    month_records = [r for r in records if not r.get("ds", "").startswith("HIDDEN")]
+    month_records = get_records(t_month1, t_month2)["records"]
+    month_records = [r for r in month_records if not r.get("ds", "").startswith("HIDDEN")]
     week_records = [r for r in month_records if r["t1"] < t_week2 and (r["t1"] == r["t2"] or r["t2"] > t_week1)]
     day_records = [r for r in week_records if r["t1"] < t_day2 and (r["t1"] == r["t2"] or r["t2"] > t_day1)]
     running_records = [r for r in week_records if r["t1"] == r["t2"]]
