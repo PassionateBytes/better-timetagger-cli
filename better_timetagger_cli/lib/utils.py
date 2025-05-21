@@ -143,7 +143,7 @@ def edit_file(path: str, editor: str | None = None) -> None:
         print(f"Edit the file at: {path}")
 
 
-def user_config_dir(appname=None, roaming=False) -> str:
+def get_config_dir(appname=None, roaming=False) -> str:
     """
     Get the directory to store app config files.
 

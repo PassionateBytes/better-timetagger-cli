@@ -6,7 +6,7 @@ import click
 import toml
 from rich import print
 
-from .utils import user_config_dir
+from .utils import get_config_dir
 
 CONFIG_FILE_NAME = "config.toml"
 LEGACY_CONFIG_FILE_NAME = "config.txt"
@@ -56,7 +56,7 @@ def get_config_path(*, legacy: bool = False) -> str:
         The path to the config file.
     """
     config_file_name = LEGACY_CONFIG_FILE_NAME if legacy else CONFIG_FILE_NAME
-    return os.path.join(user_config_dir("timetagger_cli"), config_file_name)
+    return os.path.join(get_config_dir("timetagger_cli"), config_file_name)
 
 
 def load_config(*, legacy: bool = False) -> ConfigDict:
