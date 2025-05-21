@@ -13,6 +13,7 @@ from better_timetagger_cli.lib.utils import generate_uid, print_records
     "--description",
     type=click.STRING,
     help="Add a description to the task.",
+    default="",
 )
 @click.option(
     "-e",
