@@ -7,7 +7,7 @@ from better_timetagger_cli.lib.click_utils import abort
 from better_timetagger_cli.lib.utils import print_records
 
 
-@click.command()
+@click.command(("stop", "check-out", "out"))
 @click.argument(
     "tags",
     type=click.STRING,
@@ -17,10 +17,12 @@ def stop(tags: list[str]) -> None:
     """
     Stop time tracking.
 
-    If no specific tags are provided, all running records will be stopped.
+    If tags are provided, all running records will be stopped.
     Specify one or more tags to stop only matching records.
+
+    Command aliases: 'check-out', 'out'
     """
-    tags = [f"#{t}" if not t.startswith("#") else t for t in tags]
+    tags = [t if t.startswith("#") else f"#{t}" for t in tags]
 
     running_records = get_runnning_records()["records"]
     if not running_records:
