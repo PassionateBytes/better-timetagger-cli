@@ -62,7 +62,7 @@ def print_records(
     """
     now = int(time())
 
-    table = Table(box=SIMPLE, expand=True)
+    table = Table(box=SIMPLE, min_width=65)
     table.add_column("Started", justify="right", style="cyan", no_wrap=True)
     table.add_column("Stopped", justify="left", style="cyan", no_wrap=True)
     table.add_column("Duration", justify="left", style="green", no_wrap=True)
@@ -100,7 +100,7 @@ def print_records(
             readable_time(r["t2"]),
             readable_duration(r["t2"] - r["t1"]),
             highlight_tags_in_description(r["ds"]),
-            style="dim red",
+            style="red",
         )
 
     print(table)
