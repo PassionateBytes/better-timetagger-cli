@@ -22,22 +22,15 @@ def diagnose(fix: bool) -> None:
     """
     Load all records and perform diagnostics to detect issues.
     """
-
-    # Get records and sort by t1
-    records = get_updates()["records"]
-    records = sorted(records, key=lambda r: r["t1"])
-
-    # Prep
     early_date = datetime(2000, 1, 1)
     late_date = datetime.now() + timedelta(days=1)
     very_late_date = datetime.now() + timedelta(days=365 * 2)
 
-    # Investigate records
+    records = get_updates()["records"]
     suspicious_records = []
     wrong_records = []
 
-    # Add tqdm progress bar
-    for r in records:
+    for r in reversed(records):
         t1, t2 = r["t1"], r["t2"]
         if t1 < 0 or t2 < 0:
             wrong_records.append(("negative timestamp", r))
@@ -54,9 +47,6 @@ def diagnose(fix: bool) -> None:
         elif t1 == t2 and abs(time.time() - t1) > 86400 * 2:
             ndays = round(abs(time.time() - t1) / 86400)
             suspicious_records.append((f"running for about {ndays} days", r))
-
-    suspicious_records.sort(key=lambda r: r[1]["t1"])
-    wrong_records.sort(key=lambda r: r[1]["t1"])
 
     if not wrong_records and not suspicious_records:
         print("[green]All records are valid.")
@@ -76,7 +66,6 @@ def diagnose(fix: bool) -> None:
             table.add_row(f"[yellow]{prefix}:", f"Record '{r['key']}' from {readable_time(r['t1'])} to {readable_time(r['t2'])}")
         return table
 
-    # Fixing wrong records
     if fix:
         with Live() as live:
             for i, (_, r) in enumerate(wrong_records):
@@ -91,5 +80,6 @@ def diagnose(fix: bool) -> None:
                     r["t2"] = r["t1"] + dt
                     put_records([r])
                 live.update(render_table(i))
+
     else:
         print(render_table())

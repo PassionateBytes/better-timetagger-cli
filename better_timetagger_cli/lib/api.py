@@ -67,6 +67,7 @@ def get_records(start: int, end: int, include_partial_match: bool = True) -> Get
     timestamp_1 = min(start, end) if include_partial_match else max(start, end)
     timestamp_2 = max(start, end) if include_partial_match else min(start, end)
     response = _request("GET", f"records?timerange={timestamp_1}-{timestamp_2}")
+    response["records"].sort(key=lambda r: r["t1"], reverse=True)
     return cast(GetRecordsResponse, response)
 
 
@@ -99,6 +100,7 @@ def put_records(records: list[Record]) -> PutRecordsResponse:
         A dictionary containing the response from the API.
     """
     response = _request("PUT", "records", records)
+    response["accepted"].sort(key=lambda r: r["t1"], reverse=True)
     return cast(PutRecordsResponse, response)
 
 
@@ -138,6 +140,7 @@ def get_updates(since: int = 0) -> GetUpdatesResponse:
         A dictionary containing the updates from the API.
     """
     response = _request("GET", f"updates?since={since}")
+    response["records"].sort(key=lambda r: r["t1"], reverse=True)
     return cast(GetRecordsResponse, response)
 
 
