@@ -29,7 +29,7 @@ class AliasedGroup(click.Group):
         return name, cmd, args
 
 
-def abort(message: str, exc: Exception | None = None) -> NoReturn:
+def abort(message: str) -> NoReturn:
     """
     Abort the current command with a message.
 
@@ -37,6 +37,4 @@ def abort(message: str, exc: Exception | None = None) -> NoReturn:
         message: The message to display before aborting.
     """
     print(f"\n[red]{message}[/red]")
-    if exc is not None:
-        raise click.ClickException from exc
-    raise click.ClickException
+    exit(1)

@@ -90,7 +90,7 @@ def load_config(*, legacy: bool = False) -> ConfigDict:
         return config
 
     except Exception as e:
-        abort(f"Failed to load config file: {e.__class__.__name__}\n[dim]{e}[/dim]", e)
+        abort(f"Failed to load config file: {e.__class__.__name__}\n[dim]{e}[/dim]")
 
 
 def write_default_config(filepath: str) -> None:
@@ -118,7 +118,7 @@ def write_default_config(filepath: str) -> None:
             f.write(config_content.encode())
         os.chmod(filepath, 0o640)
     except Exception as e:  # pragma: no cover
-        abort(f"Could not write default config file: {e.__class__.__name__}\n[dim]{e}[/dim]", e)
+        abort(f"Could not write default config file: {e.__class__.__name__}\n[dim]{e}[/dim]")
 
 
 def prepare_config_file() -> str:

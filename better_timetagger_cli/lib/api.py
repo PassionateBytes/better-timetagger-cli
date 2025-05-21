@@ -38,7 +38,7 @@ def _request(
         response = requests.request(method.upper(), url, json=body, headers=headers, verify=ssl_verify)
 
     except Exception as e:
-        abort(f"API request failed: {e.__class__.__name__}\n[dim]{e}[/dim]", e)
+        abort(f"API request failed: {e.__class__.__name__}\n[dim]{e}[/dim]")
 
     if response.status_code != 200:
         response_text = response.text
@@ -100,7 +100,6 @@ def put_records(records: list[Record]) -> PutRecordsResponse:
         A dictionary containing the response from the API.
     """
     response = _request("PUT", "records", records)
-    response["accepted"].sort(key=lambda r: r["t1"], reverse=True)
     return cast(PutRecordsResponse, response)
 
 
