@@ -1,6 +1,7 @@
 from time import time
 
 import click
+from rich import print
 
 from better_timetagger_cli.lib.api import get_runnning_records, put_records
 from better_timetagger_cli.lib.click_utils import abort
@@ -60,7 +61,10 @@ def start(tags: list[str], description: str, empty: bool, keep: bool) -> None:
     else:
         for r in running_records:
             if r.get("ds", "") == description:
-                abort("Timer with this description is already running.")
+                print("\n[red]Task with this description is already running.[/red]")
+                print_records(running=running_records)
+                exit(1)
+
             r["t2"] = now
         put_records([new_record, *running_records])
         print_records(started=[new_record], stopped=running_records)
