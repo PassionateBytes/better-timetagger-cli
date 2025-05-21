@@ -7,7 +7,7 @@ from rich.box import SIMPLE
 from rich.table import Table
 
 from better_timetagger_cli.lib.api import get_records
-from better_timetagger_cli.lib.utils import get_tag_durations, readable_duration, sort_tag_durations, styled_padded, total_time
+from better_timetagger_cli.lib.utils import get_tag_stats, readable_duration, styled_padded, total_time
 
 
 @click.command()
@@ -47,10 +47,10 @@ def status() -> None:
     total_day = total_time(day_records, today, tomorrow)
 
     # Get tag totals
-    month_tags = get_tag_durations(month_records)
-    week_tags = get_tag_durations(week_records)
-    day_tags = get_tag_durations(day_records)
-    running_tags = get_tag_durations(running_records)
+    month_tag_stats = get_tag_stats(month_records)
+    week_tag_stats = get_tag_stats(week_records)
+    day_tag_stats = get_tag_stats(day_records)
+    running_tag_stats = get_tag_stats(running_records)
 
     # Report
     table = Table(show_header=False, box=SIMPLE)
@@ -60,38 +60,38 @@ def status() -> None:
     table.add_row(
         "Total this month:",
         readable_duration(total_month),
-        ", ".join(f"{tag} [dim]({readable_duration(duration)})[/dim]" for tag, duration in month_tags.items()),
+        ", ".join(f"{tag} [dim]({readable_duration(duration)})[/dim]" for tag, (_, duration) in month_tag_stats.items()),
     )
     table.add_row(
         "Total this week:",
         readable_duration(total_week),
-        ", ".join(f"{tag} [dim]({readable_duration(duration)})[/dim]" for tag, duration in week_tags.items()),
+        ", ".join(f"{tag} [dim]({readable_duration(duration)})[/dim]" for tag, (_, duration) in week_tag_stats.items()),
     )
     table.add_row(
         "Total today:",
         readable_duration(total_day),
-        ", ".join(f"{tag} [dim]({readable_duration(duration)})[/dim]" for tag, duration in day_tags.items()),
+        ", ".join(f"{tag} [dim]({readable_duration(duration)})[/dim]" for tag, (_, duration) in day_tag_stats.items()),
     )
     table.add_section()
     table.add_row(
         "Records this month:",
         styled_padded(len(month_records)),
-        ", ".join(sort_tag_durations(month_tags)),
+        ", ".join(f"{tag} [dim]({count})[/dim]" for tag, (count, _) in month_tag_stats.items()),
     )
     table.add_row(
         "Records this week:",
         styled_padded(len(week_records)),
-        ", ".join(sort_tag_durations(week_tags)),
+        ", ".join(f"{tag} [dim]({count})[/dim]" for tag, (count, _) in week_tag_stats.items()),
     )
     table.add_row(
         "Records today:",
         styled_padded(len(day_records)),
-        ", ".join(sort_tag_durations(day_tags)),
+        ", ".join(f"{tag} [dim]({count})[/dim]" for tag, (count, _) in day_tag_stats.items()),
     )
     table.add_section()
     table.add_row(
         "Running:",
         styled_padded(len(running_records)),
-        ", ".join(sort_tag_durations(running_tags)),
+        ", ".join(list(running_tag_stats)),
     )
     print(table)

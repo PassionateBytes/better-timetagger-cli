@@ -122,39 +122,30 @@ def get_record_duration(record: Record) -> int:
     return t2 - t1
 
 
-def get_tag_durations(records: list[Record]) -> dict[str, int]:
+def get_tag_stats(records: list[Record]) -> dict[str, tuple[int, int]]:
     """
-    Get all
+    Get statistics for each tag in the records. Results are sorted by tag's total duration.
 
     Args:
         records: A list of records.
 
     Returns:
-        A dictionary with tags as keys and their total durations as values.
+        A tuple with 1) the number of occurrences of the tag and 2) the total duration for that tag.
     """
 
-    tag_durations = {}
+    tag_stats = {}
     for r in records:
         for word in r["ds"].split():
             if word.startswith("#"):
-                tag_durations[word] = tag_durations.get(word, 0) + get_record_duration(r)
+                stats = tag_stats.get(word, (0, 0))
+                tag_stats[word] = (
+                    stats[0] + 1,
+                    stats[1] + get_record_duration(r),
+                )
 
-    return tag_durations
+    tag_stats = dict(sorted(tag_stats.items(), key=lambda x: x[1][1], reverse=True))
 
-
-def sort_tag_durations(tag_durations: dict[str, int]) -> list[str]:
-    """
-    Sort tags by their duration.
-
-    Args:
-        tag_durations: A dictionary with tags as keys and their total durations as values.
-
-    Returns:
-        A list of tags sorted by their duration.
-    """
-    tags = list(tag_durations)
-    tags.sort(key=lambda x: tag_durations[x], reverse=True)
-    return tags
+    return tag_stats
 
 
 def edit_file(path: str, editor: str | None = None) -> None:
