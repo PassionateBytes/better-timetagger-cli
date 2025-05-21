@@ -55,7 +55,7 @@ def status() -> None:
     # Report
     table = Table(show_header=False, box=SIMPLE)
     table.add_column(justify="right", style="cyan", no_wrap=True)
-    table.add_column(justify="left", style="magenta")
+    table.add_column(justify="left", style="magenta", no_wrap=True)
     table.add_column(justify="left", style="green")
     table.add_row(
         "Total this month:",
