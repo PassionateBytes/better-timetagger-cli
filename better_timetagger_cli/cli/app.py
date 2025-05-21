@@ -14,5 +14,5 @@ def app() -> None:
     config = load_config()
     parts = config["api_url"].rstrip("/").split("/")
     url = "/".join(parts[:-2]) + "/app/"
-    print(f"Open web-app at: [cyan]{url}[/cyan]")
+    print(f"\nOpen web-app at: [cyan]{url}[/cyan]")
     webbrowser.open(url)

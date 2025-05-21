@@ -1,4 +1,7 @@
+from typing import NoReturn
+
 import click
+from rich import print
 
 
 class AliasedGroup(click.Group):
@@ -24,3 +27,16 @@ class AliasedGroup(click.Group):
         _, cmd, args = super().resolve_command(ctx, args)
         name = cmd.name if cmd else None
         return name, cmd, args
+
+
+def abort(message: str, exc: Exception | None = None) -> NoReturn:
+    """
+    Abort the current command with a message.
+
+    Args:
+        message: The message to display before aborting.
+    """
+    print(f"\n[red]{message}[/red]")
+    if exc is not None:
+        raise click.ClickException from exc
+    raise click.ClickException

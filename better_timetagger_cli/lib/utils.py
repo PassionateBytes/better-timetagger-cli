@@ -114,33 +114,26 @@ def edit_file(path: str, editor: str | None = None) -> None:
         path: The path to the file to open.
         editor: The name or path of the editor executable. Default to system default.
     """
-    try:
-        if editor:
-            subprocess.call((editor, path))
-            return
+    if editor:
+        subprocess.call((editor, path))
+        return
 
-        if sys.platform.startswith("darwin"):
-            subprocess.call(("open", path))
+    if sys.platform.startswith("darwin"):
+        subprocess.call(("open", path))
 
-        elif sys.platform.startswith("win"):
-            if " " in path:
-                # see: http://stackoverflow.com/a/72796/2271927
-                subprocess.call(("start", "", path), shell=True)
-            else:
-                subprocess.call(("start", path), shell=True)
-
-        elif sys.platform.startswith("linux"):
-            try:
-                # see: http://superuser.com/questions/38984/linux-equivalent-command-for-open-command-on-mac-windows
-                subprocess.call(("xdg-open", path))
-            except FileNotFoundError:
-                subprocess.call((os.getenv("EDITOR", "vi"), path))
-
+    elif sys.platform.startswith("win"):
+        if " " in path:
+            # see: http://stackoverflow.com/a/72796/2271927
+            subprocess.call(("start", "", path), shell=True)
         else:
-            raise NotImplementedError(f"Platform {sys.platform} not supported")
+            subprocess.call(("start", path), shell=True)
 
-    except Exception:
-        print(f"Edit the file at: {path}")
+    elif sys.platform.startswith("linux"):
+        try:
+            # see: http://superuser.com/questions/38984/linux-equivalent-command-for-open-command-on-mac-windows
+            subprocess.call(("xdg-open", path))
+        except FileNotFoundError:
+            subprocess.call((os.getenv("EDITOR", "vi"), path))
 
 
 def get_config_dir(appname=None, roaming=False) -> str:

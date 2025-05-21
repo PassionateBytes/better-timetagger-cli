@@ -18,5 +18,5 @@ def setup(editor: str | None) -> None:
     Edit the configuration file for the TimeTagger CLI.
     """
     filename = prepare_config_file()
-    print(f"Update the TimeTagger config file: [cyan]{filename}[/cyan]")
+    print(f"\nTimeTagger config file: [cyan]{filename}[/cyan]")
     edit_file(filename, editor=editor)
