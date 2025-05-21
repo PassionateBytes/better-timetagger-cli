@@ -5,9 +5,9 @@ from typing import Literal, cast
 
 import click
 import requests
+from rich import print
 
 from .config import load_config
-from .rich_utils import console
 from .types import GetRecordsResponse, GetSettingsResponse, GetUpdatesResponse, PutRecordsResponse, PutSettingsResponse, Record, Settings
 
 
@@ -37,7 +37,7 @@ def _request(
         response = requests.request(method.upper(), url, json=body, headers=headers, verify=ssl_verify)
 
     except Exception as e:
-        console.print(f"[red]API request failed: {e.__class__.__name__}[/red]\n[dim red]{e}[/dim red]")
+        print(f"[red]API request failed: {e.__class__.__name__}[/red]\n[dim red]{e}[/dim red]")
         raise click.Abort from e
 
     if response.status_code != 200:
@@ -46,7 +46,7 @@ def _request(
             response_text = json.dumps(response.json(), indent=2)
         except json.JSONDecodeError:
             pass
-        console.print(f"[red]API request failed with status code: {response.status_code}[/red]\n[dim red]{response_text}[/dim red]")
+        print(f"[red]API request failed with status code: {response.status_code}[/red]\n[dim red]{response_text}[/dim red]")
         raise click.Abort
 
     return response.json()

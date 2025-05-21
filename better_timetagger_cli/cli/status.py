@@ -2,12 +2,12 @@ from datetime import datetime, timedelta
 from time import time
 
 import click
+from rich import print
 from rich.box import SIMPLE
 from rich.table import Table
 
 from better_timetagger_cli.lib.api import get_records
-from better_timetagger_cli.lib.rich_utils import console, styled_padded
-from better_timetagger_cli.lib.utils import readable_duration, total_time
+from better_timetagger_cli.lib.utils import readable_duration, styled_padded, total_time
 
 
 @click.command()
@@ -60,4 +60,4 @@ def status() -> None:
     table.add_row("Records today:", styled_padded(len(day_records)))
     table.add_section()
     table.add_row("Running:", styled_padded(len(running_records)))
-    console.print(table)
+    print(table)

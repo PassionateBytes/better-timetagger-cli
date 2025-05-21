@@ -2,12 +2,12 @@ import time
 from datetime import datetime, timedelta
 
 import click
+from rich import print
 from rich.box import SIMPLE
 from rich.live import Live
 from rich.table import Table
 
 from better_timetagger_cli.lib.api import get_updates, put_records
-from better_timetagger_cli.lib.rich_utils import console
 from better_timetagger_cli.lib.utils import readable_time
 
 
@@ -59,7 +59,7 @@ def diagnose(fix: bool) -> None:
     wrong_records.sort(key=lambda r: r[1]["t1"])
 
     if not wrong_records and not suspicious_records:
-        console.print("[green]All records are valid.")
+        print("[green]All records are valid.")
         return
 
     def render_table(fixed_idx: int = -1) -> Table:
@@ -78,7 +78,7 @@ def diagnose(fix: bool) -> None:
 
     # Fixing wrong records
     if fix:
-        with Live(console=console) as live:
+        with Live() as live:
             for i, (_, r) in enumerate(wrong_records):
                 if t1 > t2:
                     r["t1"], r["t2"] = r["t2"], r["t1"]
@@ -92,4 +92,4 @@ def diagnose(fix: bool) -> None:
                     put_records([r])
                 live.update(render_table(i))
     else:
-        console.print(render_table())
+        print(render_table())

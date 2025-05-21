@@ -1,8 +1,8 @@
 import click
+from rich import print
 
 from better_timetagger_cli.lib.config import prepare_config_file
-from better_timetagger_cli.lib.rich_utils import console
-from better_timetagger_cli.lib.utils import open_file
+from better_timetagger_cli.lib.utils import edit_file
 
 
 @click.command()
@@ -18,5 +18,5 @@ def setup(editor: str | None) -> None:
     Edit the configuration file for the TimeTagger CLI.
     """
     filename = prepare_config_file()
-    console.print(f"Update the TimeTagger config file: [cyan]{filename}[/cyan]")
-    open_file(filename, editor=editor)
+    print(f"Update the TimeTagger config file: [cyan]{filename}[/cyan]")
+    edit_file(filename, editor=editor)
