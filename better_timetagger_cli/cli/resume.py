@@ -52,7 +52,7 @@ def resume(ctx: click.Context, tags: list[str], keep: bool, select: bool) -> Non
     t2 = int(tomorrow.timestamp())
 
     records = get_records(t1, t2)["records"]
-    records = [r for r in records if all(t in r["ds"] for t in tags) and "HIDDEN" not in r["ds"]]
+    records = [r for r in records if all(t in r["ds"] for t in tags)]
     records.sort(key=lambda r: r["t2"], reverse=True)
 
     if len(records) == 0:

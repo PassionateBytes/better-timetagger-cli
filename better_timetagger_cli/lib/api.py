@@ -52,7 +52,30 @@ def _request(
     return response.json()
 
 
-def get_records(start: int, end: int, include_partial_match: bool = True) -> GetRecordsResponse:
+def _normalize_records(records: list[Record]) -> list[Record]:
+    """
+    Ensure that all records have the required keys with expected types.
+
+    Args:
+        records: A list of records to normalize.
+
+    Returns:
+        A list of normalized records.
+    """
+    return [
+        {
+            "key": r.get("key", ""),
+            "mt": r.get("mt", 0),
+            "t1": r.get("t1", 0),
+            "t2": r.get("t2", 0),
+            "ds": r.get("ds", ""),
+            "st": r.get("st", 0),
+        }
+        for r in records
+    ]
+
+
+def get_records(start: int, end: int, include_partial_match: bool = True, include_hidden: bool = False) -> GetRecordsResponse:
     """
     Calls TimeTagger API using `GET /records?timerange={start}-{end}` and returns the response.
 
@@ -60,6 +83,7 @@ def get_records(start: int, end: int, include_partial_match: bool = True) -> Get
         start: The start timestamp to get records from.
         end: The end timestamp to get records until.
         include_partial: Whether to include partial matches, i.e. records that are not fully contained in the range. Defaults to True.
+        include_hidden: Whether to include hidden (i.e. deleted) records. Defaults to False.
 
     Returns:
         A dictionary containing the records from the API.
@@ -67,7 +91,10 @@ def get_records(start: int, end: int, include_partial_match: bool = True) -> Get
     timestamp_1 = min(start, end) if include_partial_match else max(start, end)
     timestamp_2 = max(start, end) if include_partial_match else min(start, end)
     response = _request("GET", f"records?timerange={timestamp_1}-{timestamp_2}")
+    response["records"] = _normalize_records(response["records"])
     response["records"].sort(key=lambda r: r["t1"], reverse=True)
+    if not include_hidden:
+        response["records"] = [r for r in response["records"] if not r["ds"].startswith("HIDDEN")]
     return cast(GetRecordsResponse, response)
 
 
@@ -128,18 +155,21 @@ def put_settings(settings: dict) -> PutSettingsResponse:
     return cast(PutSettingsResponse, response)
 
 
-def get_updates(since: int = 0) -> GetUpdatesResponse:
+def get_updates(since: int = 0, include_hidden: bool = False) -> GetUpdatesResponse:
     """
     Calls TimeTagger API using `GET /updates?since={since}` and returns the response.
 
     Args:
         since: The timestamp to get updates since. Defaults to 0. Should typically use the last call's `server_time` value.
+        include_hidden: Whether to include hidden (i.e. deleted) records. Defaults to False.
 
     Returns:
         A dictionary containing the updates from the API.
     """
     response = _request("GET", f"updates?since={since}")
     response["records"].sort(key=lambda r: r["t1"], reverse=True)
+    if not include_hidden:
+        response["records"] = [r for r in response["records"] if not r["ds"].startswith("HIDDEN")]
     return cast(GetRecordsResponse, response)
 
 

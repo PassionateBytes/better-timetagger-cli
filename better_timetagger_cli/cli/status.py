@@ -36,7 +36,6 @@ def status() -> None:
 
     # Collect records
     month_records = get_records(t_month1, t_month2)["records"]
-    month_records = [r for r in month_records if not r.get("ds", "").startswith("HIDDEN")]
     week_records = [r for r in month_records if r["t1"] < t_week2 and (r["t1"] == r["t2"] or r["t2"] > t_week1)]
     day_records = [r for r in week_records if r["t1"] < t_day2 and (r["t1"] == r["t2"] or r["t2"] > t_day1)]
     running_records = [r for r in week_records if r["t1"] == r["t2"]]
