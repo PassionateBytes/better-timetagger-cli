@@ -28,7 +28,11 @@ from better_timetagger_cli.lib.utils import generate_uid, print_records
     is_flag=True,
     help="Keep previous tasks running, do not stop them.",
 )
-@click.argument("tags", type=click.STRING, nargs=-1)
+@click.argument(
+    "tags",
+    type=click.STRING,
+    nargs=-1,
+)
 def start(tags: list[str], description: str, empty: bool, keep: bool) -> None:
     """
     Start time tracking.
