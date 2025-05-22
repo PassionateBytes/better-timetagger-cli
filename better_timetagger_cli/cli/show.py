@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import Literal
 
 import click
 import dateparser
@@ -47,7 +48,27 @@ from better_timetagger_cli.lib.utils import get_tag_stats, print_records, readab
     default=None,
     help="Show table only, disable summary.",
 )
-def show(start: str | None, end: str | None, days: int | None, summary: bool | None) -> None:
+@click.option(
+    "-x",
+    "--match",
+    "match",
+    type=click.Choice(["any", "all"]),
+    default="any",
+    help="Tag matching mode. Filter records that match [any] or [all] tags.",
+)
+@click.argument(
+    "tags",
+    type=click.STRING,
+    nargs=-1,
+)
+def show(
+    start: str | None,
+    end: str | None,
+    days: int | None,
+    summary: bool | None,
+    match: Literal["any", "all"],
+    tags: list[str],
+) -> None:
     """
     List tasks of the requested time frame.
 
@@ -56,6 +77,7 @@ def show(start: str | None, end: str | None, days: int | None, summary: bool | N
 
     Command aliases: 'report', 'display'
     """
+    tags = [t if t.startswith("#") else f"#{t}" for t in tags]
     if days is not None and (start is not None or end is not None):
         abort("Can not combine '--days' parameter with either '--start' or '--end'.")
 
@@ -75,6 +97,12 @@ def show(start: str | None, end: str | None, days: int | None, summary: bool | N
             abort("Could not parse '--end' date.")
 
     records = get_records(start_dt, end_dt)["records"]
+    if tags:
+        match_func = any if match == "any" else all
+        records = [r for r in records if match_func(tag in r["ds"] for tag in tags)]
+
+    if not records:
+        abort("No records.")
 
     if summary is not False:
         print_summary(records, start_dt, end_dt)
