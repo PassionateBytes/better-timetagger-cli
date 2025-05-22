@@ -10,7 +10,7 @@ from rich.table import Table
 from better_timetagger_cli.lib.api import get_records
 from better_timetagger_cli.lib.click_utils import abort
 from better_timetagger_cli.lib.types import Record
-from better_timetagger_cli.lib.utils import get_tag_stats, print_records, readable_date_time, readable_duration, total_time, unify_tags_callback
+from better_timetagger_cli.lib.utils import get_tag_stats, print_records, readable_duration, styled_padded, total_time, unify_tags_callback
 
 
 @click.command(("show", "report", "display"))
@@ -125,24 +125,27 @@ def print_summary(records: list[Record], start_dt: datetime, end_dt: datetime) -
     total = total_time(records, start_dt, end_dt)
     tag_stats = get_tag_stats(records)
 
-    first_record = min(r["t1"] for r in records) if records else None
-    running_record = next((datetime.now() for r in records if r["t1"] == r["t2"]), None)
-    if running_record:
-        last_record = None
-    else:
-        last_record = max(r["t2"] for r in records) if records else None
+    records_padding_length = max(len(str(len(records))), 5)
 
     table = Table(show_header=False, box=SIMPLE)
-    table.add_column(justify="right", style="cyan", no_wrap=True)
-    table.add_column(justify="left", style="magenta", no_wrap=True)
+    table.add_column(style="cyan", no_wrap=True)
+    table.add_column(style="magenta", no_wrap=True)
+    table.add_column(style="magenta", no_wrap=True)
 
-    table.add_row("Total:", readable_duration(total), style="bold")
-    table.add_row("First Record:", readable_date_time(first_record))
-    table.add_row("Last Record:", "Currently running" if running_record else readable_date_time(last_record))
+    table.add_row(
+        "Total:",
+        styled_padded(len(records), records_padding_length),
+        readable_duration(total),
+        style="bold",
+    )
 
     if tag_stats:
         table.add_section()
         for tag, (count, duration) in tag_stats.items():
-            table.add_row(f"[green]{tag}:[/green]", f"x{count} ({readable_duration(duration)})")
+            table.add_row(
+                f"[green]{tag}:[/green]",
+                styled_padded(count, records_padding_length),
+                readable_duration(duration),
+            )
 
     print(table)

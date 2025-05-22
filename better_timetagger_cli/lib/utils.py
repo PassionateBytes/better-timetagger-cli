@@ -29,7 +29,7 @@ def styled_padded(value: Any, width: int = 5, *, style: str = "magenta", padding
         return text
 
 
-def highlight_tags_in_description(description: str) -> Text:
+def highlight_tags_in_description(description: str, style: str = "underline") -> Text:
     """
     Highlight tags (marked by '#') in record descriptions.
 
@@ -43,7 +43,7 @@ def highlight_tags_in_description(description: str) -> Text:
     for word in description.split():
         if word.startswith("#"):
             text.append(" ")
-            text.append(word, style="bold underline")
+            text.append(word, style=style)
         else:
             text.append(f" {word}")
     return text
@@ -64,10 +64,10 @@ def print_records(
     now = int(time())
 
     table = Table(box=SIMPLE, min_width=65)
-    table.add_column("Started", justify="right", style="cyan", no_wrap=True)
-    table.add_column("Stopped", justify="left", style="cyan", no_wrap=True)
-    table.add_column("Duration", justify="left", style="green", no_wrap=True)
-    table.add_column("Description", justify="left", style="magenta", no_wrap=True)
+    table.add_column("Started", style="cyan", no_wrap=True)
+    table.add_column("Stopped", style="cyan", no_wrap=True)
+    table.add_column("Duration", style="bold magenta", no_wrap=True)
+    table.add_column("Description", style="green", no_wrap=True)
 
     for r in records:
         table.add_row(
