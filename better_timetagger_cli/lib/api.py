@@ -2,7 +2,7 @@ import json
 from collections.abc import Generator
 from datetime import datetime
 from time import sleep, time
-from typing import Literal, cast
+from typing import Literal, TypeVar, cast
 
 import click
 import requests
@@ -121,6 +121,7 @@ def get_records(
     tags_match: Literal["any", "all"] = "any",
     sort_by: Literal["t1", "t2", "st", "mt", "ds"] = "t2",
     sort_reverse: bool = True,
+    _skip_post_processing: bool = False,
 ) -> GetRecordsResponse:
     """
     Calls TimeTagger API using `GET /records?timerange={start}-{end}` and returns the response.
@@ -145,14 +146,15 @@ def get_records(
     t2 = max(start, end) if include_partial_match else min(start, end)
     response = _request("GET", f"records?timerange={t1}-{t2}")
 
-    response["records"] = _post_process_records(
-        response["records"],
-        include_hidden=include_hidden,
-        tags=tags,
-        tags_match=tags_match,
-        sort_by=sort_by,
-        sort_reverse=sort_reverse,
-    )
+    if not _skip_post_processing:
+        response["records"] = _post_process_records(
+            response["records"],
+            include_hidden=include_hidden,
+            tags=tags,
+            tags_match=tags_match,
+            sort_by=sort_by,
+            sort_reverse=sort_reverse,
+        )
 
     return cast(GetRecordsResponse, response)
 
@@ -182,8 +184,25 @@ def get_runnning_records(
     now = int(time())
     start = now - 60 * 60 * 24
     end = now + 60 * 60 * 24
-    response = get_records(start, end, tags=tags, tags_match=tags_match, sort_by=sort_by, sort_reverse=sort_reverse)
+
+    response = get_records(
+        start,
+        end,
+        tags=tags,
+        tags_match=tags_match,
+        sort_by=sort_by,
+        sort_reverse=sort_reverse,
+        _skip_post_processing=True,  # post-process after filtering
+    )
     response["records"] = [r for r in response["records"] if r["t1"] == r["t2"]]
+    response["records"] = _post_process_records(
+        response["records"],
+        include_hidden=False,
+        tags=tags,
+        tags_match=tags_match,
+        sort_by=sort_by,
+        sort_reverse=sort_reverse,
+    )
     return response
 
 
@@ -227,13 +246,14 @@ def put_settings(settings: dict) -> PutSettingsResponse:
 
 
 def get_updates(
-    since: int = 0,
+    since: int | datetime = 0,
     *,
     include_hidden: bool = False,
     tags: list[str] | None = None,
     tags_match: Literal["any", "all"] = "any",
     sort_by: Literal["t1", "t2", "st", "mt", "ds"] = "t2",
     sort_reverse: bool = True,
+    _skip_post_processing: bool = False,
 ) -> GetUpdatesResponse:
     """
     Calls TimeTagger API using `GET /updates?since={since}` and returns the response.
@@ -249,21 +269,61 @@ def get_updates(
     Returns:
         A dictionary containing the updates from the API.
     """
+    if isinstance(since, datetime):
+        since = int(since.timestamp())
+
     response = _request("GET", f"updates?since={since}")
 
-    response["records"] = _post_process_records(
-        response["records"],
-        include_hidden=include_hidden,
-        tags=tags,
-        tags_match=tags_match,
-        sort_by=sort_by,
-        sort_reverse=sort_reverse,
-    )
+    if not _skip_post_processing:
+        response["records"] = _post_process_records(
+            response["records"],
+            include_hidden=include_hidden,
+            tags=tags,
+            tags_match=tags_match,
+            sort_by=sort_by,
+            sort_reverse=sort_reverse,
+        )
 
-    return cast(GetRecordsResponse, response)
+    return cast(GetUpdatesResponse, response)
 
 
-def continuous_updates(since: int = 0, delay: int = 2) -> Generator[GetUpdatesResponse, None]:
+_T = TypeVar("_T", bound=Record | Settings)
+
+
+def _merge_by_key(
+    updated_data: list[_T],
+    original_data: list[_T],
+) -> list[_T]:
+    """
+    Merge two lists of records or settings by their keys.
+
+    Args:
+        updated_data: The updated data to merge.
+        original_data: The original data to merge with.
+
+    Returns:
+        A list of merged records or settings.
+    """
+    updates_key_map = {obj["key"]: obj for obj in updated_data}
+    merged_data = []
+    while original_data:
+        obj = original_data.pop(0)
+        updated_obj = updates_key_map.pop(obj["key"], obj)
+        merged_data.append(updated_obj)
+    merged_data.extend(updates_key_map.values())
+    return merged_data
+
+
+def continuous_updates(
+    since: int | datetime = 0,
+    *,
+    delay: int = 5,
+    include_hidden: bool = False,
+    tags: list[str] | None = None,
+    tags_match: Literal["any", "all"] = "any",
+    sort_by: Literal["t1", "t2", "st", "mt", "ds"] = "t2",
+    sort_reverse: bool = True,
+) -> Generator[GetUpdatesResponse, None]:
     """
     Generator that continually polls TimeTagger API using `GET /updates?since={since}`, using the last call's `server_time` value as the new `since` value.
 
@@ -272,13 +332,51 @@ def continuous_updates(since: int = 0, delay: int = 2) -> Generator[GetUpdatesRe
     Args:
         since: The timestamp to get updates since. Defaults to 0. Should typically use the last call's `server_time` value.
         delay: The minimul delay in seconds between requests. Defaults to 2 second.
+        include_hidden: Whether to include hidden (i.e. deleted) records. Defaults to False.
+        tags: A list of tags to filter records by. Defaults to None.
+        tags_match: The mode to match tags. Can be "any" or "all". Defaults to "any".
+        sort_by: The field to sort the records by. Can be "t1", "t2", "st", "mt", or "ds". Defaults to "t2".
+        sort_reverse: Whether to sort in reverse order. Defaults to True.
 
     Yields:
         A dictionary containing the updates from the API.
     """
+    response_cache: GetUpdatesResponse = {}
 
     while True:
-        response = get_updates(since)
-        since = response["server_time"]
-        yield response
+        updates = get_updates(
+            response_cache.get("server_time", since),
+            include_hidden=include_hidden,
+            tags=tags,
+            tags_match=tags_match,
+            sort_by=sort_by,
+            sort_reverse=sort_reverse,
+            _skip_post_processing=True,  # post-process after filtering
+        )
+
+        if updates["reset"]:
+            response_cache = updates
+
+        else:
+            response_cache["records"] = _merge_by_key(
+                updates.get("records", []),
+                response_cache.get("records", []),
+            )
+            response_cache["settings"] = _merge_by_key(
+                updates.get("settings", []),
+                response_cache.get("settings", []),
+            )
+            response_cache["server_time"] = updates.get("server_time", 0)
+            response_cache["reset"] = updates.get("reset", 0)
+
+        response_cache["records"] = _post_process_records(
+            response_cache.get("records", []),
+            include_hidden=include_hidden,
+            tags=tags,
+            tags_match=tags_match,
+            sort_by=sort_by,
+            sort_reverse=sort_reverse,
+        )
+
+        yield response_cache
         sleep(delay)

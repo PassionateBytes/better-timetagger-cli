@@ -49,17 +49,23 @@ def highlight_tags_in_description(description: str, style: str = "underline") ->
     return text
 
 
-def print_records(
+def render_records(
     records: list[Record] = (),
     *,
     started: Iterable[Record] = (),
     running: Iterable[Record] = (),
     stopped: Iterable[Record] = (),
-) -> None:
+) -> Table:
     """
-    Print records in a table format.
+    Create a renderable rich object to display records.
 
     Apply different styles based on the record status (started, running, stopped).
+
+    Args:
+        records: A list of records to display.
+        started: A list of records that are started.
+        running: A list of records that are running.
+        stopped: A list of records that are stopped.
     """
     now = int(time())
 
@@ -75,6 +81,7 @@ def print_records(
             readable_date_time(r["t2"]) if r["t1"] != r["t2"] else "...",
             readable_duration(r["t2"] - r["t1"]),
             highlight_tags_in_description(r["ds"]),
+            style="bold" if r["t1"] == r["t2"] else None,
         )
 
     for r in started:
@@ -104,7 +111,34 @@ def print_records(
             style="red",
         )
 
-    print(table)
+    return table
+
+
+def print_records(
+    records: list[Record] = (),
+    *,
+    started: Iterable[Record] = (),
+    running: Iterable[Record] = (),
+    stopped: Iterable[Record] = (),
+) -> Table:
+    """
+    Display records in a table format using rich.
+
+    Apply different styles based on the record status (started, running, stopped).
+
+    Args:
+        records: A list of records to display.
+        started: A list of records that are started.
+        running: A list of records that are running.
+        stopped: A list of records that are stopped.
+    """
+    output = render_records(
+        records,
+        started=started,
+        running=running,
+        stopped=stopped,
+    )
+    print(output)
 
 
 def get_record_duration(record: Record) -> int:
@@ -212,7 +246,7 @@ def get_config_dir(appname=None, roaming=False) -> str:
     return str(path)
 
 
-def total_time(records: list[Record], start: datetime, end: datetime) -> int:
+def total_time(records: list[Record], start: int | datetime, end: int | datetime) -> int:
     """
     Calculate the total time spent on records within a given time range.
 
@@ -225,13 +259,15 @@ def total_time(records: list[Record], start: datetime, end: datetime) -> int:
         The total time in seconds spent on the records within the time range.
     """
     total = 0
-    t_start = start.timestamp()
-    t_end = end.timestamp()
-    t_now = datetime.now().timestamp()
+    if isinstance(start, datetime):
+        start = start.timestamp()
+    if isinstance(end, datetime):
+        end = end.timestamp()
+    now = datetime.now().timestamp()
     for r in records:
         t1 = r["t1"]
-        t2 = r["t2"] if r["t1"] != r["t2"] else t_now
-        total += min(t_end, t2) - max(t_start, t1)
+        t2 = r["t2"] if r["t1"] != r["t2"] else now
+        total += min(end, t2) - max(start, t1)
     return total
 
 

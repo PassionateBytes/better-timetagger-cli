@@ -1,14 +1,15 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Literal
 
 import click
 import dateparser
 from rich import print
 from rich.box import SIMPLE
+from rich.console import Group
+from rich.live import Live
 from rich.table import Table
 
-from better_timetagger_cli.lib.api import get_records
-from better_timetagger_cli.lib.click_utils import abort
+from better_timetagger_cli.lib.api import continuous_updates, get_records
 from better_timetagger_cli.lib.types import Record
 from better_timetagger_cli.lib.utils import abort, get_tag_stats, readable_duration, render_records, styled_padded, total_time, unify_tags_callback
 
@@ -31,12 +32,6 @@ from better_timetagger_cli.lib.utils import abort, get_tag_stats, readable_durat
     "--end",
     type=click.STRING,
     help="Show records earlier than this time. Supports natural language.",
-)
-@click.option(
-    "-d",
-    "--days",
-    type=click.IntRange(min=1),
-    help="Number of recent days to display. Can not be used with '--start' or '--end'.",
 )
 @click.option(
     "-z",
@@ -62,65 +57,119 @@ from better_timetagger_cli.lib.utils import abort, get_tag_stats, readable_durat
     default="any",
     help="Tag matching mode. Filter records that match [any] or [all] tags.",
 )
+@click.option(
+    "-f",
+    "--follow",
+    is_flag=True,
+    help="Continuously monitor for changes and update the output in real time. If used with a relative '--start' time (like '2 hours ago'), the moniroted time frame will follow the current time.",
+)
 def show(
     tags: list[str],
     start: str | None,
     end: str | None,
-    days: int | None,
     summary: bool | None,
     tags_match: Literal["any", "all"],
+    follow: bool,
 ) -> None:
     """
     List tasks of the requested time frame.
 
-    The parameters '--start' and '--end' support natural language.
+    The parameters '--start' and '--end' support natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
 
     Command aliases: 'report', 'display'
     """
-    if days is not None and (start is not None or end is not None):
-        abort("Can not combine '--days' parameter with either '--start' or '--end'.")
+    start_dt, end_dt = parse_timeframe(start, end)
 
-    # 'days' mode
-    elif days is not None:
-        end_dt = datetime.now()
-        start_dt = end_dt - timedelta(days=days)
-        start_dt = start_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    if not follow:
+        records = get_records(
+            start_dt,
+            end_dt,
+            tags=tags,
+            tags_match=tags_match,
+        )["records"]
 
-    # 'start' and 'end' mode
+        if not records:
+            abort("No records found.")
+
+        output = render_output(summary, records, start_dt, end_dt)
+        print(output)
+
     else:
-        start_dt = dateparser.parse(start) if start is not None else datetime(2000, 1, 1)
-        end_dt = dateparser.parse(end) if end is not None else datetime(3000, 1, 1)
-        if start_dt is None:
-            abort("Could not parse '--start' date.")
-        if end_dt is None:
-            abort("Could not parse '--end' date.")
+        with Live() as live:
+            for update in continuous_updates(start_dt, tags=tags, tags_match=tags_match):
+                # Re-evaluate time frame and filter cached records accordingly to support "floating" time frames
+                start_dt, end_dt = parse_timeframe(start, end)
+                update["records"] = [r for r in update["records"] if start_dt.timestamp() <= r["t1"] or r["t1"] == r["t2"]]
 
-    records = get_records(
-        start_dt,
-        end_dt,
-        tags=tags,
-        tags_match=tags_match,
-    )["records"]
+                if update["records"]:
+                    output = render_output(summary, update["records"], start_dt, update["server_time"])
+                else:
+                    output = "\n[red]Waiting for records...[/red]\n"
 
-    if not records:
-        abort("No matching records.")
-
-    if summary is not False:
-        print_summary(records, start_dt, end_dt)
-
-    if summary is not True:
-        print_records(records)
+                live.update(output)
 
 
-def print_summary(records: list[Record], start_dt: datetime, end_dt: datetime) -> None:
+def parse_timeframe(
+    start: str | None,
+    end: str | None,
+) -> tuple[datetime, datetime]:
     """
-    Print a summary of the records.
+    Parse the time frame for the show command.
 
     Args:
-        records (list[Record]): List of records to summarize.
-        start_dt (datetime): Start date and time for the summary.
-        end_dt (datetime): End date and time for the summary.
+        start: Start date and time for the records.
+        end: End date and time for the records.
+
+    Returns:
+        A tuple containing the start and end date and time.
+    """
+    start_dt = dateparser.parse(start) if start is not None else datetime(2000, 1, 1)
+    end_dt = dateparser.parse(end) if end is not None else datetime(3000, 1, 1)
+
+    if start_dt is None:
+        abort("Could not parse '--start' date.")
+    if end_dt is None:
+        abort("Could not parse '--end' date.")
+
+    return start_dt, end_dt
+
+
+def render_output(summary: bool | None, records: list[Record], start_dt: datetime, end_dt: datetime) -> Group:
+    """
+    Render the output for the show command.
+
+    Args:
+        summary: Flag to indicate whether to show summary or not.
+        records: List of records to display.
+        start_dt: Start date and time for the records.
+        end_dt: End date and time for the records.
+
+    Returns:
+        A rich console group containing the rendered output.
+    """
+    renderables = []
+
+    if summary is not False:
+        renderables.append(render_summary(records, start_dt, end_dt))
+
+    if summary is not True:
+        renderables.append(render_records(records))
+
+    return Group(*renderables)
+
+
+def render_summary(records: list[Record], start_dt: datetime, end_dt: datetime) -> Table:
+    """
+    Use rich to render a summary of the records.
+
+    Args:
+        records: List of records to summarize.
+        start_dt: Start date and time for the summary.
+        end_dt: End date and time for the summary.
+
+    Returns:
+        Table: A rich table object containing the summary.
     """
     total = total_time(records, start_dt, end_dt)
     tag_stats = get_tag_stats(records)
@@ -148,4 +197,4 @@ def print_summary(records: list[Record], start_dt: datetime, end_dt: datetime) -
                 readable_duration(duration),
             )
 
-    print(table)
+    return table
