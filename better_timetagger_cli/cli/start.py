@@ -1,9 +1,11 @@
 from time import time
 
 import click
+import dateparser
 from rich import print
 
 from better_timetagger_cli.lib.api import get_runnning_records, put_records
+from better_timetagger_cli.lib.types import Record
 from better_timetagger_cli.lib.utils import abort, generate_uid, print_records, unify_tags_callback
 
 
@@ -13,6 +15,12 @@ from better_timetagger_cli.lib.utils import abort, generate_uid, print_records, 
     type=click.STRING,
     nargs=-1,
     callback=unify_tags_callback,
+)
+@click.option(
+    "-a",
+    "--at",
+    type=click.STRING,
+    help="Start the task at a specific time. Supports natural language.",
 )
 @click.option(
     "-d",
@@ -33,11 +41,14 @@ from better_timetagger_cli.lib.utils import abort, generate_uid, print_records, 
     is_flag=True,
     help="Keep previous tasks running, do not stop them.",
 )
-def start(tags: list[str], description: str, empty: bool, keep: bool) -> None:
+def start(tags: list[str], at: str | None, description: str, empty: bool, keep: bool) -> None:
     """
     Start time tracking.
 
     Provide one or more tags to label the task.
+
+    The '--at' parameter supports natural language to specify date and time.
+    You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
 
     Command aliases: 'check-in', 'in'
     """
@@ -47,10 +58,18 @@ def start(tags: list[str], description: str, empty: bool, keep: bool) -> None:
         abort("No tags or description provided. Use -e to start an empty task.")
 
     now = int(time())
-    new_record = {
+    if at:
+        at_dt = dateparser.parse(at)
+        if not at_dt:
+            abort("Could not parse '--at'.")
+        start_t = int(at_dt.timestamp())
+    else:
+        start_t = now
+
+    new_record: Record = {
         "key": generate_uid(),
-        "t1": now,
-        "t2": now,
+        "t1": start_t,
+        "t2": start_t,
         "mt": now,
         "st": 0,
         "ds": description,
@@ -64,7 +83,7 @@ def start(tags: list[str], description: str, empty: bool, keep: bool) -> None:
     else:
         for r in running_records:
             if r.get("ds", "") == description:
-                print("\n[red]Task with this description is already running.[/red]")
+                print("\n[red]Task with these tags and description is already running.[/red]")
                 print_records(running=running_records)
                 exit(1)
 

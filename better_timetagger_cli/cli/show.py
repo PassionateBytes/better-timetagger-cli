@@ -50,26 +50,26 @@ from better_timetagger_cli.lib.utils import abort, get_tag_stats, readable_durat
     help="Show table only, disable summary.",
 )
 @click.option(
+    "-f",
+    "--follow",
+    is_flag=True,
+    help="Continuously monitor for changes and update the output in real time. If used with a relative '--start' time (like '2 hours ago'), the moniroted time frame will follow the current time.",
+)
+@click.option(
     "-x",
     "--match",
     "tags_match",
     type=click.Choice(["any", "all"]),
     default="any",
-    help="Tag matching mode. Filter records that match [any] or [all] tags.",
-)
-@click.option(
-    "-f",
-    "--follow",
-    is_flag=True,
-    help="Continuously monitor for changes and update the output in real time. If used with a relative '--start' time (like '2 hours ago'), the moniroted time frame will follow the current time.",
+    help="Tag matching mode. Filter records that match any or all tags. Default: any.",
 )
 def show(
     tags: list[str],
     start: str | None,
     end: str | None,
     summary: bool | None,
-    tags_match: Literal["any", "all"],
     follow: bool,
+    tags_match: Literal["any", "all"],
 ) -> None:
     """
     List tasks of the requested time frame.
@@ -128,9 +128,9 @@ def parse_timeframe(
     end_dt = dateparser.parse(end) if end is not None else datetime(3000, 1, 1)
 
     if start_dt is None:
-        abort("Could not parse '--start' date.")
+        abort("Could not parse '--start'.")
     if end_dt is None:
-        abort("Could not parse '--end' date.")
+        abort("Could not parse '--end'.")
 
     return start_dt, end_dt
 
