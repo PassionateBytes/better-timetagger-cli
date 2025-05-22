@@ -17,13 +17,13 @@ from better_timetagger_cli.lib.utils import get_tag_stats, print_records, readab
     "-s",
     "--start",
     type=click.STRING,
-    help="Show records later than this time.",
+    help="Show records later than this time. Supports natural language.",
 )
 @click.option(
     "-e",
     "--end",
     type=click.STRING,
-    help="Show records earlier than this time.",
+    help="Show records earlier than this time. Supports natural language.",
 )
 @click.option(
     "-d",
@@ -51,8 +51,8 @@ def show(start: str | None, end: str | None, days: int | None, summary: bool | N
     """
     List tasks of the requested time frame.
 
-    The parameters '--start' and '--end' support natural language parsing.
-    You can use phrases like 'yesterday', 'May 11', '5 minutes ago', '2025-01-01 12:00', etc.
+    The parameters '--start' and '--end' support natural language.
+    You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
 
     Command aliases: 'report', 'display'
     """
