@@ -7,6 +7,7 @@ from .app import app
 from .diagnose import diagnose
 from .resume import resume
 from .setup import setup
+from .show import show
 from .start import start
 from .status import status
 from .stop import stop
@@ -46,6 +47,7 @@ cli.add_command(app)
 cli.add_command(diagnose)
 cli.add_command(resume)
 cli.add_command(setup)
+cli.add_command(show)
 cli.add_command(start)
 cli.add_command(status)
 cli.add_command(stop)
