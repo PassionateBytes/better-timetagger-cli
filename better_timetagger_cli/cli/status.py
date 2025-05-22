@@ -49,6 +49,8 @@ def status() -> None:
     day_tag_stats = get_tag_stats(day_records)
     running_tag_stats = get_tag_stats(running_records)
 
+    records_padding_length = max(len(str(len(month_records))), 5)
+
     # Report
     table = Table(show_header=False, box=SIMPLE)
     table.add_column(justify="right", style="cyan", no_wrap=True)
@@ -72,23 +74,23 @@ def status() -> None:
     table.add_section()
     table.add_row(
         "Records this month:",
-        styled_padded(len(month_records)),
+        styled_padded(len(month_records), records_padding_length),
         ", ".join(f"{tag} [dim]({count})[/dim]" for tag, (count, _) in month_tag_stats.items()),
     )
     table.add_row(
         "Records this week:",
-        styled_padded(len(week_records)),
+        styled_padded(len(week_records), records_padding_length),
         ", ".join(f"{tag} [dim]({count})[/dim]" for tag, (count, _) in week_tag_stats.items()),
     )
     table.add_row(
         "Records today:",
-        styled_padded(len(day_records)),
+        styled_padded(len(day_records), records_padding_length),
         ", ".join(f"{tag} [dim]({count})[/dim]" for tag, (count, _) in day_tag_stats.items()),
     )
     table.add_section()
     table.add_row(
         "Running:",
-        styled_padded(len(running_records)),
+        styled_padded(len(running_records), records_padding_length),
         ", ".join(list(running_tag_stats)),
     )
     print(table)
