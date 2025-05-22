@@ -48,12 +48,17 @@ def resume(ctx: click.Context, tags: list[str], keep: bool, select: bool) -> Non
     tomorrow = today + timedelta(days=1)
     last_month = today - timedelta(weeks=4)
 
-    records = get_records(last_month, tomorrow)["records"]
-    records = [r for r in records if all(t in r["ds"] for t in tags)]
-    records.sort(key=lambda r: r["t2"], reverse=True)
+    records = get_records(
+        last_month,
+        tomorrow,
+        tags=tags,
+        tags_match="all",
+        sort_by="t2",
+        sort_reverse=True,
+    )["records"]
 
-    if len(records) == 0:
-        abort("No matching records within the last week.")
+    if not records:
+        abort("No matching records within last 4 weeks.")
         return
 
     # Unless using 'select' mode, resume the most recent matching record

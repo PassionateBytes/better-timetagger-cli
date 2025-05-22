@@ -57,7 +57,7 @@ from better_timetagger_cli.lib.utils import get_tag_stats, print_records, readab
 @click.option(
     "-x",
     "--match",
-    "match",
+    "tags_match",
     type=click.Choice(["any", "all"]),
     default="any",
     help="Tag matching mode. Filter records that match [any] or [all] tags.",
@@ -68,7 +68,7 @@ def show(
     end: str | None,
     days: int | None,
     summary: bool | None,
-    match: Literal["any", "all"],
+    tags_match: Literal["any", "all"],
 ) -> None:
     """
     List tasks of the requested time frame.
@@ -96,13 +96,15 @@ def show(
         if end_dt is None:
             abort("Could not parse '--end' date.")
 
-    records = get_records(start_dt, end_dt)["records"]
-    if tags:
-        match_func = any if match == "any" else all
-        records = [r for r in records if match_func(tag in r["ds"] for tag in tags)]
+    records = get_records(
+        start_dt,
+        end_dt,
+        tags=tags,
+        tags_match=tags_match,
+    )["records"]
 
     if not records:
-        abort("No records.")
+        abort("No matching records.")
 
     if summary is not False:
         print_summary(records, start_dt, end_dt)
