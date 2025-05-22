@@ -5,7 +5,7 @@ import sys
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 from time import time
-from typing import Any
+from typing import Any, NoReturn
 
 import click
 from rich import print

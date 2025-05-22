@@ -49,7 +49,7 @@ def diagnose(fix: bool) -> None:
             suspicious_records.append((f"running for about {ndays} days", r))
 
     if not wrong_records and not suspicious_records:
-        print("\n[green]All records are valid.[/green]")
+        print("\n[green]All records are valid.[/green]\n")
         return
 
     def render_table(fixed_idx: int = -1) -> Table:

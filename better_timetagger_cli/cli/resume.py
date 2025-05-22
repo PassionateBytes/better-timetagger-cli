@@ -57,7 +57,7 @@ def resume(ctx: click.Context, tags: list[str], keep: bool, select: bool) -> Non
     )["records"]
 
     if not records:
-        abort("No matching records within last 4 weeks.")
+        abort("No records found within last 4 weeks.")
         return
 
     # Unless using 'select' mode, resume the most recent matching record
