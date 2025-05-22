@@ -9,7 +9,7 @@ from rich.table import Table
 
 from better_timetagger_cli.lib.api import get_records
 from better_timetagger_cli.lib.click_utils import abort
-from better_timetagger_cli.lib.utils import highlight_tags_in_description
+from better_timetagger_cli.lib.utils import highlight_tags_in_description, unify_tags_callback
 
 from .start import start
 
@@ -19,6 +19,7 @@ from .start import start
     "tags",
     type=click.STRING,
     nargs=-1,
+    callback=unify_tags_callback,
 )
 @click.option(
     "-k",
@@ -41,8 +42,6 @@ def resume(ctx: click.Context, tags: list[str], keep: bool, select: bool) -> Non
 
     Note that only records from the last 4 weeks are considered.
     """
-    tags = [t if t.startswith("#") else f"#{t}" for t in tags]
-
     now = int(time())
     now_dt = datetime.fromtimestamp(now)
     today = datetime(now_dt.year, now_dt.month, now_dt.day)

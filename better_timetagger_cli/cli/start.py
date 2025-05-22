@@ -5,10 +5,16 @@ from rich import print
 
 from better_timetagger_cli.lib.api import get_runnning_records, put_records
 from better_timetagger_cli.lib.click_utils import abort
-from better_timetagger_cli.lib.utils import generate_uid, print_records
+from better_timetagger_cli.lib.utils import generate_uid, print_records, unify_tags_callback
 
 
 @click.command(("start", "check-in", "in"))
+@click.argument(
+    "tags",
+    type=click.STRING,
+    nargs=-1,
+    callback=unify_tags_callback,
+)
 @click.option(
     "-d",
     "--description",
@@ -28,11 +34,6 @@ from better_timetagger_cli.lib.utils import generate_uid, print_records
     is_flag=True,
     help="Keep previous tasks running, do not stop them.",
 )
-@click.argument(
-    "tags",
-    type=click.STRING,
-    nargs=-1,
-)
 def start(tags: list[str], description: str, empty: bool, keep: bool) -> None:
     """
     Start time tracking.
@@ -41,7 +42,6 @@ def start(tags: list[str], description: str, empty: bool, keep: bool) -> None:
 
     Command aliases: 'check-in', 'in'
     """
-    tags = [t if t.startswith("#") else f"#{t}" for t in tags]
     description = f"{' '.join(tags)} {description}".strip()
 
     if not description and not empty:

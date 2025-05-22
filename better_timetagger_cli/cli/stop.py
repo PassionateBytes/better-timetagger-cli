@@ -4,7 +4,7 @@ import click
 
 from better_timetagger_cli.lib.api import get_runnning_records, put_records
 from better_timetagger_cli.lib.click_utils import abort
-from better_timetagger_cli.lib.utils import print_records
+from better_timetagger_cli.lib.utils import print_records, unify_tags_callback
 
 
 @click.command(("stop", "check-out", "out"))
@@ -12,6 +12,7 @@ from better_timetagger_cli.lib.utils import print_records
     "tags",
     type=click.STRING,
     nargs=-1,
+    callback=unify_tags_callback,
 )
 def stop(tags: list[str]) -> None:
     """
@@ -22,8 +23,6 @@ def stop(tags: list[str]) -> None:
 
     Command aliases: 'check-out', 'out'
     """
-    tags = [t if t.startswith("#") else f"#{t}" for t in tags]
-
     running_records = get_runnning_records()["records"]
     if not running_records:
         abort("No running records.")

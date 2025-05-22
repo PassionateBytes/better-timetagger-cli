@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from time import time
 from typing import Any
 
+import click
 from rich import print
 from rich.box import SIMPLE
 from rich.table import Table
@@ -294,3 +295,20 @@ def generate_uid(length: int = 8) -> str:
     """
     chars = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     return "".join([secrets.choice(chars) for i in range(length)])
+
+
+def unify_tags_callback(ctx: click.Context, param: click.Parameter, tags: list[str]) -> list[str]:
+    """
+    Click option callback to unify tags.
+
+    Ensure tags start with '#' and remove duplicates.
+
+    Args:
+        tags: A list of tags.
+
+    Returns:
+        A list of unique tags.
+    """
+    tags = [t if t.startswith("#") else f"#{t}" for t in tags]
+    tags = list(set(tags))
+    return tags
