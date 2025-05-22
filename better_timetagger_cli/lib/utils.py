@@ -183,13 +183,17 @@ def get_tag_stats(records: list[Record]) -> dict[str, tuple[int, int]]:
     return tag_stats
 
 
-def edit_file(path: str, editor: str | None = None) -> None:
+def open_in_editor(path: str, editor: str | None = None) -> None:
     """
-    Open a file in the system's default editor or a specified editor.
+    Open a file in the system's default editor, or a specified editor.
 
     Args:
         path: The path to the file to open.
         editor: The name or path of the editor executable. Default to system default.
+
+    See:
+        http://stackoverflow.com/a/72796/2271927
+        http://superuser.com/questions/38984/linux-equivalent-command-for-open-command-on-mac-windows
     """
     if editor:
         subprocess.call((editor, path))
@@ -200,17 +204,15 @@ def edit_file(path: str, editor: str | None = None) -> None:
 
     elif sys.platform.startswith("win"):
         if " " in path:
-            # see: http://stackoverflow.com/a/72796/2271927
             subprocess.call(("start", "", path), shell=True)
         else:
             subprocess.call(("start", path), shell=True)
 
     elif sys.platform.startswith("linux"):
         try:
-            # see: http://superuser.com/questions/38984/linux-equivalent-command-for-open-command-on-mac-windows
             subprocess.call(("xdg-open", path))
         except FileNotFoundError:
-            subprocess.call((os.getenv("EDITOR", "vi"), path))
+            subprocess.call((os.getenv("EDITOR", "nano"), path))
 
 
 def get_config_dir(appname=None, roaming=False) -> str:
