@@ -3,7 +3,7 @@ import secrets
 import subprocess
 import sys
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import time
 from typing import Any
 
@@ -70,15 +70,15 @@ def print_records(
 
     for r in records:
         table.add_row(
-            readable_time(r["t1"]),
-            readable_time(r["t2"]) if r["t1"] != r["t2"] else "...",
+            readable_date_time(r["t1"]),
+            readable_date_time(r["t2"]) if r["t1"] != r["t2"] else "...",
             readable_duration(r["t2"] - r["t1"]),
             highlight_tags_in_description(r["ds"]),
         )
 
     for r in started:
         table.add_row(
-            readable_time(now),
+            readable_date_time(now),
             "...",
             "...",
             highlight_tags_in_description(r["ds"]),
@@ -87,7 +87,7 @@ def print_records(
 
     for r in running:
         table.add_row(
-            readable_time(r["t1"]),
+            readable_date_time(r["t1"]),
             "...",
             readable_duration(now - r["t1"]),
             highlight_tags_in_description(r["ds"]),
@@ -96,8 +96,8 @@ def print_records(
 
     for r in stopped:
         table.add_row(
-            readable_time(r["t1"]),
-            readable_time(r["t2"]),
+            readable_date_time(r["t1"]),
+            readable_date_time(r["t2"]),
             readable_duration(r["t2"] - r["t1"]),
             highlight_tags_in_description(r["ds"]),
             style="red",
@@ -234,7 +234,7 @@ def total_time(records: list[Record], start: datetime, end: datetime) -> int:
     return total
 
 
-def readable_time(timestamp: int | float) -> str:
+def readable_date_time(timestamp: int | float | datetime) -> str:
     """
     Turn a timestamp into a readable string.
 
@@ -244,11 +244,14 @@ def readable_time(timestamp: int | float) -> str:
     Returns:
         A string representing the timestamp in 'YYYY-MM-DD HH:MM' format.
     """
-    value = datetime.fromtimestamp(timestamp)
+    if isinstance(timestamp, datetime):
+        value = timestamp
+    else:
+        value = datetime.fromtimestamp(timestamp)
     return f"{value:%Y-%m-%d %H:%M}"
 
 
-def readable_duration(duration: int | float) -> str:
+def readable_duration(duration: int | float | timedelta) -> str:
     """
     Turn a duration in seconds into a reabable string.
 
@@ -258,8 +261,21 @@ def readable_duration(duration: int | float) -> str:
     Returns:
         A string representing the duration in 'HH:MM' format.
     """
-    m = round(duration / 60)
-    return f"{m // 60:02.0f}:{m % 60:02.0f}"
+    if isinstance(duration, timedelta):
+        total_seconds = duration.total_seconds()
+    else:
+        total_seconds = duration
+
+    hours, remainder = divmod(total_seconds, 60 * 60)
+    minutes, _ = divmod(remainder, 60)
+
+    parts = []
+    if hours:
+        parts.append(f"{hours:.0f}h")
+
+    parts.append(f"{minutes:.0f}m")
+
+    return " ".join(parts)
 
 
 def generate_uid(length: int = 8) -> str:

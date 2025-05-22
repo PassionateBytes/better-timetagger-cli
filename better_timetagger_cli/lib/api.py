@@ -1,5 +1,6 @@
 import json
 from collections.abc import Generator
+from datetime import datetime
 from time import sleep, time
 from typing import Literal, cast
 
@@ -75,7 +76,7 @@ def _normalize_records(records: list[Record]) -> list[Record]:
     ]
 
 
-def get_records(start: int, end: int, include_partial_match: bool = True, include_hidden: bool = False) -> GetRecordsResponse:
+def get_records(start: int | datetime, end: int | datetime, include_partial_match: bool = True, include_hidden: bool = False) -> GetRecordsResponse:
     """
     Calls TimeTagger API using `GET /records?timerange={start}-{end}` and returns the response.
 
@@ -88,6 +89,11 @@ def get_records(start: int, end: int, include_partial_match: bool = True, includ
     Returns:
         A dictionary containing the records from the API.
     """
+    if isinstance(start, datetime):
+        start = int(start.timestamp())
+    if isinstance(end, datetime):
+        end = int(end.timestamp())
+
     timestamp_1 = min(start, end) if include_partial_match else max(start, end)
     timestamp_2 = max(start, end) if include_partial_match else min(start, end)
     response = _request("GET", f"records?timerange={timestamp_1}-{timestamp_2}")
