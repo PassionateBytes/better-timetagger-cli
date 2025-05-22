@@ -312,3 +312,14 @@ def unify_tags_callback(ctx: click.Context, param: click.Parameter, tags: list[s
     tags = [t if t.startswith("#") else f"#{t}" for t in tags]
     tags = list(set(tags))
     return tags
+
+
+def abort(message: str) -> NoReturn:
+    """
+    Abort the current command with a message.
+
+    Args:
+        message: The message to display before aborting.
+    """
+    print(f"\n[red]{message}[/red]\n")
+    exit(1)

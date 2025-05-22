@@ -3,8 +3,7 @@ from time import time
 import click
 
 from better_timetagger_cli.lib.api import get_runnning_records, put_records
-from better_timetagger_cli.lib.click_utils import abort
-from better_timetagger_cli.lib.utils import print_records, unify_tags_callback
+from better_timetagger_cli.lib.utils import abort, print_records, unify_tags_callback
 
 
 @click.command(("stop", "check-out", "out"))

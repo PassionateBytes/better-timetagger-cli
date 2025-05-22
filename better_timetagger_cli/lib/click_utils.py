@@ -1,8 +1,6 @@
 from collections.abc import Iterable
-from typing import NoReturn
 
 import click
-from rich import print
 
 
 class AliasedGroup(click.Group):
@@ -67,14 +65,3 @@ class AliasedGroup(click.Group):
             if first in self._alias_map:
                 args[0] = self._alias_map[first]
         return super().resolve_command(ctx, args)
-
-
-def abort(message: str) -> NoReturn:
-    """
-    Abort the current command with a message.
-
-    Args:
-        message: The message to display before aborting.
-    """
-    print(f"\n[red]{message}[/red]")
-    exit(1)

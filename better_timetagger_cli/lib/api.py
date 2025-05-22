@@ -7,7 +7,7 @@ from typing import Literal, cast
 import click
 import requests
 
-from better_timetagger_cli.lib.click_utils import abort
+from better_timetagger_cli.lib.utils import abort
 
 from .config import load_config
 from .types import GetRecordsResponse, GetSettingsResponse, GetUpdatesResponse, PutRecordsResponse, PutSettingsResponse, Record, Settings

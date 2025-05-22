@@ -4,8 +4,7 @@ import click
 from rich import print
 
 from better_timetagger_cli.lib.api import get_runnning_records, put_records
-from better_timetagger_cli.lib.click_utils import abort
-from better_timetagger_cli.lib.utils import generate_uid, print_records, unify_tags_callback
+from better_timetagger_cli.lib.utils import abort, generate_uid, print_records, unify_tags_callback
 
 
 @click.command(("start", "check-in", "in"))

@@ -8,8 +8,7 @@ from rich.prompt import IntPrompt
 from rich.table import Table
 
 from better_timetagger_cli.lib.api import get_records
-from better_timetagger_cli.lib.click_utils import abort
-from better_timetagger_cli.lib.utils import highlight_tags_in_description, unify_tags_callback
+from better_timetagger_cli.lib.utils import abort, highlight_tags_in_description, unify_tags_callback
 
 from .start import start
 

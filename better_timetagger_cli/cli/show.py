@@ -10,7 +10,7 @@ from rich.table import Table
 from better_timetagger_cli.lib.api import get_records
 from better_timetagger_cli.lib.click_utils import abort
 from better_timetagger_cli.lib.types import Record
-from better_timetagger_cli.lib.utils import get_tag_stats, print_records, readable_duration, styled_padded, total_time, unify_tags_callback
+from better_timetagger_cli.lib.utils import abort, get_tag_stats, readable_duration, render_records, styled_padded, total_time, unify_tags_callback
 
 
 @click.command(("show", "report", "display"))

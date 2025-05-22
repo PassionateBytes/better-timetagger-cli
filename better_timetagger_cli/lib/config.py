@@ -5,8 +5,7 @@ from typing import TypedDict
 import click
 import toml
 
-from .click_utils import abort
-from .utils import get_config_dir
+from .utils import abort, get_config_dir
 
 CONFIG_FILE_NAME = "config.toml"
 LEGACY_CONFIG_FILE_NAME = "config.txt"
