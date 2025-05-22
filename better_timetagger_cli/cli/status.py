@@ -31,11 +31,9 @@ def status() -> None:
     t_day2 = int(tomorrow.timestamp())
     t_week1 = int(last_monday.timestamp())
     t_week2 = int(next_monday.timestamp())
-    t_month1 = int(first_of_this_month.timestamp())
-    t_month2 = int(first_of_next_month.timestamp())
 
     # Collect records
-    month_records = get_records(t_month1, t_month2)["records"]
+    month_records = get_records(first_of_this_month, first_of_next_month)["records"]
     week_records = [r for r in month_records if r["t1"] < t_week2 and (r["t1"] == r["t2"] or r["t2"] > t_week1)]
     day_records = [r for r in week_records if r["t1"] < t_day2 and (r["t1"] == r["t2"] or r["t2"] > t_day1)]
     running_records = [r for r in week_records if r["t1"] == r["t2"]]

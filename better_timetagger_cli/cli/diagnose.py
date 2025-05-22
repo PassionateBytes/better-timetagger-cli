@@ -8,7 +8,7 @@ from rich.live import Live
 from rich.table import Table
 
 from better_timetagger_cli.lib.api import get_updates, put_records
-from better_timetagger_cli.lib.utils import readable_time
+from better_timetagger_cli.lib.utils import readable_date_time
 
 
 @click.command()
@@ -59,11 +59,11 @@ def diagnose(fix: bool) -> None:
         table.add_column(justify="left", style="green")
         for i, (prefix, r) in enumerate(wrong_records):
             if i <= fixed_idx:
-                table.add_row(f"{prefix}:", f"Record '{r['key']}' from {readable_time(r['t1'])} to {readable_time(r['t2'])}", "...fixed!")
+                table.add_row(f"{prefix}:", f"Record '{r['key']}' from {readable_date_time(r['t1'])} to {readable_date_time(r['t2'])}", "...fixed!")
             else:
-                table.add_row(f"{prefix}:", f"Record '{r['key']}' from {readable_time(r['t1'])} to {readable_time(r['t2'])}")
+                table.add_row(f"{prefix}:", f"Record '{r['key']}' from {readable_date_time(r['t1'])} to {readable_date_time(r['t2'])}")
         for prefix, r in suspicious_records:
-            table.add_row(f"[yellow]{prefix}:", f"Record '{r['key']}' from {readable_time(r['t1'])} to {readable_time(r['t2'])}")
+            table.add_row(f"[yellow]{prefix}:", f"Record '{r['key']}' from {readable_date_time(r['t1'])} to {readable_date_time(r['t2'])}")
         return table
 
     if fix:
