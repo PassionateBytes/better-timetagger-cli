@@ -8,6 +8,7 @@ from rich.table import Table
 
 from better_timetagger_cli.lib.api import get_records
 from better_timetagger_cli.lib.click_utils import abort
+from better_timetagger_cli.lib.types import Record
 from better_timetagger_cli.lib.utils import get_tag_stats, print_records, readable_date_time, readable_duration, total_time
 
 
@@ -30,7 +31,23 @@ from better_timetagger_cli.lib.utils import get_tag_stats, print_records, readab
     type=click.IntRange(min=1),
     help="Number of recent days to display. Can not be used with '--start' or '--end'.",
 )
-def show(start: str | None, end: str | None, days: int | None) -> None:
+@click.option(
+    "-z",
+    "--summary",
+    "summary",
+    flag_value=True,
+    default=None,
+    help="Show summary only, disable table.",
+)
+@click.option(
+    "-Z",
+    "--no-summary",
+    "summary",
+    flag_value=False,
+    default=None,
+    help="Show table only, disable summary.",
+)
+def show(start: str | None, end: str | None, days: int | None, summary: bool | None) -> None:
     """
     List tasks of the requested time frame.
 
@@ -59,7 +76,22 @@ def show(start: str | None, end: str | None, days: int | None) -> None:
 
     records = get_records(start_dt, end_dt)["records"]
 
-    # Report Summary
+    if summary is not False:
+        print_summary(records, start_dt, end_dt)
+
+    if summary is not True:
+        print_records(records)
+
+
+def print_summary(records: list[Record], start_dt: datetime, end_dt: datetime) -> None:
+    """
+    Print a summary of the records.
+
+    Args:
+        records (list[Record]): List of records to summarize.
+        start_dt (datetime): Start date and time for the summary.
+        end_dt (datetime): End date and time for the summary.
+    """
     total = total_time(records, start_dt, end_dt)
     tag_stats = get_tag_stats(records)
 
@@ -73,14 +105,14 @@ def show(start: str | None, end: str | None, days: int | None) -> None:
     table = Table(show_header=False, box=SIMPLE)
     table.add_column(justify="right", style="cyan", no_wrap=True)
     table.add_column(justify="left", style="magenta", no_wrap=True)
+
     table.add_row("Total:", readable_duration(total), style="bold")
     table.add_row("First Record:", readable_date_time(first_record))
     table.add_row("Last Record:", "Currently running" if running_record else readable_date_time(last_record))
+
     if tag_stats:
         table.add_section()
         for tag, (count, duration) in tag_stats.items():
             table.add_row(f"[green]{tag}:[/green]", f"x{count} ({readable_duration(duration)})")
-    print(table)
 
-    # Report Records
-    print_records(records)
+    print(table)
