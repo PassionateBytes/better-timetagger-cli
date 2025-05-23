@@ -329,9 +329,9 @@ def generate_uid(length: int = 8) -> str:
     return "".join([secrets.choice(chars) for i in range(length)])
 
 
-def unify_tags_callback(ctx: click.Context, param: click.Parameter, tags: list[str]) -> list[str]:
+def unify_tags_argument_callback(ctx: click.Context, param: click.Parameter, tags: list[str]) -> list[str]:
     """
-    Click option callback to unify tags.
+    Click argument callback to unify tags.
 
     Ensure tags start with '#' and remove duplicates.
 

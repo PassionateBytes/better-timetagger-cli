@@ -7,7 +7,7 @@ from rich.console import Group
 
 from better_timetagger_cli.lib.api import check_record_tags_match, get_runnning_records, put_records
 from better_timetagger_cli.lib.types import Record
-from better_timetagger_cli.lib.utils import abort, generate_uid, print_records, render_records, unify_tags_callback
+from better_timetagger_cli.lib.utils import abort, generate_uid, print_records, render_records, unify_tags_argument_callback
 
 
 @click.command(("start", "check-in", "in"))
@@ -15,7 +15,7 @@ from better_timetagger_cli.lib.utils import abort, generate_uid, print_records, 
     "tags",
     type=click.STRING,
     nargs=-1,
-    callback=unify_tags_callback,
+    callback=unify_tags_argument_callback,
 )
 @click.option(
     "-a",

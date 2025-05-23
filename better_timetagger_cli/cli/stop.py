@@ -5,7 +5,7 @@ import click
 
 from better_timetagger_cli.cli.start import parse_at
 from better_timetagger_cli.lib.api import check_record_tags_match, get_runnning_records, put_records
-from better_timetagger_cli.lib.utils import abort, print_records, unify_tags_callback
+from better_timetagger_cli.lib.utils import abort, print_records, unify_tags_argument_callback
 
 
 @click.command(("stop", "check-out", "out"))
@@ -13,7 +13,7 @@ from better_timetagger_cli.lib.utils import abort, print_records, unify_tags_cal
     "tags",
     type=click.STRING,
     nargs=-1,
-    callback=unify_tags_callback,
+    callback=unify_tags_argument_callback,
 )
 @click.option(
     "-a",

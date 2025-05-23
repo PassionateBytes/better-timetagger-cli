@@ -10,7 +10,7 @@ from rich.table import Table
 from rich.text import Text
 
 from better_timetagger_cli.lib.api import get_records
-from better_timetagger_cli.lib.utils import abort, highlight_tags_in_description, unify_tags_callback
+from better_timetagger_cli.lib.utils import abort, highlight_tags_in_description, unify_tags_argument_callback
 
 from .start import start
 
@@ -20,7 +20,7 @@ from .start import start
     "tags",
     type=click.STRING,
     nargs=-1,
-    callback=unify_tags_callback,
+    callback=unify_tags_argument_callback,
 )
 @click.option(
     "-k",
