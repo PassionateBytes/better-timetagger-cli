@@ -2,8 +2,10 @@
 # Utilities based on `rich` to render formatted output.
 """
 
+import re
+import sys
 from collections.abc import Iterable
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from rich import print
@@ -129,6 +131,40 @@ def render_records(
     return table
 
 
+def records_to_csv(records: Iterable[Record]) -> str:
+    """
+    Convert records to CSV.
+
+    This produces the same CSV format as the TimeTagger web app.
+
+    Args:
+        records: A list of records to convert.
+
+    Returns:
+        A string representing the records in CSV format.
+    """
+    header = ("key", "start", "stop", "tags", "description")
+    newline = "\n" if not sys.platform.startswith("win") else "\r\n"
+    separator = "\t"
+
+    lines = [
+        (
+            r.get("key", ""),
+            datetime.fromtimestamp(r.get("t1", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z"),
+            datetime.fromtimestamp(r.get("t2", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z"),
+            " ".join(get_tags_from_description(r.get("ds", ""))),
+            r.get("ds", ""),
+        )
+        for r in records
+    ]
+    lines = [header, *lines]
+
+    # - substitute unsafe whitespace
+    # - join fields with separator
+    # - join lines with newline
+    return newline.join(separator.join(re.sub(r"\s+", " ", str(field)) for field in line) for line in lines)
+
+
 def readable_date_time(timestamp: int | float | datetime) -> str:
     """
     Turn a timestamp into a readable string.
@@ -207,6 +243,19 @@ def styled_padded(value: Any, width: int = 5, *, style: str = "magenta", padding
         text.append(padding * len_padding, style=padding_style)
         text.append(value_str, style=style)
         return text
+
+
+def get_tags_from_description(description: str) -> list[str]:
+    """
+    Extract tags from a description string.
+
+    Args:
+        description: The description string.
+
+    Returns:
+        A list of tags extracted from the description.
+    """
+    return [word for word in description.split() if word.startswith("#")]
 
 
 def highlight_tags_in_description(description: str, style: str = "underline") -> Text:
