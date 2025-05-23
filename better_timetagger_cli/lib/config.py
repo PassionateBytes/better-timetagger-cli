@@ -6,27 +6,13 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Literal, TypedDict, cast, overload
+from typing import Literal, cast, overload
 from urllib.parse import urlparse, urlunparse
 
 import toml
 
 from .misc import abort
-
-
-class ConfigDict(TypedDict):
-    base_url: str
-    api_token: str
-    ssl_verify: bool | str
-    datetime_format: str
-    weekday_format: str
-
-
-class LegacyConfigDict(TypedDict):
-    api_url: str
-    api_token: str
-    ssl_verify: bool | str
-
+from .types import ConfigDict, LegacyConfigDict
 
 CONFIG_FILE = "config.toml"
 LEGACY_CONFIG_FILE = "config.txt"
@@ -116,25 +102,25 @@ def load_config(*, abort_on_error: bool = True, cache=True) -> ConfigDict | None
             config = toml.loads(f.read().decode())
 
         if "base_url" not in config or not config["base_url"]:
-            raise ValueError("Parameter 'base_url' not set. Run 'timetagger setup' to fix.")
+            raise ValueError("Parameter 'base_url' not set.")
         if not config["base_url"].startswith(("http://", "https://")):
-            raise ValueError("Parameter 'base_url' must start with 'http://' or 'https://'. Run 'timetagger setup' to fix.")
+            raise ValueError("Parameter 'base_url' must start with 'http://' or 'https://'.")
         if "api_token" not in config or not config["api_token"]:
-            raise ValueError("Parameter 'api_token' not set. Run 'timetagger setup' to fix.")
+            raise ValueError("Parameter 'api_token' not set.")
         if "ssl_verify" not in config or not config["ssl_verify"]:
             config |= {"ssl_verify": True}
         if "datetime_format" not in config:
-            raise ValueError("Parameter 'datetime_format' not set. Run 'timetagger setup' to fix.")
-        if validate_strftime_format(config["datetime_format"]):
-            raise ValueError("Parameter 'datetime_format' is invalid. Run 'timetagger setup' to fix.")
+            raise ValueError("Parameter 'datetime_format' not set.")
+        if not validate_strftime_format(config["datetime_format"]):
+            raise ValueError("Parameter 'datetime_format' is invalid.")
         if "weekday_format" not in config:
-            raise ValueError("Parameter 'weekday_format' not set. Run 'timetagger setup' to fix.")
-        if validate_strftime_format(config["weekday_format"]):
-            raise ValueError("Parameter 'weekday_format' is invalid. Run 'timetagger setup' to fix.")
+            raise ValueError("Parameter 'weekday_format' not set.")
+        if not validate_strftime_format(config["weekday_format"]):
+            raise ValueError("Parameter 'weekday_format' is invalid.")
 
     except Exception as e:
         if abort_on_error:
-            abort(f"Failed to load config file: {e.__class__.__name__}\n[dim]{e}[/dim]")
+            abort(f"Failed to load config file: {e.__class__.__name__}\n[dim]{e}\nRun 'timetagger setup' to fix.[/dim]")
         return None
 
     _CONFIG_CACHE = cast(ConfigDict, config)

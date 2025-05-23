@@ -7,7 +7,7 @@ import secrets
 from collections.abc import Generator
 from datetime import datetime
 from time import sleep
-from typing import Literal, TypedDict, cast
+from typing import Literal, cast
 
 import click
 import requests
@@ -15,77 +15,7 @@ import requests
 from .config import load_config
 from .misc import abort, now_timestamp
 from .records import merge_by_key, post_process_records
-
-
-class Record(TypedDict):
-    """
-    A TimeTagger record object
-    """
-
-    key: str
-    mt: int
-    t1: int
-    t2: int
-    ds: str
-    st: float
-
-
-class Settings(TypedDict):
-    """
-    A TimeTagger settings object
-    """
-
-    key: str
-    value: str
-    mt: int
-    st: float
-
-
-class GetRecordsResponse(TypedDict):
-    """
-    A response from the Timetagger API at `GET /records`
-    """
-
-    records: list[Record]
-
-
-class PutRecordsResponse(TypedDict):
-    """
-    A response from the Timetagger API at `PUT /records`
-    """
-
-    accepted: list[str]
-    failed: list[str]
-    errors: list[str]
-
-
-class GetSettingsResponse(TypedDict):
-    """
-    A response from the Timetagger API at `GET /settings`
-    """
-
-    settings: list[Settings]
-
-
-class PutSettingsResponse(TypedDict):
-    """
-    A response from the Timetagger API at `PUT /settings`
-    """
-
-    accepted: list[str]
-    failed: list[str]
-    errors: list[str]
-
-
-class GetUpdatesResponse(TypedDict):
-    """
-    A response from the Timetagger API at `GET /updates`
-    """
-
-    server_time: int
-    reset: int
-    records: list[Record]
-    settings: list[Settings]
+from .types import GetRecordsResponse, GetSettingsResponse, GetUpdatesResponse, PutRecordsResponse, PutSettingsResponse, Record, Settings
 
 
 def api_request(

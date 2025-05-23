@@ -9,9 +9,9 @@ from rich.table import Table
 from rich.text import Text
 
 from better_timetagger_cli.lib.api import get_records
-from better_timetagger_cli.lib.click import tags_callback
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import highlight_tags_in_description
+from better_timetagger_cli.lib.parsers import tags_callback
 
 from .start import start
 

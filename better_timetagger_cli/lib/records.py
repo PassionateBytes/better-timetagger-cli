@@ -5,8 +5,8 @@
 from datetime import datetime
 from typing import Literal, TypeVar
 
-from .api import Record, Settings
 from .misc import now_timestamp
+from .types import Record, Settings
 
 
 def get_total_time(records: list[Record], start: int | datetime, end: int | datetime) -> int:

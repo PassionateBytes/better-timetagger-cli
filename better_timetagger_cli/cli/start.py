@@ -1,13 +1,12 @@
 from typing import Literal
 
 import click
-import dateparser
 from rich.console import Group
 
 from better_timetagger_cli.lib.api import Record, create_record_key, get_runnning_records, put_records
-from better_timetagger_cli.lib.click import tags_callback
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import print_records, render_records
+from better_timetagger_cli.lib.parsers import parse_at, tags_callback
 from better_timetagger_cli.lib.records import check_record_tags_match
 
 
@@ -106,21 +105,3 @@ def start(tags: list[str], at: str | None, description: str, empty: bool, keep: 
 
     put_records([new_record, *stopped_records])
     print_records(started=[new_record], running=running_records, stopped=stopped_records, show_keys=show_keys)
-
-
-def parse_at(at: str | None) -> int | None:
-    """
-    Parse the 'at' parameter.
-
-    Args:
-        at: The 'at' parameter value.
-
-    Returns:
-        The parsed start time as a timestamp, or None if not provided.
-    """
-    if at:
-        at_dt = dateparser.parse(at)
-        if not at_dt:
-            abort("Could not parse '--at'.")
-        return int(at_dt.timestamp())
-    return None

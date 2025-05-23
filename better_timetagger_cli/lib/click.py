@@ -69,20 +69,3 @@ class AliasedGroup(click.Group):
             if first in self._alias_map:
                 args[0] = self._alias_map[first]
         return super().resolve_command(ctx, args)
-
-
-def tags_callback(ctx: click.Context, param: click.Parameter, tags: list[str]) -> list[str]:
-    """
-    Click argument callback to normalize tags.
-
-    Ensure tags start with '#' and remove duplicates.
-
-    Args:
-        tags: A list of tags.
-
-    Returns:
-        A list of unique tags.
-    """
-    tags = [t if t.startswith("#") else f"#{t}" for t in tags]
-    tags = list(set(tags))
-    return tags

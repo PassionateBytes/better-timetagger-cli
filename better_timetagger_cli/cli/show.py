@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import Literal
 
 import click
-import dateparser
 from rich import print
 from rich.box import SIMPLE
 from rich.console import Group
@@ -10,9 +9,9 @@ from rich.live import Live
 from rich.table import Table
 
 from better_timetagger_cli.lib.api import Record, continuous_updates, get_records
-from better_timetagger_cli.lib.click import tags_callback
 from better_timetagger_cli.lib.misc import abort
 from better_timetagger_cli.lib.output import readable_duration, render_records, styled_padded
+from better_timetagger_cli.lib.parsers import parse_start_end, tags_callback
 from better_timetagger_cli.lib.records import get_tag_stats, get_total_time
 
 
@@ -88,7 +87,7 @@ def show(
 
     Command aliases: 'show', 'report', 'display'
     """
-    start_dt, end_dt = parse_timeframe(start, end)
+    start_dt, end_dt = parse_start_end(start, end)
 
     # Regular one-time output
     if not follow:
@@ -110,38 +109,13 @@ def show(
         with Live(waiting_msg) as live:
             for update in continuous_updates(start_dt, tags=tags, tags_match=tags_match):
                 # Re-evaluate time frame and filter cached records accordingly to support "floating" time frames
-                start_dt, end_dt = parse_timeframe(start, end)
+                start_dt, end_dt = parse_start_end(start, end)
                 update["records"] = [r for r in update["records"] if start_dt.timestamp() <= r["t1"] or r["t1"] == r["t2"]]
 
                 if update["records"]:
                     live.update(render_output(summary, update["records"], start_dt, update["server_time"], show_keys))
                 else:
                     live.update(waiting_msg)
-
-
-def parse_timeframe(
-    start: str | None,
-    end: str | None,
-) -> tuple[datetime, datetime]:
-    """
-    Parse the time frame for the show command.
-
-    Args:
-        start: Start date and time for the records.
-        end: End date and time for the records.
-
-    Returns:
-        A tuple containing the start and end date and time.
-    """
-    start_dt = dateparser.parse(start) if start is not None else datetime(2000, 1, 1)
-    end_dt = dateparser.parse(end) if end is not None else datetime(3000, 1, 1)
-
-    if start_dt is None:
-        abort("Could not parse '--start'.")
-    if end_dt is None:
-        abort("Could not parse '--end'.")
-
-    return start_dt, end_dt
 
 
 def render_output(summary: bool | None, records: list[Record], start_dt: int | datetime, end_dt: int | datetime, show_keys: bool) -> Group:
