@@ -192,7 +192,6 @@ def render_summary(records: list[Record], start_dt: datetime, end_dt: datetime) 
     )
 
     if tag_stats:
-        table.add_section()
         for tag, (count, duration) in tag_stats.items():
             table.add_row(
                 f"[green]{tag}:[/green]",
