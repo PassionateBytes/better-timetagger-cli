@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import TypedDict
 from urllib.parse import urlparse, urlunparse
@@ -13,6 +14,8 @@ class ConfigDict(TypedDict):
     base_url: str
     api_token: str
     ssl_verify: bool | str
+    datetime_format: str
+    weekday_format: str
 
 
 class LegacyConfigDict(TypedDict):
@@ -46,41 +49,54 @@ api_token = "{api_token}"
 # ssl_verify = "path/to/certificate"  # -> path to self-signed certificate
 # ssl_verify = false  # -> disables SSL verification
 ssl_verify = {ssl_verify}  # -> enables SSL verification
+
+### DATE/TIME FORMAT
+# This format-string is used to render dates and times in the command line interface.
+# For more information, visit: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+# datetime_format = "%Y-%m-%dT%H:%M:%S"  # -> ISO 8601 format
+# datetime_format = "%d.%m.%Y %H:%M"  # -> European date with 24hr time
+# datetime_format = "%m/%d/%Y %I:%M %P"  # -> US-American date with 12hr am/pm time
+datetime_format = "{datetime_format}"  # -> Custom format with abbreviated month and custom styling
+
+### WEEKDAY FORMAT
+# This format-string is used to render weekdays in the command line interface.
+# For more information, visit: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
+# weekday_format = "%A"  # -> full weekday name
+weekday_format = "{weekday_format}"  # -> abbreviated weekday name
 """.lstrip().replace("\r\n", "\n")
 
 DEFAULT_CONFIG_VALUES: ConfigDict = {
     "base_url": "https://timetagger.io/timetagger/",
     "api_token": "<your api token>",
     "ssl_verify": "true",
+    "datetime_format": "%d-%b-%Y [bold]%H:%M[/bold]",
+    "weekday_format": "%a",
 }
 
 if sys.platform.startswith("win"):
     DEFAULT_CONFIG_TEMPLATE.replace("\n", "\r\n")
 
 
-def get_config_path(config_file: str) -> str:
-    """
-    Get the path to the config file.
-
-    Args:
-        config_file: The name of the config file.
-
-    Returns:
-        The path to the config file.
-    """
-    return os.path.join(get_config_dir(), "timetagger_cli", config_file)
+_CONFIG_CACHE: ConfigDict | None = None
 
 
-def load_config(*, abort_on_error: bool = True) -> ConfigDict:
+def load_config(*, abort_on_error: bool = True, cache=True) -> ConfigDict:
     """
     Load and validate the config from the filesystem.
 
+    Cache the configuration by default to avoid reloading it multiple times.
+
     Args:
         abort_on_error: Set to False to return None instead of aborting the program on loading errors.
+        cache: Set to False to force reloading the config file.
 
     Returns:
         The loaded configuration as a dictionary.
     """
+    global _CONFIG_CACHE
+    if cache and _CONFIG_CACHE is not None:
+        return _CONFIG_CACHE
+
     filepath = get_config_path(CONFIG_FILE)
 
     try:
@@ -88,20 +104,29 @@ def load_config(*, abort_on_error: bool = True) -> ConfigDict:
             config = toml.loads(f.read().decode())
 
         if "base_url" not in config or not config["base_url"]:
-            raise Exception("Parameter 'base_url' not set. Run 'timetagger setup' to fix.")
+            raise ValueError("Parameter 'base_url' not set. Run 'timetagger setup' to fix.")
         if not config["base_url"].startswith(("http://", "https://")):
-            raise Exception("Parameter 'base_url' must start with 'http://' or 'https://'. Run 'timetagger setup' to fix.")
+            raise ValueError("Parameter 'base_url' must start with 'http://' or 'https://'. Run 'timetagger setup' to fix.")
         if "api_token" not in config or not config["api_token"]:
-            raise Exception("Parameter 'api_token' not set. Run 'timetagger setup' to fix.")
+            raise ValueError("Parameter 'api_token' not set. Run 'timetagger setup' to fix.")
         if "ssl_verify" not in config or not config["ssl_verify"]:
             config |= {"ssl_verify": True}
-
-        return config
+        if "datetime_format" not in config:
+            raise ValueError("Parameter 'datetime_format' not set. Run 'timetagger setup' to fix.")
+        if validate_strftime_format(config["datetime_format"]):
+            raise ValueError("Parameter 'datetime_format' is invalid. Run 'timetagger setup' to fix.")
+        if "weekday_format" not in config:
+            raise ValueError("Parameter 'weekday_format' not set. Run 'timetagger setup' to fix.")
+        if validate_strftime_format(config["weekday_format"]):
+            raise ValueError("Parameter 'weekday_format' is invalid. Run 'timetagger setup' to fix.")
 
     except Exception as e:
         if abort_on_error:
             abort(f"Failed to load config file: {e.__class__.__name__}\n[dim]{e}[/dim]")
         return None
+
+    _CONFIG_CACHE = config
+    return config
 
 
 def load_legacy_config() -> LegacyConfigDict | None:
@@ -133,6 +158,23 @@ def load_legacy_config() -> LegacyConfigDict | None:
         return None
 
 
+def validate_strftime_format(format_string: str) -> bool:
+    """
+    Validate a strftime format string.
+
+    Args:
+        format_string: The format string to validate.
+
+    Returns:
+        True if the format string is valid, False otherwise.
+    """
+    try:
+        datetime.now().strftime(format_string)
+        return True
+    except (ValueError, TypeError):
+        return False
+
+
 def create_default_config() -> str:
     """
     Create a new configuration file.
@@ -150,9 +192,10 @@ def create_default_config() -> str:
             url_path = Path(url.path).parent.parent
             url = url._replace(path=str(url_path))
             config_values: ConfigDict = {
+                **DEFAULT_CONFIG_VALUES,
                 "base_url": urlunparse(url),
                 "api_token": legacy_config_values["api_token"],
-                "ssl_verify": legacy_config_values["ssl_verify"],
+                "ssl_verify": "true" if legacy_config_values["ssl_verify"] else "false",
             }
 
         else:
@@ -190,3 +233,16 @@ def ensure_config_file() -> str:
 
     os.chmod(filepath, 0o640)
     return filepath
+
+
+def get_config_path(config_file: str) -> str:
+    """
+    Get the path to the config file.
+
+    Args:
+        config_file: The name of the config file.
+
+    Returns:
+        The path to the config file.
+    """
+    return os.path.join(get_config_dir(), "timetagger_cli", config_file)

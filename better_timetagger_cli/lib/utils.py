@@ -13,6 +13,8 @@ from rich.box import SIMPLE
 from rich.table import Table
 from rich.text import Text
 
+from better_timetagger_cli.lib.config import load_config
+
 from .types import Record
 
 
@@ -298,11 +300,14 @@ def readable_date_time(timestamp: int | float | datetime) -> str:
     Returns:
         A string representing the timestamp in date and time format.
     """
+    config = load_config()
+
     if isinstance(timestamp, datetime):
         value = timestamp
     else:
         value = datetime.fromtimestamp(timestamp)
-    return f"{value:%d-%b-%Y} [bold]{value:%H:%M}[/bold]"
+
+    return value.strftime(config["datetime_format"])
 
 
 def readable_weekday(timestamp: int | float | datetime) -> str:
@@ -315,11 +320,14 @@ def readable_weekday(timestamp: int | float | datetime) -> str:
     Returns:
         A string representing the timestamp as weekday
     """
+    config = load_config()
+
     if isinstance(timestamp, datetime):
         value = timestamp
     else:
         value = datetime.fromtimestamp(timestamp)
-    return f"{value:%a}"
+
+    return value.strftime(config["weekday_format"])
 
 
 def readable_duration(duration: int | float | timedelta) -> str:
