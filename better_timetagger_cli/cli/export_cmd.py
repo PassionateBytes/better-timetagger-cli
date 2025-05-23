@@ -1,9 +1,9 @@
 from typing import Literal
 
 import click
-from rich import print
 
 from better_timetagger_cli.lib.api import get_records
+from better_timetagger_cli.lib.console import console
 from better_timetagger_cli.lib.misc import abort
 from better_timetagger_cli.lib.parsers import parse_start_end, tags_callback
 from better_timetagger_cli.lib.records import records_to_csv
@@ -78,4 +78,4 @@ def export_cmd(
     click.echo(csv, file=file)  # type: ignore[arg-type]
 
     if file is not None:
-        print(f"\n[green]Exported {len(records)} records to '{file.name}'.[/green]\n")
+        console.print(f"\n[green]Exported {len(records)} records to '{file.name}'.[/green]\n")

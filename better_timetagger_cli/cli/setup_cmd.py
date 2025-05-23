@@ -1,7 +1,7 @@
 import click
-from rich import print
 
 from better_timetagger_cli.lib.config import ensure_config_file
+from better_timetagger_cli.lib.console import console
 from better_timetagger_cli.lib.misc import open_in_editor
 
 
@@ -22,6 +22,6 @@ def setup_cmd(editor: str | None) -> None:
 
     filename = ensure_config_file()
 
-    print(f"\nTimeTagger config file: [cyan]{filename}[/cyan]\n")
+    console.print(f"\nTimeTagger config file: [cyan]{filename}[/cyan]\n")
 
     open_in_editor(filename, editor=editor)

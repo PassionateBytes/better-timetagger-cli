@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 
 import click
-from rich import print
 from rich.box import SIMPLE
 from rich.table import Table
 
 from better_timetagger_cli.lib.api import get_records
+from better_timetagger_cli.lib.console import console
 from better_timetagger_cli.lib.misc import now_timestamp
 from better_timetagger_cli.lib.output import readable_duration, styled_padded
 from better_timetagger_cli.lib.records import get_tag_stats, get_total_time
@@ -94,4 +94,4 @@ def status_cmd() -> None:
         styled_padded(len(running_records), records_padding_length),
         ", ".join(list(running_tag_stats)),
     )
-    print(table)
+    console.print(table)

@@ -2,13 +2,13 @@ from datetime import datetime
 from typing import Literal
 
 import click
-from rich import print
 from rich.box import SIMPLE
 from rich.console import Group
 from rich.live import Live
 from rich.table import Table
 
 from better_timetagger_cli.lib.api import continuous_updates, get_records
+from better_timetagger_cli.lib.console import console
 from better_timetagger_cli.lib.misc import abort
 from better_timetagger_cli.lib.output import readable_duration, render_records, styled_padded
 from better_timetagger_cli.lib.parsers import parse_start_end, tags_callback
@@ -105,7 +105,7 @@ def show_cmd(
         if not records:
             abort("No records found.")
 
-        print(render_output(summary, records, start_dt, end_dt, show_keys))
+        console.print(render_output(summary, records, start_dt, end_dt, show_keys))
 
     # In 'follow' mode, monitor continuously for changes
     else:

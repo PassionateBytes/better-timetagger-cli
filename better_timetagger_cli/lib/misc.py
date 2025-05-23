@@ -8,9 +8,10 @@ import sys
 from time import time
 from typing import NoReturn
 
-from rich import print
 from rich.abc import RichRenderable
 from rich.console import Group
+
+from .console import console
 
 
 def abort(message: str | RichRenderable | Group) -> NoReturn:
@@ -20,7 +21,7 @@ def abort(message: str | RichRenderable | Group) -> NoReturn:
     Args:
         message: The message to display before aborting.
     """
-    print(f"\n[red]{message}[/red]\n")
+    console.print(f"\n[red]{message}[/red]\n")
     exit(1)
 
 
@@ -56,7 +57,7 @@ def open_in_editor(path: str, editor: str | None = None) -> None:
             subprocess.call((os.getenv("EDITOR", "nano"), path))
 
     else:
-        print(f"\n[red]Unsupported platform: {sys.platform}. Please open the file manually.[/red]")
+        console.print(f"\n[red]Unsupported platform: {sys.platform}. Please open the file manually.[/red]")
 
 
 def now_timestamp() -> int:

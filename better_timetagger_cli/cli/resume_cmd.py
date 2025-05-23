@@ -2,13 +2,13 @@ from datetime import datetime, timedelta
 from typing import Literal
 
 import click
-from rich import print
 from rich.box import SIMPLE
 from rich.prompt import IntPrompt
 from rich.table import Table
 from rich.text import Text
 
 from better_timetagger_cli.lib.api import get_records
+from better_timetagger_cli.lib.console import console
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import highlight_tags_in_description
 from better_timetagger_cli.lib.parsers import tags_callback
@@ -102,7 +102,7 @@ def resume_cmd(
         for i, choice in enumerate(resume_description_choices):
             id = Text(f"[{i}]:", style="bold" if i <= 0 else "dim")
             table.add_row(id, highlight_tags_in_description(choice))
-        print(table)
+        console.print(table)
 
         # prompt for choice
         selected = None

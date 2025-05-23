@@ -2,12 +2,12 @@ import time
 from datetime import datetime, timedelta
 
 import click
-from rich import print
 from rich.box import SIMPLE
 from rich.live import Live
 from rich.table import Table
 
 from better_timetagger_cli.lib.api import get_updates, put_records
+from better_timetagger_cli.lib.console import console
 from better_timetagger_cli.lib.misc import abort
 from better_timetagger_cli.lib.output import readable_date_time
 from better_timetagger_cli.lib.types import Record
@@ -79,13 +79,13 @@ def diagnose_cmd(fix: bool) -> None:
 
     # all valid
     if not error_records and not warning_records:
-        print(f"\n[green]All {len(records)} records are valid.[/green]\n")
+        console.print(f"\n[green]All {len(records)} records are valid.[/green]\n")
         return
 
     # regular output
     if not fix:
         output = render_results(error_records, warning_records)
-        print(output)
+        console.print(output)
         return
 
     # when fixing errors, update live output as we go

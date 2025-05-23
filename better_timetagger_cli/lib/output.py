@@ -6,13 +6,13 @@ from collections.abc import Iterable
 from datetime import datetime, timedelta
 from typing import Any
 
-from rich import print
 from rich.box import SIMPLE
 from rich.table import Table
 from rich.text import Text
 
 from .api import Record
 from .config import load_config
+from .console import console
 from .misc import now_timestamp
 
 
@@ -43,7 +43,7 @@ def print_records(
         stopped=stopped,
         show_keys=show_keys,
     )
-    print(output)
+    console.print(output)
 
 
 def render_records(
