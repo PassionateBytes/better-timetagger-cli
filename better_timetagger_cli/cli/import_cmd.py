@@ -1,3 +1,4 @@
+import sys
 from typing import Literal, TextIO
 
 import click
@@ -67,6 +68,8 @@ def import_cmd(
     """
     start_dt, end_dt = parse_start_end(start, end)
     if file is None:
+        if sys.stdin.isatty():
+            abort("No input. Use '--file' or pipe data to stdin.")
         file = click.get_text_stream("stdin")
 
     records = records_from_csv(file)  # type: ignore[arg-type]
