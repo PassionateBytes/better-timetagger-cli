@@ -77,10 +77,11 @@ def show(
     The parameters '--start' and '--end' support natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
 
-    Command aliases: 'report', 'display'
+    Command aliases: 'show', 'report', 'display'
     """
     start_dt, end_dt = parse_timeframe(start, end)
 
+    # Regular one-time output
     if not follow:
         records = get_records(
             start_dt,
@@ -95,8 +96,10 @@ def show(
         output = render_output(summary, records, start_dt, end_dt)
         print(output)
 
+    # In 'follow' mode, monitor continuously for changes
     else:
-        with Live() as live:
+        waiting_msg = "\n[red]Waiting for records...[/red]\n"
+        with Live(waiting_msg) as live:
             for update in continuous_updates(start_dt, tags=tags, tags_match=tags_match):
                 # Re-evaluate time frame and filter cached records accordingly to support "floating" time frames
                 start_dt, end_dt = parse_timeframe(start, end)
@@ -105,7 +108,7 @@ def show(
                 if update["records"]:
                     output = render_output(summary, update["records"], start_dt, update["server_time"])
                 else:
-                    output = "\n[red]Waiting for records...[/red]\n"
+                    output = waiting_msg
 
                 live.update(output)
 
