@@ -41,7 +41,7 @@ from better_timetagger_cli.lib.records import records_to_csv
     default="any",
     help="Tag matching mode. Filter records that match any or all tags. Default: any.",
 )
-def export(
+def export_cmd(
     tags: list[str],
     start: str | None,
     end: str | None,

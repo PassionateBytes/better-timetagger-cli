@@ -70,7 +70,7 @@ from better_timetagger_cli.lib.records import get_tag_stats, get_total_time
     default="any",
     help="Tag matching mode. Filter records that match any or all tags. Default: any.",
 )
-def show(
+def show_cmd(
     tags: list[str],
     start: str | None,
     end: str | None,

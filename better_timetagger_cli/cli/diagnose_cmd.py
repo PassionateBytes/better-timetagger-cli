@@ -19,7 +19,7 @@ from better_timetagger_cli.lib.output import readable_date_time
     is_flag=True,
     help="Apply fixes to corrupt records.",
 )
-def diagnose(fix: bool) -> None:
+def diagnose_cmd(fix: bool) -> None:
     """
     Check all records for common errors and inconsistencies.
 

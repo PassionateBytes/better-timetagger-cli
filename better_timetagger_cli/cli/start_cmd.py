@@ -56,7 +56,7 @@ from better_timetagger_cli.lib.records import check_record_tags_match
     default="all",
     help="Tag matching mode. Filter records that match any or all tags. Default: all.",
 )
-def start(tags: list[str], at: str | None, description: str, empty: bool, keep: bool, show_keys: bool, tags_match: Literal["any", "all"]) -> None:
+def start_cmd(tags: list[str], at: str | None, description: str, empty: bool, keep: bool, show_keys: bool, tags_match: Literal["any", "all"]) -> None:
     """
     Start time tracking.
 

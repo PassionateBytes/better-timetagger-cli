@@ -3,15 +3,15 @@ import click
 from better_timetagger_cli import __version__
 from better_timetagger_cli.lib.click import AliasedGroup
 
-from .app import app
-from .diagnose import diagnose
-from .export import export
-from .resume import resume
-from .setup import setup
-from .show import show
-from .start import start
-from .status import status
-from .stop import stop
+from .app_cmd import app_cmd
+from .diagnose_cmd import diagnose_cmd
+from .export_cmd import export_cmd
+from .resume_cmd import resume_cmd
+from .setup_cmd import setup_cmd
+from .show_cmd import show_cmd
+from .start_cmd import start_cmd
+from .status_cmd import status_cmd
+from .stop_cmd import stop_cmd
 
 
 @click.group(
@@ -44,12 +44,12 @@ def cli(ctx: click.Context) -> None:
 
 
 # register cli commands
-cli.add_command(app)
-cli.add_command(diagnose)
-cli.add_command(export)
-cli.add_command(resume)
-cli.add_command(setup)
-cli.add_command(show)
-cli.add_command(start)
-cli.add_command(status)
-cli.add_command(stop)
+cli.add_command(app_cmd)
+cli.add_command(diagnose_cmd)
+cli.add_command(export_cmd)
+cli.add_command(resume_cmd)
+cli.add_command(setup_cmd)
+cli.add_command(show_cmd)
+cli.add_command(start_cmd)
+cli.add_command(status_cmd)
+cli.add_command(stop_cmd)

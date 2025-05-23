@@ -13,7 +13,7 @@ from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import highlight_tags_in_description
 from better_timetagger_cli.lib.parsers import tags_callback
 
-from .start import start
+from .start_cmd import start_cmd
 
 
 @click.command()
@@ -44,7 +44,7 @@ from .start import start
     help="Tag matching mode. Filter records that match any or all tags. Default: all.",
 )
 @click.pass_context
-def resume(
+def resume_cmd(
     ctx: click.Context,
     tags: list[str],
     keep: bool,
@@ -80,7 +80,7 @@ def resume(
     # Resume most recent record
     if not select or len(records) == 1:
         resume_description = records[0]["ds"].strip()
-        ctx.invoke(start, description=resume_description, keep=keep)
+        ctx.invoke(start_cmd, description=resume_description, keep=keep)
         return
 
     # In 'select' mode, provide choice of records to resume
@@ -115,4 +115,4 @@ def resume(
             )
 
         resume_description = resume_description_choices[int(selected)]
-        ctx.invoke(start, description=resume_description, keep=keep)
+        ctx.invoke(start_cmd, description=resume_description, keep=keep)

@@ -13,7 +13,7 @@ from better_timetagger_cli.lib.misc import open_in_editor
     default=None,
     help="The name or path of the editor you want to use. By default, the configuration file will be opened in the system's default editor.",
 )
-def setup(editor: str | None) -> None:
+def setup_cmd(editor: str | None) -> None:
     """
     Edit the configuration file for the TimeTagger CLI.
 
