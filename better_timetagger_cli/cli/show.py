@@ -56,6 +56,12 @@ from better_timetagger_cli.lib.utils import abort, get_tag_stats, readable_durat
     help="Continuously monitor for changes and update the output in real time. If used with a relative '--start' time (like '2 hours ago'), the moniroted time frame will follow the current time.",
 )
 @click.option(
+    "-v",
+    "--show-keys",
+    is_flag=True,
+    help="List each record's key.",
+)
+@click.option(
     "-x",
     "--match",
     "tags_match",
@@ -69,6 +75,7 @@ def show(
     end: str | None,
     summary: bool | None,
     follow: bool,
+    show_keys: bool,
     tags_match: Literal["any", "all"],
 ) -> None:
     """
@@ -93,7 +100,7 @@ def show(
         if not records:
             abort("No records found.")
 
-        output = render_output(summary, records, start_dt, end_dt)
+        output = render_output(summary, records, start_dt, end_dt, show_keys)
         print(output)
 
     # In 'follow' mode, monitor continuously for changes
@@ -106,7 +113,7 @@ def show(
                 update["records"] = [r for r in update["records"] if start_dt.timestamp() <= r["t1"] or r["t1"] == r["t2"]]
 
                 if update["records"]:
-                    output = render_output(summary, update["records"], start_dt, update["server_time"])
+                    output = render_output(summary, update["records"], start_dt, update["server_time"], show_keys)
                 else:
                     output = waiting_msg
 
@@ -138,7 +145,7 @@ def parse_timeframe(
     return start_dt, end_dt
 
 
-def render_output(summary: bool | None, records: list[Record], start_dt: datetime, end_dt: datetime) -> Group:
+def render_output(summary: bool | None, records: list[Record], start_dt: datetime, end_dt: datetime, show_keys: bool) -> Group:
     """
     Render the output for the show command.
 
@@ -147,6 +154,7 @@ def render_output(summary: bool | None, records: list[Record], start_dt: datetim
         records: List of records to display.
         start_dt: Start date and time for the records.
         end_dt: End date and time for the records.
+        show_keys: Flag to indicate whether to show record keys.
 
     Returns:
         A rich console group containing the rendered output.
@@ -157,7 +165,7 @@ def render_output(summary: bool | None, records: list[Record], start_dt: datetim
         renderables.append(render_summary(records, start_dt, end_dt))
 
     if summary is not True:
-        renderables.append(render_records(records))
+        renderables.append(render_records(records, show_keys=show_keys))
 
     return Group(*renderables)
 

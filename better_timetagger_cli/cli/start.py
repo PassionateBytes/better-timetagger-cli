@@ -43,6 +43,12 @@ from better_timetagger_cli.lib.utils import abort, generate_uid, print_records, 
     help="Keep previous tasks running, do not stop them.",
 )
 @click.option(
+    "-v",
+    "--show-keys",
+    is_flag=True,
+    help="List each record's key.",
+)
+@click.option(
     "-x",
     "--match",
     "tags_match",
@@ -50,7 +56,7 @@ from better_timetagger_cli.lib.utils import abort, generate_uid, print_records, 
     default="all",
     help="Tag matching mode. Filter records that match any or all tags. Default: all.",
 )
-def start(tags: list[str], at: str | None, description: str, empty: bool, keep: bool, tags_match: Literal["any", "all"]) -> None:
+def start(tags: list[str], at: str | None, description: str, empty: bool, keep: bool, show_keys: bool, tags_match: Literal["any", "all"]) -> None:
     """
     Start time tracking.
 
@@ -86,7 +92,7 @@ def start(tags: list[str], at: str | None, description: str, empty: bool, keep: 
             abort(
                 Group(
                     "\n[red]Task with these tags and description is already running.[/red]",
-                    render_records(running=running_records),
+                    render_records(running=running_records, show_keys=show_keys),
                 )
             )
 
@@ -98,7 +104,7 @@ def start(tags: list[str], at: str | None, description: str, empty: bool, keep: 
             running_records.remove(r)
 
     put_records([new_record, *stopped_records])
-    print_records(started=[new_record], running=running_records, stopped=stopped_records)
+    print_records(started=[new_record], running=running_records, stopped=stopped_records, show_keys=show_keys)
 
 
 def parse_at(at: str | None) -> int | None:

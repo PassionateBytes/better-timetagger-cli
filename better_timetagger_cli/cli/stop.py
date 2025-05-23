@@ -22,6 +22,12 @@ from better_timetagger_cli.lib.utils import abort, print_records, unify_tags_arg
     help="Stop the task at a specific time. Supports natural language.",
 )
 @click.option(
+    "-v",
+    "--show-keys",
+    is_flag=True,
+    help="List each record's key.",
+)
+@click.option(
     "-x",
     "--match",
     "tags_match",
@@ -29,7 +35,7 @@ from better_timetagger_cli.lib.utils import abort, print_records, unify_tags_arg
     default="all",
     help="Tag matching mode. Filter records that match any or all tags. Default: all.",
 )
-def stop(tags: list[str], at: str | None, tags_match: Literal["any", "all"]) -> None:
+def stop(tags: list[str], at: str | None, show_keys: bool, tags_match: Literal["any", "all"]) -> None:
     """
     Stop time tracking.
 
@@ -59,4 +65,4 @@ def stop(tags: list[str], at: str | None, tags_match: Literal["any", "all"]) -> 
             running_records.remove(r)
 
     put_records(stopped_records)
-    print_records(stopped=stopped_records, running=running_records)
+    print_records(stopped=stopped_records, running=running_records, show_keys=show_keys)

@@ -55,6 +55,7 @@ def render_records(
     started: Iterable[Record] = (),
     running: Iterable[Record] = (),
     stopped: Iterable[Record] = (),
+    show_keys: bool = False,
 ) -> Table:
     """
     Create a renderable rich object to display records.
@@ -66,18 +67,28 @@ def render_records(
         started: A list of records that are started.
         running: A list of records that are running.
         stopped: A list of records that are stopped.
+        show_key: If True, show the key of each record.
     """
     now = int(time())
 
     table = Table(box=SIMPLE, min_width=65)
+    if show_keys:
+        table.add_column("Key", style="blue", no_wrap=True)
     table.add_column(style="cyan", no_wrap=True)
     table.add_column("Started", style="cyan", no_wrap=True)
     table.add_column("Stopped", style="cyan", no_wrap=True)
     table.add_column("Duration", style="bold magenta", no_wrap=True)
     table.add_column("Description", style="green", no_wrap=True)
 
+    def _add_row(key: str, *args, **kwargs) -> None:
+        """Optionally include the 'key' column."""
+        if show_keys:
+            args = [key, *args]
+        table.add_row(*args, **kwargs)
+
     for r in records:
-        table.add_row(
+        _add_row(
+            r["key"],
             readable_weekday(r["t1"]),
             readable_date_time(r["t1"]),
             readable_date_time(r["t2"]) if r["t1"] != r["t2"] else "...",
@@ -86,7 +97,8 @@ def render_records(
         )
 
     for r in started:
-        table.add_row(
+        _add_row(
+            r["key"],
             readable_weekday(r["t1"]),
             readable_date_time(now),
             "...",
@@ -96,7 +108,8 @@ def render_records(
         )
 
     for r in running:
-        table.add_row(
+        _add_row(
+            r["key"],
             readable_weekday(r["t1"]),
             readable_date_time(r["t1"]),
             "...",
@@ -106,7 +119,8 @@ def render_records(
         )
 
     for r in stopped:
-        table.add_row(
+        _add_row(
+            r["key"],
             readable_weekday(r["t1"]),
             readable_date_time(r["t1"]),
             readable_date_time(r["t2"]),
@@ -124,6 +138,7 @@ def print_records(
     started: Iterable[Record] = (),
     running: Iterable[Record] = (),
     stopped: Iterable[Record] = (),
+    show_keys: bool = False,
 ) -> Table:
     """
     Display records in a table format using rich.
@@ -135,12 +150,14 @@ def print_records(
         started: A list of records that are started.
         running: A list of records that are running.
         stopped: A list of records that are stopped.
+        show_keys: If True, show the key of each record.
     """
     output = render_records(
         records,
         started=started,
         running=running,
         stopped=stopped,
+        show_keys=show_keys,
     )
     print(output)
 
