@@ -51,7 +51,7 @@ ssl_verify = {ssl_verify}  # -> enables SSL verification
 DEFAULT_CONFIG_VALUES: ConfigDict = {
     "base_url": "https://timetagger.io/timetagger/",
     "api_token": "<your api token>",
-    "ssl_verify": "True",
+    "ssl_verify": "true",
 }
 
 if sys.platform.startswith("win"):
@@ -133,10 +133,13 @@ def load_legacy_config() -> LegacyConfigDict | None:
         return None
 
 
-def create_default_config() -> None:
+def create_default_config() -> str:
     """
     Create a new configuration file.
     Grab default values from the legacy config file if possible. Otherwise, use the default values.
+
+    Returns:
+        The path to the configuration file.
     """
 
     # load legacy config values
@@ -166,6 +169,7 @@ def create_default_config() -> None:
         with open(filepath, "wb") as f:
             f.write(DEFAULT_CONFIG_TEMPLATE.format(**config_values).encode())
         os.chmod(filepath, 0o640)
+        return filepath
 
     except Exception as e:
         abort(f"Could not create default config file: {e.__class__.__name__}\n[dim]{e}[/dim]")
@@ -179,10 +183,10 @@ def ensure_config_file() -> str:
     Returns:
         The path to the configuration file.
     """
-    filepath = get_config_path(CONFIG_FILE)
-
     if not load_config(abort_on_error=False):
-        create_default_config(filepath)
+        filepath = create_default_config()
+    else:
+        filepath = get_config_path(CONFIG_FILE)
 
     os.chmod(filepath, 0o640)
     return filepath
