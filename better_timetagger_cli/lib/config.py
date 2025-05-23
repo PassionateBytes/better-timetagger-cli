@@ -1,6 +1,6 @@
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 from typing import TypedDict
 from urllib.parse import urlparse, urlunparse
 
@@ -68,7 +68,7 @@ def get_config_path(config_file: str) -> str:
     Returns:
         The path to the config file.
     """
-    return os.path.join(get_config_dir("timetagger_cli"), "timetagger_cli", config_file)
+    return os.path.join(get_config_dir(), "timetagger_cli", config_file)
 
 
 def load_config(*, abort_on_error: bool = True) -> ConfigDict:

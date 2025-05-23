@@ -215,12 +215,11 @@ def open_in_editor(path: str, editor: str | None = None) -> None:
             subprocess.call((os.getenv("EDITOR", "nano"), path))
 
 
-def get_config_dir(appname=None, roaming=False) -> str:
+def get_config_dir(roaming=False) -> str:
     """
     Get the directory to store app config files.
 
     Args:
-        appname: The name of the application subdirectory.
         roaming: If True, use roaming profile on Windows.
 
     Returns:
@@ -239,11 +238,6 @@ def get_config_dir(appname=None, roaming=False) -> str:
 
     if not (path and os.path.isdir(path)):
         path = os.path.expanduser("~")
-
-    if appname:
-        path = os.path.join(path, appname)
-        if not os.path.isdir(path):
-            os.makedirs(path, exist_ok=True)
 
     return str(path)
 
