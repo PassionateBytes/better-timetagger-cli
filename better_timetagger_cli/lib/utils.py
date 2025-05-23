@@ -70,6 +70,7 @@ def render_records(
     now = int(time())
 
     table = Table(box=SIMPLE, min_width=65)
+    table.add_column(style="cyan", no_wrap=True)
     table.add_column("Started", style="cyan", no_wrap=True)
     table.add_column("Stopped", style="cyan", no_wrap=True)
     table.add_column("Duration", style="bold magenta", no_wrap=True)
@@ -77,15 +78,16 @@ def render_records(
 
     for r in records:
         table.add_row(
+            readable_weekday(r["t1"]),
             readable_date_time(r["t1"]),
             readable_date_time(r["t2"]) if r["t1"] != r["t2"] else "...",
             readable_duration(r["t2"] - r["t1"]),
             highlight_tags_in_description(r["ds"]),
-            style="bold" if r["t1"] == r["t2"] else None,
         )
 
     for r in started:
         table.add_row(
+            readable_weekday(r["t1"]),
             readable_date_time(now),
             "...",
             "...",
@@ -95,6 +97,7 @@ def render_records(
 
     for r in running:
         table.add_row(
+            readable_weekday(r["t1"]),
             readable_date_time(r["t1"]),
             "...",
             readable_duration(now - r["t1"]),
@@ -104,6 +107,7 @@ def render_records(
 
     for r in stopped:
         table.add_row(
+            readable_weekday(r["t1"]),
             readable_date_time(r["t1"]),
             readable_date_time(r["t2"]),
             readable_duration(r["t2"] - r["t1"]),
@@ -275,13 +279,30 @@ def readable_date_time(timestamp: int | float | datetime) -> str:
         timestamp: The timestamp to convert.
 
     Returns:
-        A string representing the timestamp in 'YYYY-MM-DD HH:MM' format.
+        A string representing the timestamp in date and time format.
     """
     if isinstance(timestamp, datetime):
         value = timestamp
     else:
         value = datetime.fromtimestamp(timestamp)
-    return f"{value:%Y-%m-%d %H:%M}"
+    return f"{value:%d-%b-%Y} [bold]{value:%H:%M}[/bold]"
+
+
+def readable_weekday(timestamp: int | float | datetime) -> str:
+    """
+    Turn a timestamp into a readable string.
+
+    Args:
+        timestamp: The timestamp to convert.
+
+    Returns:
+        A string representing the timestamp as weekday
+    """
+    if isinstance(timestamp, datetime):
+        value = timestamp
+    else:
+        value = datetime.fromtimestamp(timestamp)
+    return f"{value:%a}"
 
 
 def readable_duration(duration: int | float | timedelta) -> str:
