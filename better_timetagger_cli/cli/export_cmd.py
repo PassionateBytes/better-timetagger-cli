@@ -1,6 +1,7 @@
 from typing import Literal
 
 import click
+from rich import print
 
 from better_timetagger_cli.lib.api import get_records
 from better_timetagger_cli.lib.misc import abort
@@ -18,6 +19,7 @@ from better_timetagger_cli.lib.records import records_to_csv
 @click.option(
     "-o",
     "--output",
+    "file",
     type=click.File("w"),
     help="Output file. If not specified, output to stdout.",
 )
@@ -43,7 +45,7 @@ from better_timetagger_cli.lib.records import records_to_csv
 )
 def export_cmd(
     tags: list[str],
-    output: click.File | None,
+    file: click.File | None,
     start: str | None,
     end: str | None,
     tags_match: Literal["any", "all"],
@@ -73,4 +75,7 @@ def export_cmd(
 
     csv = records_to_csv(records)
 
-    click.echo(csv, file=output)  # type: ignore[arg-type]
+    click.echo(csv, file=file)  # type: ignore[arg-type]
+
+    if file is not None:
+        print(f"\n[green]Exported {len(records)} records to '{file.name}'.[/green]\n")
