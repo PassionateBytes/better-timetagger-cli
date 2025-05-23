@@ -1,21 +1,22 @@
-from time import time
 from typing import Literal
 
 import click
 import dateparser
 from rich.console import Group
 
-from better_timetagger_cli.lib.api import check_record_tags_match, get_runnning_records, put_records
-from better_timetagger_cli.lib.types import Record
-from better_timetagger_cli.lib.utils import abort, generate_uid, print_records, render_records, unify_tags_argument_callback
+from better_timetagger_cli.lib.api import Record, create_record_key, get_runnning_records, put_records
+from better_timetagger_cli.lib.click import tags_callback
+from better_timetagger_cli.lib.misc import abort, now_timestamp
+from better_timetagger_cli.lib.output import print_records, render_records
+from better_timetagger_cli.lib.records import check_record_tags_match
 
 
-@click.command(("start", "check-in", "in"))
+@click.command(("start", "check-in", "in"))  # type: ignore[call-overload]
 @click.argument(
     "tags",
     type=click.STRING,
     nargs=-1,
-    callback=unify_tags_argument_callback,
+    callback=tags_callback,
 )
 @click.option(
     "-a",
@@ -72,10 +73,10 @@ def start(tags: list[str], at: str | None, description: str, empty: bool, keep: 
     if not description and not empty:
         abort("No tags or description provided. Use '--empty' to start a task without tags or description.")
 
-    now = int(time())
+    now = now_timestamp()
     start_t = parse_at(at) or now
     new_record: Record = {
-        "key": generate_uid(),
+        "key": create_record_key(),
         "t1": start_t,
         "t2": start_t,
         "mt": now,
@@ -88,7 +89,7 @@ def start(tags: list[str], at: str | None, description: str, empty: bool, keep: 
 
     for r in running_records.copy():
         # Avoid starting duplicate task
-        if r.get["ds"] == description:
+        if r["ds"] == description:
             abort(
                 Group(
                     "\n[red]Task with these tags and description is already running.[/red]",

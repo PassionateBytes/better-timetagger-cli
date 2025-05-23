@@ -1,13 +1,17 @@
+"""
+# Utilities load and interact with the configuration file.
+"""
+
 import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import TypedDict
+from typing import Literal, TypedDict, cast, overload
 from urllib.parse import urlparse, urlunparse
 
 import toml
 
-from .utils import abort, get_config_dir
+from .misc import abort
 
 
 class ConfigDict(TypedDict):
@@ -80,7 +84,15 @@ if sys.platform.startswith("win"):
 _CONFIG_CACHE: ConfigDict | None = None
 
 
-def load_config(*, abort_on_error: bool = True, cache=True) -> ConfigDict:
+@overload
+def load_config(*, abort_on_error: Literal[True] = True, cache: bool = True) -> ConfigDict: ...
+
+
+@overload
+def load_config(*, abort_on_error: Literal[False] = False, cache: bool = True) -> ConfigDict | None: ...
+
+
+def load_config(*, abort_on_error: bool = True, cache=True) -> ConfigDict | None:
     """
     Load and validate the config from the filesystem.
 
@@ -125,8 +137,8 @@ def load_config(*, abort_on_error: bool = True, cache=True) -> ConfigDict:
             abort(f"Failed to load config file: {e.__class__.__name__}\n[dim]{e}[/dim]")
         return None
 
-    _CONFIG_CACHE = config
-    return config
+    _CONFIG_CACHE = cast(ConfigDict, config)
+    return cast(ConfigDict, config)
 
 
 def load_legacy_config() -> LegacyConfigDict | None:
@@ -152,10 +164,10 @@ def load_legacy_config() -> LegacyConfigDict | None:
         if "ssl_verify" not in config or not config["ssl_verify"]:
             config |= {"ssl_verify": True}
 
-        return config
-
     except Exception:
         return None
+
+    return cast(LegacyConfigDict, config)
 
 
 def validate_strftime_format(format_string: str) -> bool:
@@ -246,3 +258,30 @@ def get_config_path(config_file: str) -> str:
         The path to the config file.
     """
     return os.path.join(get_config_dir(), "timetagger_cli", config_file)
+
+
+def get_config_dir(roaming=False) -> str:
+    """
+    Get the directory to store app config files.
+
+    Args:
+        roaming: If True, use roaming profile on Windows.
+
+    Returns:
+        The path to the config directory.
+    """
+    if sys.platform.startswith("darwin"):
+        path = os.path.expanduser("~/Library/Preferences/")
+
+    elif sys.platform.startswith("win"):
+        path1, path2 = os.getenv("LOCALAPPDATA"), os.getenv("APPDATA")
+        path = (path2 or path1) if roaming else (path1 or path2)
+        path = os.path.normpath(path)
+
+    else:
+        path = os.getenv("XDG_CONFIG_HOME", os.path.expanduser("~/.config"))
+
+    if not (path and os.path.isdir(path)):
+        path = os.path.expanduser("~")
+
+    return str(path)

@@ -2,10 +2,10 @@ import click
 from rich import print
 
 from better_timetagger_cli.lib.config import ensure_config_file
-from better_timetagger_cli.lib.utils import open_in_editor
+from better_timetagger_cli.lib.misc import open_in_editor
 
 
-@click.command(("setup", "configure"))
+@click.command(("setup", "configure"))  # type: ignore[call-overload]
 @click.option(
     "-e",
     "--editor",

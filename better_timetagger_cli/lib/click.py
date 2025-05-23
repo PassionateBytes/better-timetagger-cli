@@ -1,3 +1,7 @@
+"""
+# Utilities based on `click` for the CLI framework.
+"""
+
 from collections.abc import Iterable
 
 import click
@@ -12,7 +16,7 @@ class AliasedGroup(click.Group):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self._alias_map = {}
+        self._alias_map: dict[str, str] = {}
 
     def add_command(self, cmd, name=None):
         # Get all names (primary + aliases)
@@ -56,7 +60,7 @@ class AliasedGroup(click.Group):
             return None
         elif len(matches) == 1:
             return click.Group.get_command(self, ctx, matches[0])
-        ctx.fail(f"Ambiguous command. Choose either of: {', '.join(sorted(matches))}")
+        return ctx.fail(f"Ambiguous command. Choose either of: {', '.join(sorted(matches))}")
 
     def resolve_command(self, ctx, args) -> tuple[str | None, click.Command | None, list[str]]:
         # Resolve alias before handing off
@@ -65,3 +69,20 @@ class AliasedGroup(click.Group):
             if first in self._alias_map:
                 args[0] = self._alias_map[first]
         return super().resolve_command(ctx, args)
+
+
+def tags_callback(ctx: click.Context, param: click.Parameter, tags: list[str]) -> list[str]:
+    """
+    Click argument callback to normalize tags.
+
+    Ensure tags start with '#' and remove duplicates.
+
+    Args:
+        tags: A list of tags.
+
+    Returns:
+        A list of unique tags.
+    """
+    tags = [t if t.startswith("#") else f"#{t}" for t in tags]
+    tags = list(set(tags))
+    return tags

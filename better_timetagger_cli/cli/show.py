@@ -9,17 +9,19 @@ from rich.console import Group
 from rich.live import Live
 from rich.table import Table
 
-from better_timetagger_cli.lib.api import continuous_updates, get_records
-from better_timetagger_cli.lib.types import Record
-from better_timetagger_cli.lib.utils import abort, get_tag_stats, readable_duration, render_records, styled_padded, total_time, unify_tags_argument_callback
+from better_timetagger_cli.lib.api import Record, continuous_updates, get_records
+from better_timetagger_cli.lib.click import tags_callback
+from better_timetagger_cli.lib.misc import abort
+from better_timetagger_cli.lib.output import readable_duration, render_records, styled_padded
+from better_timetagger_cli.lib.records import get_tag_stats, get_total_time
 
 
-@click.command(("show", "report", "display"))
+@click.command(("show", "report", "display"))  # type: ignore[call-overload]
 @click.argument(
     "tags",
     type=click.STRING,
     nargs=-1,
-    callback=unify_tags_argument_callback,
+    callback=tags_callback,
 )
 @click.option(
     "-s",
@@ -100,8 +102,7 @@ def show(
         if not records:
             abort("No records found.")
 
-        output = render_output(summary, records, start_dt, end_dt, show_keys)
-        print(output)
+        print(render_output(summary, records, start_dt, end_dt, show_keys))
 
     # In 'follow' mode, monitor continuously for changes
     else:
@@ -113,11 +114,9 @@ def show(
                 update["records"] = [r for r in update["records"] if start_dt.timestamp() <= r["t1"] or r["t1"] == r["t2"]]
 
                 if update["records"]:
-                    output = render_output(summary, update["records"], start_dt, update["server_time"], show_keys)
+                    live.update(render_output(summary, update["records"], start_dt, update["server_time"], show_keys))
                 else:
-                    output = waiting_msg
-
-                live.update(output)
+                    live.update(waiting_msg)
 
 
 def parse_timeframe(
@@ -145,7 +144,7 @@ def parse_timeframe(
     return start_dt, end_dt
 
 
-def render_output(summary: bool | None, records: list[Record], start_dt: datetime, end_dt: datetime, show_keys: bool) -> Group:
+def render_output(summary: bool | None, records: list[Record], start_dt: int | datetime, end_dt: int | datetime, show_keys: bool) -> Group:
     """
     Render the output for the show command.
 
@@ -170,7 +169,7 @@ def render_output(summary: bool | None, records: list[Record], start_dt: datetim
     return Group(*renderables)
 
 
-def render_summary(records: list[Record], start_dt: datetime, end_dt: datetime) -> Table:
+def render_summary(records: list[Record], start_dt: int | datetime, end_dt: int | datetime) -> Table:
     """
     Use rich to render a summary of the records.
 
@@ -182,7 +181,7 @@ def render_summary(records: list[Record], start_dt: datetime, end_dt: datetime) 
     Returns:
         Table: A rich table object containing the summary.
     """
-    total = total_time(records, start_dt, end_dt)
+    total = get_total_time(records, start_dt, end_dt)
     tag_stats = get_tag_stats(records)
 
     records_padding_length = max(len(str(len(records))), 5)

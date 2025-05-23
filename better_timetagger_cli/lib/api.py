@@ -1,16 +1,91 @@
+"""
+# Utilities to interact with the TimeTagger API.
+"""
+
 import json
+import secrets
 from collections.abc import Generator
 from datetime import datetime
-from time import sleep, time
-from typing import Literal, TypeVar, cast
+from time import sleep
+from typing import Literal, TypedDict, cast
 
 import click
 import requests
 
-from better_timetagger_cli.lib.utils import abort
-
 from .config import load_config
-from .types import GetRecordsResponse, GetSettingsResponse, GetUpdatesResponse, PutRecordsResponse, PutSettingsResponse, Record, Settings
+from .misc import abort, now_timestamp
+from .records import merge_by_key, post_process_records
+
+
+class Record(TypedDict):
+    """
+    A TimeTagger record object
+    """
+
+    key: str
+    mt: int
+    t1: int
+    t2: int
+    ds: str
+    st: float
+
+
+class Settings(TypedDict):
+    """
+    A TimeTagger settings object
+    """
+
+    key: str
+    value: str
+    mt: int
+    st: float
+
+
+class GetRecordsResponse(TypedDict):
+    """
+    A response from the Timetagger API at `GET /records`
+    """
+
+    records: list[Record]
+
+
+class PutRecordsResponse(TypedDict):
+    """
+    A response from the Timetagger API at `PUT /records`
+    """
+
+    accepted: list[str]
+    failed: list[str]
+    errors: list[str]
+
+
+class GetSettingsResponse(TypedDict):
+    """
+    A response from the Timetagger API at `GET /settings`
+    """
+
+    settings: list[Settings]
+
+
+class PutSettingsResponse(TypedDict):
+    """
+    A response from the Timetagger API at `PUT /settings`
+    """
+
+    accepted: list[str]
+    failed: list[str]
+    errors: list[str]
+
+
+class GetUpdatesResponse(TypedDict):
+    """
+    A response from the Timetagger API at `GET /updates`
+    """
+
+    server_time: int
+    reset: int
+    records: list[Record]
+    settings: list[Settings]
 
 
 def api_request(
@@ -51,83 +126,6 @@ def api_request(
         raise click.Abort
 
     return response.json()
-
-
-def normalize_records(records: list[Record]) -> list[Record]:
-    """
-    Ensure that all records have the required keys with expected types.
-
-    Args:
-        records: A list of records to normalize.
-
-    Returns:
-        A list of normalized records.
-    """
-    return [
-        {
-            "key": r.get("key", ""),
-            "mt": r.get("mt", 0),
-            "t1": r.get("t1", 0),
-            "t2": r.get("t2", 0),
-            "ds": r.get("ds", ""),
-            "st": r.get("st", 0),
-        }
-        for r in records
-    ]
-
-
-def post_process_records(
-    records: list[Record],
-    *,
-    include_hidden: bool = False,
-    tags: list[str] | None = None,
-    tags_match: Literal["any", "all"] = "any",
-    sort_by: Literal["t1", "t2", "st", "mt", "ds"] = "t2",
-    sort_reverse: bool = True,
-) -> list[Record]:
-    """
-    Post-process records after fetching them from the API.
-
-    This includes sorting, filtering by tags, and manage hidden records.
-
-    Args:
-        records: A list of records to post-process.
-        include_hidden: Whether to include hidden (i.e. deleted) records. Defaults to False.
-        tags: A list of tags to filter records by. Defaults to None.
-        tags_match: The mode to match tags. Can be "any" or "all". Defaults to "any".
-        sort_by: The field to sort the records by. Can be "t1", "t2", "st", "mt", or "ds". Defaults to "t2".
-        sort_reverse: Whether to sort in reverse order. Defaults to True.
-
-    Returns:
-        A list of post-processed records.
-    """
-    records = normalize_records(records)
-    records.sort(key=lambda r: r[sort_by], reverse=sort_reverse)
-    if tags:
-        records = [r for r in records if check_record_tags_match(r, tags, tags_match)]
-    if not include_hidden:
-        records = [r for r in records if not r["ds"].startswith("HIDDEN")]
-    return records
-
-
-def check_record_tags_match(
-    record: Record,
-    tags: list[str],
-    tags_match: Literal["any", "all"],
-) -> bool:
-    """
-    Check if the record matches the provided tags.
-
-    Args:
-        record: The record to check.
-        tags: The tags to match against.
-        tags_match: The matching mode ('any' or 'all').
-
-    Returns:
-        True if the record matches the tags, False otherwise.
-    """
-    match_func = any if tags_match == "any" else all
-    return match_func(tag in record["ds"] for tag in tags)
 
 
 def get_records(
@@ -200,7 +198,7 @@ def get_runnning_records(
     Returns:
         A dictionary containing the running records from the API.
     """
-    now = int(time())
+    now = now_timestamp()
     start = now - 60 * 60 * 24
     end = now + 60 * 60 * 24
 
@@ -235,7 +233,7 @@ def put_records(records: list[Record]) -> PutRecordsResponse:
     Returns:
         A dictionary containing the response from the API.
     """
-    response = records("PUT", "records", records)
+    response = api_request("PUT", "records", records)
     return cast(PutRecordsResponse, response)
 
 
@@ -306,33 +304,6 @@ def get_updates(
     return cast(GetUpdatesResponse, response)
 
 
-_T = TypeVar("_T", bound=Record | Settings)
-
-
-def _merge_by_key(
-    updated_data: list[_T],
-    original_data: list[_T],
-) -> list[_T]:
-    """
-    Merge two lists of records or settings by their keys.
-
-    Args:
-        updated_data: The updated data to merge.
-        original_data: The original data to merge with.
-
-    Returns:
-        A list of merged records or settings.
-    """
-    updates_key_map = {obj["key"]: obj for obj in updated_data}
-    merged_data = []
-    while original_data:
-        obj = original_data.pop(0)
-        updated_obj = updates_key_map.pop(obj["key"], obj)
-        merged_data.append(updated_obj)
-    merged_data.extend(updates_key_map.values())
-    return merged_data
-
-
 def continuous_updates(
     since: int | datetime = 0,
     *,
@@ -360,7 +331,7 @@ def continuous_updates(
     Yields:
         A dictionary containing the updates from the API.
     """
-    response_cache: GetUpdatesResponse = {}
+    response_cache: GetUpdatesResponse = {}  # type: ignore[typeddict-item]
 
     while True:
         updates = get_updates(
@@ -377,11 +348,11 @@ def continuous_updates(
             response_cache = updates
 
         else:
-            response_cache["records"] = _merge_by_key(
+            response_cache["records"] = merge_by_key(
                 updates.get("records", []),
                 response_cache.get("records", []),
             )
-            response_cache["settings"] = _merge_by_key(
+            response_cache["settings"] = merge_by_key(
                 updates.get("settings", []),
                 response_cache.get("settings", []),
             )
@@ -399,3 +370,21 @@ def continuous_updates(
 
         yield response_cache
         sleep(delay)
+
+
+def create_record_key(length: int = 8) -> str:
+    """
+    Generate a unique id for records, in the form of an 8-character string.
+
+    The value is used to uniquely identify the record of one user.
+    Assuming a user who has been creating 100 records a day, for 20 years (about 1M records),
+    the chance of a collision for a new record is about 1 in 50 milion.
+
+    Args:
+        length: The length of the random string to generate. Default is 8.
+
+    Returns:
+        A string of 8 random characters.
+    """
+    chars = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    return "".join([secrets.choice(chars) for i in range(length)])

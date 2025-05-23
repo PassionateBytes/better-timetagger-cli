@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from time import time
 from typing import Literal
 
 import click
@@ -10,7 +9,9 @@ from rich.table import Table
 from rich.text import Text
 
 from better_timetagger_cli.lib.api import get_records
-from better_timetagger_cli.lib.utils import abort, highlight_tags_in_description, unify_tags_argument_callback
+from better_timetagger_cli.lib.click import tags_callback
+from better_timetagger_cli.lib.misc import abort, now_timestamp
+from better_timetagger_cli.lib.output import highlight_tags_in_description
 
 from .start import start
 
@@ -20,7 +21,7 @@ from .start import start
     "tags",
     type=click.STRING,
     nargs=-1,
-    callback=unify_tags_argument_callback,
+    callback=tags_callback,
 )
 @click.option(
     "-k",
@@ -57,7 +58,7 @@ def resume(
 
     Note that only records from the last 4 weeks are considered.
     """
-    now = int(time())
+    now = now_timestamp()
     now_dt = datetime.fromtimestamp(now)
     today = datetime(now_dt.year, now_dt.month, now_dt.day)
     tomorrow = today + timedelta(days=1)
@@ -84,7 +85,7 @@ def resume(
 
     # In 'select' mode, provide choice of records to resume
     else:
-        resume_description_choices = []
+        resume_description_choices: list[str] = []
         for r in records:
             # avoid duplicates
             if any(r["ds"].strip() == choice for choice in resume_description_choices):

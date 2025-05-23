@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from time import time
 
 import click
 from rich import print
@@ -7,7 +6,9 @@ from rich.box import SIMPLE
 from rich.table import Table
 
 from better_timetagger_cli.lib.api import get_records
-from better_timetagger_cli.lib.utils import get_tag_stats, readable_duration, styled_padded, total_time
+from better_timetagger_cli.lib.misc import now_timestamp
+from better_timetagger_cli.lib.output import readable_duration, styled_padded
+from better_timetagger_cli.lib.records import get_tag_stats, get_total_time
 
 
 @click.command()
@@ -17,7 +18,7 @@ def status() -> None:
     """
 
     # Relevant dates
-    now = int(time())
+    now = now_timestamp()
     now_dt = datetime.fromtimestamp(now)
     today = datetime(now_dt.year, now_dt.month, now_dt.day)
     tomorrow = today + timedelta(1)
@@ -39,9 +40,9 @@ def status() -> None:
     running_records = [r for r in week_records if r["t1"] == r["t2"]]
 
     # Calculate totals
-    total_month = total_time(month_records, first_of_this_month, first_of_next_month)
-    total_week = total_time(week_records, last_monday, next_monday)
-    total_day = total_time(day_records, today, tomorrow)
+    total_month = get_total_time(month_records, first_of_this_month, first_of_next_month)
+    total_week = get_total_time(week_records, last_monday, next_monday)
+    total_day = get_total_time(day_records, today, tomorrow)
 
     # Get tag totals
     month_tag_stats = get_tag_stats(month_records)

@@ -1,19 +1,21 @@
-from time import time
 from typing import Literal
 
 import click
 
 from better_timetagger_cli.cli.start import parse_at
-from better_timetagger_cli.lib.api import check_record_tags_match, get_runnning_records, put_records
-from better_timetagger_cli.lib.utils import abort, print_records, unify_tags_argument_callback
+from better_timetagger_cli.lib.api import get_runnning_records, put_records
+from better_timetagger_cli.lib.click import tags_callback
+from better_timetagger_cli.lib.misc import abort, now_timestamp
+from better_timetagger_cli.lib.output import print_records
+from better_timetagger_cli.lib.records import check_record_tags_match
 
 
-@click.command(("stop", "check-out", "out"))
+@click.command(("stop", "check-out", "out"))  # type: ignore[call-overload]
 @click.argument(
     "tags",
     type=click.STRING,
     nargs=-1,
-    callback=unify_tags_argument_callback,
+    callback=tags_callback,
 )
 @click.option(
     "-a",
@@ -53,7 +55,7 @@ def stop(tags: list[str], at: str | None, show_keys: bool, tags_match: Literal["
     if not running_records:
         abort("No running records.")
 
-    now = int(time())
+    now = now_timestamp()
     stop_t = parse_at(at) or now
 
     for r in running_records.copy():
