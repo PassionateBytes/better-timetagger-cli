@@ -40,8 +40,8 @@ def stop_cmd(tags: list[str], at: str | None, show_keys: bool, tags_match: Liter
     """
     Stop time tracking.
 
-    If tags are provided, all running records will be stopped.
-    Specify one or more tags to stop only matching records.
+    If no tags are provided, all running tasks will be stopped.
+    Specify one or more tags to stop only matching tasks.
 
     The '--at' parameter supports natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
