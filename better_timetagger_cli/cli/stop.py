@@ -3,8 +3,8 @@ from typing import Literal
 
 import click
 
-from better_timetagger_cli.cli.start import check_tags_match, parse_at
-from better_timetagger_cli.lib.api import get_runnning_records, put_records
+from better_timetagger_cli.cli.start import parse_at
+from better_timetagger_cli.lib.api import check_record_tags_match, get_runnning_records, put_records
 from better_timetagger_cli.lib.utils import abort, print_records, unify_tags_callback
 
 
@@ -52,7 +52,7 @@ def stop(tags: list[str], at: str | None, tags_match: Literal["any", "all"]) -> 
 
     for r in running_records.copy():
         # Stop running tasks with matching tags
-        if check_tags_match(r, tags, tags_match):
+        if check_record_tags_match(r, tags, tags_match):
             r["t2"] = stop_t
             r["mt"] = stop_t
             stopped_records.append(r)

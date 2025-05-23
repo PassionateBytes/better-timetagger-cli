@@ -5,7 +5,7 @@ import click
 import dateparser
 from rich.console import Group
 
-from better_timetagger_cli.lib.api import get_runnning_records, put_records
+from better_timetagger_cli.lib.api import check_record_tags_match, get_runnning_records, put_records
 from better_timetagger_cli.lib.types import Record
 from better_timetagger_cli.lib.utils import abort, generate_uid, print_records, render_records, unify_tags_callback
 
@@ -91,7 +91,7 @@ def start(tags: list[str], at: str | None, description: str, empty: bool, keep: 
             )
 
         # Stop running tasks with matching tags, unless in 'keep' mode
-        if not keep and check_tags_match(r, tags, tags_match):
+        if not keep and check_record_tags_match(r, tags, tags_match):
             r["t2"] = now
             r["mt"] = now
             stopped_records.append(r)
@@ -117,23 +117,3 @@ def parse_at(at: str | None) -> int | None:
             abort("Could not parse '--at'.")
         return int(at_dt.timestamp())
     return None
-
-
-def check_tags_match(
-    record: Record,
-    tags: list[str],
-    tags_match: Literal["any", "all"],
-) -> bool:
-    """
-    Check if the record matches the provided tags.
-
-    Args:
-        record: The record to check.
-        tags: The tags to match against.
-        tags_match: The matching mode ('any' or 'all').
-
-    Returns:
-        True if the record matches the tags, False otherwise.
-    """
-    match_func = any if tags_match == "any" else all
-    return match_func(tag in record["ds"] for tag in tags)

@@ -13,7 +13,7 @@ from .config import load_config
 from .types import GetRecordsResponse, GetSettingsResponse, GetUpdatesResponse, PutRecordsResponse, PutSettingsResponse, Record, Settings
 
 
-def _request(
+def api_request(
     method: Literal["GET", "POST", "PUT", "PATCH", "DELETE"],
     path: str,
     body: list | dict | None = None,
@@ -53,7 +53,7 @@ def _request(
     return response.json()
 
 
-def _normalize_records(records: list[Record]) -> list[Record]:
+def normalize_records(records: list[Record]) -> list[Record]:
     """
     Ensure that all records have the required keys with expected types.
 
@@ -76,7 +76,7 @@ def _normalize_records(records: list[Record]) -> list[Record]:
     ]
 
 
-def _post_process_records(
+def post_process_records(
     records: list[Record],
     *,
     include_hidden: bool = False,
@@ -101,14 +101,33 @@ def _post_process_records(
     Returns:
         A list of post-processed records.
     """
-    records = _normalize_records(records)
+    records = normalize_records(records)
     records.sort(key=lambda r: r[sort_by], reverse=sort_reverse)
     if tags:
-        match_func = any if tags_match == "any" else all
-        records = [r for r in records if match_func(tag in r["ds"] for tag in tags)]
+        records = [r for r in records if check_record_tags_match(r, tags, tags_match)]
     if not include_hidden:
         records = [r for r in records if not r["ds"].startswith("HIDDEN")]
     return records
+
+
+def check_record_tags_match(
+    record: Record,
+    tags: list[str],
+    tags_match: Literal["any", "all"],
+) -> bool:
+    """
+    Check if the record matches the provided tags.
+
+    Args:
+        record: The record to check.
+        tags: The tags to match against.
+        tags_match: The matching mode ('any' or 'all').
+
+    Returns:
+        True if the record matches the tags, False otherwise.
+    """
+    match_func = any if tags_match == "any" else all
+    return match_func(tag in record["ds"] for tag in tags)
 
 
 def get_records(
@@ -144,10 +163,10 @@ def get_records(
 
     t1 = min(start, end) if include_partial_match else max(start, end)
     t2 = max(start, end) if include_partial_match else min(start, end)
-    response = _request("GET", f"records?timerange={t1}-{t2}")
+    response = api_request("GET", f"records?timerange={t1}-{t2}")
 
     if not _skip_post_processing:
-        response["records"] = _post_process_records(
+        response["records"] = post_process_records(
             response["records"],
             include_hidden=include_hidden,
             tags=tags,
@@ -195,7 +214,7 @@ def get_runnning_records(
         _skip_post_processing=True,  # post-process after filtering
     )
     response["records"] = [r for r in response["records"] if r["t1"] == r["t2"]]
-    response["records"] = _post_process_records(
+    response["records"] = post_process_records(
         response["records"],
         include_hidden=False,
         tags=tags,
@@ -216,7 +235,7 @@ def put_records(records: list[Record]) -> PutRecordsResponse:
     Returns:
         A dictionary containing the response from the API.
     """
-    response = _request("PUT", "records", records)
+    response = records("PUT", "records", records)
     return cast(PutRecordsResponse, response)
 
 
@@ -227,7 +246,7 @@ def get_settings(settings: list[Settings]) -> GetSettingsResponse:
     Returns:
         A dictionary containing the settings from the API.
     """
-    response = _request("GET", "settings", settings)
+    response = api_request("GET", "settings", settings)
     return cast(GetSettingsResponse, response)
 
 
@@ -241,7 +260,7 @@ def put_settings(settings: dict) -> PutSettingsResponse:
     Returns:
         A dictionary containing the response from the API.
     """
-    response = _request("PUT", "settings", settings)
+    response = api_request("PUT", "settings", settings)
     return cast(PutSettingsResponse, response)
 
 
@@ -272,10 +291,10 @@ def get_updates(
     if isinstance(since, datetime):
         since = int(since.timestamp())
 
-    response = _request("GET", f"updates?since={since}")
+    response = api_request("GET", f"updates?since={since}")
 
     if not _skip_post_processing:
-        response["records"] = _post_process_records(
+        response["records"] = post_process_records(
             response["records"],
             include_hidden=include_hidden,
             tags=tags,
@@ -369,7 +388,7 @@ def continuous_updates(
             response_cache["server_time"] = updates.get("server_time", 0)
             response_cache["reset"] = updates.get("reset", 0)
 
-        response_cache["records"] = _post_process_records(
+        response_cache["records"] = post_process_records(
             response_cache.get("records", []),
             include_hidden=include_hidden,
             tags=tags,
