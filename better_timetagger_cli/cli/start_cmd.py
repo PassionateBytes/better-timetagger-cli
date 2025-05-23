@@ -3,11 +3,12 @@ from typing import Literal
 import click
 from rich.console import Group
 
-from better_timetagger_cli.lib.api import Record, create_record_key, get_runnning_records, put_records
+from better_timetagger_cli.lib.api import create_record_key, get_runnning_records, put_records
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import print_records, render_records
 from better_timetagger_cli.lib.parsers import parse_at, tags_callback
 from better_timetagger_cli.lib.records import check_record_tags_match
+from better_timetagger_cli.lib.types import Record
 
 
 @click.command(("start", "check-in", "in"))  # type: ignore[call-overload]

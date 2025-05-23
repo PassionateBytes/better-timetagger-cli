@@ -8,11 +8,12 @@ from rich.console import Group
 from rich.live import Live
 from rich.table import Table
 
-from better_timetagger_cli.lib.api import Record, continuous_updates, get_records
+from better_timetagger_cli.lib.api import continuous_updates, get_records
 from better_timetagger_cli.lib.misc import abort
 from better_timetagger_cli.lib.output import readable_duration, render_records, styled_padded
 from better_timetagger_cli.lib.parsers import parse_start_end, tags_callback
 from better_timetagger_cli.lib.records import get_tag_stats, get_total_time
+from better_timetagger_cli.lib.types import Record
 
 
 @click.command(("show", "report", "display"))  # type: ignore[call-overload]
