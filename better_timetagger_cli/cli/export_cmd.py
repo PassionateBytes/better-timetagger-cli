@@ -16,6 +16,12 @@ from better_timetagger_cli.lib.records import records_to_csv
     callback=tags_callback,
 )
 @click.option(
+    "-o",
+    "--output",
+    type=click.File("w"),
+    help="Output file. If not specified, output to stdout.",
+)
+@click.option(
     "-s",
     "--start",
     type=click.STRING,
@@ -28,12 +34,6 @@ from better_timetagger_cli.lib.records import records_to_csv
     help="Include records earlier than this time. Supports natural language.",
 )
 @click.option(
-    "-o",
-    "--output",
-    type=click.File("w"),
-    help="Output file. If not specified, output to stdout.",
-)
-@click.option(
     "-x",
     "--match",
     "tags_match",
@@ -43,9 +43,9 @@ from better_timetagger_cli.lib.records import records_to_csv
 )
 def export_cmd(
     tags: list[str],
+    output: click.File | None,
     start: str | None,
     end: str | None,
-    output: click.File | None,
     tags_match: Literal["any", "all"],
 ) -> None:
     """
