@@ -1,12 +1,13 @@
 from time import time
+from typing import Literal
 
 import click
 import dateparser
-from rich import print
+from rich.console import Group
 
 from better_timetagger_cli.lib.api import get_runnning_records, put_records
 from better_timetagger_cli.lib.types import Record
-from better_timetagger_cli.lib.utils import abort, generate_uid, print_records, unify_tags_callback
+from better_timetagger_cli.lib.utils import abort, generate_uid, print_records, render_records, unify_tags_callback
 
 
 @click.command(("start", "check-in", "in"))
@@ -41,7 +42,15 @@ from better_timetagger_cli.lib.utils import abort, generate_uid, print_records, 
     is_flag=True,
     help="Keep previous tasks running, do not stop them.",
 )
-def start(tags: list[str], at: str | None, description: str, empty: bool, keep: bool) -> None:
+@click.option(
+    "-x",
+    "--match",
+    "tags_match",
+    type=click.Choice(["any", "all"]),
+    default="all",
+    help="Tag matching mode. Filter records that match any or all tags. Default: all.",
+)
+def start(tags: list[str], at: str | None, description: str, empty: bool, keep: bool, tags_match: Literal["any", "all"]) -> None:
     """
     Start time tracking.
 
@@ -50,22 +59,15 @@ def start(tags: list[str], at: str | None, description: str, empty: bool, keep: 
     The '--at' parameter supports natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
 
-    Command aliases: 'check-in', 'in'
+    Command aliases: 'start', 'check-in', 'in'
     """
     description = f"{' '.join(tags)} {description}".strip()
 
     if not description and not empty:
-        abort("No tags or description provided. Use -e to start an empty task.")
+        abort("No tags or description provided. Use '--empty' to start a task without tags or description.")
 
     now = int(time())
-    if at:
-        at_dt = dateparser.parse(at)
-        if not at_dt:
-            abort("Could not parse '--at'.")
-        start_t = int(at_dt.timestamp())
-    else:
-        start_t = now
-
+    start_t = parse_at(at) or now
     new_record: Record = {
         "key": generate_uid(),
         "t1": start_t,
@@ -74,19 +76,64 @@ def start(tags: list[str], at: str | None, description: str, empty: bool, keep: 
         "st": 0,
         "ds": description,
     }
+
     running_records = get_runnning_records()["records"]
+    stopped_records = []
 
-    if keep:
-        put_records([new_record])
-        print_records(started=[new_record], running=running_records)
+    for r in running_records.copy():
+        # Avoid starting duplicate task
+        if r.get["ds"] == description:
+            abort(
+                Group(
+                    "\n[red]Task with these tags and description is already running.[/red]",
+                    render_records(running=running_records),
+                )
+            )
 
-    else:
-        for r in running_records:
-            if r.get("ds", "") == description:
-                print("\n[red]Task with these tags and description is already running.[/red]")
-                print_records(running=running_records)
-                exit(1)
-
+        # Stop running tasks with matching tags, unless in 'keep' mode
+        if not keep and check_tags_match(r, tags, tags_match):
             r["t2"] = now
-        put_records([new_record, *running_records])
-        print_records(started=[new_record], stopped=running_records)
+            r["mt"] = now
+            stopped_records.append(r)
+            running_records.remove(r)
+
+    put_records([new_record, *stopped_records])
+    print_records(started=[new_record], running=running_records, stopped=stopped_records)
+
+
+def parse_at(at: str | None) -> int | None:
+    """
+    Parse the 'at' parameter.
+
+    Args:
+        at: The 'at' parameter value.
+
+    Returns:
+        The parsed start time as a timestamp, or None if not provided.
+    """
+    if at:
+        at_dt = dateparser.parse(at)
+        if not at_dt:
+            abort("Could not parse '--at'.")
+        return int(at_dt.timestamp())
+    return None
+
+
+def check_tags_match(
+    record: Record,
+    tags: list[str],
+    tags_match: Literal["any", "all"],
+) -> bool:
+    """
+    Check if the record matches the provided tags.
+
+    Args:
+        record: The record to check.
+        tags: The tags to match against.
+        tags_match: The matching mode ('any' or 'all').
+
+    Returns:
+        True if the record matches the tags, False otherwise.
+    """
+    match_func = any if tags_match == "any" else all
+    return match_func(tag in record["ds"] for tag in tags)
