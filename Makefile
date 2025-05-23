@@ -1,14 +1,29 @@
-.PHONY: format lint lint-fix
+MODULES = better_timetagger_cli tests
+
+
+.PHONY: build format lint fix typecheck clean
+
+
+build: format lint typecheck
+	uv build
+
 
 format:
-	uv run ruff format .
-	uv run ruff check --select I,F401 --fix .
+	uv run ruff format ${MODULES}
+	uv run ruff check --fix --select I,F401 ${MODULES}
+
 
 lint:
-	uv run ruff check .
+	uv run ruff check ${MODULES}
+
 
 fix:
-	uv run ruff check --fix .
+	uv run ruff check --fix ${MODULES}
+
+
+typecheck:
+	uv run mypy ${MODULES}
+
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
