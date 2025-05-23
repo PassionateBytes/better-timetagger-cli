@@ -1,11 +1,13 @@
 from datetime import datetime, timedelta
 from time import time
+from typing import Literal
 
 import click
 from rich import print
 from rich.box import SIMPLE
 from rich.prompt import IntPrompt
 from rich.table import Table
+from rich.text import Text
 
 from better_timetagger_cli.lib.api import get_records
 from better_timetagger_cli.lib.utils import abort, highlight_tags_in_description, unify_tags_callback
@@ -32,12 +34,26 @@ from .start import start
     is_flag=True,
     help="List matching records to select from, if multiple different records match.",
 )
+@click.option(
+    "-x",
+    "--match",
+    "tags_match",
+    type=click.Choice(["any", "all"]),
+    default="all",
+    help="Tag matching mode. Filter records that match any or all tags. Default: all.",
+)
 @click.pass_context
-def resume(ctx: click.Context, tags: list[str], keep: bool, select: bool) -> None:
+def resume(
+    ctx: click.Context,
+    tags: list[str],
+    keep: bool,
+    select: bool,
+    tags_match: Literal["any", "all"],
+) -> None:
     """
     Start time tracking, using the same tags and description as the most recent record.
 
-    Specify a tag to resume the most recent record matching that tag.
+    You may specify a tag, to only resume the most recent record with that specific tag.
 
     Note that only records from the last 4 weeks are considered.
     """
@@ -51,7 +67,7 @@ def resume(ctx: click.Context, tags: list[str], keep: bool, select: bool) -> Non
         last_month,
         tomorrow,
         tags=tags,
-        tags_match="all",
+        tags_match=tags_match,
         sort_by="t2",
         sort_reverse=True,
     )["records"]
@@ -60,30 +76,42 @@ def resume(ctx: click.Context, tags: list[str], keep: bool, select: bool) -> Non
         abort("No records found within last 4 weeks.")
         return
 
-    # Unless using 'select' mode, resume the most recent matching record
+    # Resume most recent record
     if not select or len(records) == 1:
-        resume_description = records[0]["ds"]
+        resume_description = records[0]["ds"].strip()
+        ctx.invoke(start, description=resume_description, keep=keep)
+        return
 
-    # Otherwise prompt the user to select a record
+    # In 'select' mode, provide choice of records to resume
     else:
-        list_records = []
+        resume_description_choices = []
         for r in records:
-            if any(r["ds"].strip() == ur["ds"].strip() for ur in list_records):
+            # avoid duplicates
+            if any(r["ds"].strip() == choice for choice in resume_description_choices):
                 continue
-            list_records.append(r)
-            if len(list_records) >= 10:
+            resume_description_choices.append(r["ds"].strip())
+            # max 10 choices
+            if len(resume_description_choices) >= 10:
                 break
 
+        # print choices
         table = Table(show_header=False, box=SIMPLE)
-        table.add_column(justify="left", style="cyan")
-        table.add_column(justify="left", style="magenta")
-        for i, r in enumerate(list_records):
-            table.add_row(f"{'' if i else '[bold]'}[{i}]:", highlight_tags_in_description(r["ds"]))
+        table.add_column(style="cyan")
+        table.add_column(style="magenta")
+        for i, choice in enumerate(resume_description_choices):
+            id = Text(f"[{i}]:", style="bold" if i <= 0 else "dim")
+            table.add_row(id, highlight_tags_in_description(choice))
         print(table)
 
+        # prompt for choice
         selected = None
         while selected is None:
-            selected = IntPrompt.ask("Select task to resume", choices=[str(i) for i in range(len(list_records))], show_choices=False, default=0)
-        resume_description = list_records[int(selected)]["ds"]
+            selected = IntPrompt.ask(
+                "Select task to resume",
+                choices=[str(i) for i in range(len(resume_description_choices))],
+                show_choices=False,
+                default=0,
+            )
 
-    ctx.invoke(start, description=resume_description.strip(), keep=keep)
+        resume_description = resume_description_choices[int(selected)]
+        ctx.invoke(start, description=resume_description, keep=keep)
