@@ -51,6 +51,9 @@ def export_cmd(
     """
     Export records to CSV format.
 
+    If no tags are provided, all tasks within the selected time frame will be included.
+    Specify one or more tags to include only matching tasks.
+
     The parameters '--start' and '--end' support natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
     """
