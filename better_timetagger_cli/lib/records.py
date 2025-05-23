@@ -2,7 +2,10 @@
 # Utilities for handling TimeTagger records.
 """
 
-from datetime import datetime
+import re
+import sys
+from collections.abc import Iterable
+from datetime import datetime, timezone
 from typing import Literal, TypeVar
 
 from .misc import now_timestamp
@@ -181,3 +184,50 @@ def merge_by_key(
         merged_data.append(updated_obj)
     merged_data.extend(updates_key_map.values())
     return merged_data
+
+
+def records_to_csv(records: Iterable[Record]) -> str:
+    """
+    Convert records to CSV.
+
+    This produces the same CSV format as the TimeTagger web app.
+
+    Args:
+        records: A list of records to convert.
+
+    Returns:
+        A string representing the records in CSV format.
+    """
+    header = ("key", "start", "stop", "tags", "description")
+    newline = "\n" if not sys.platform.startswith("win") else "\r\n"
+    separator = "\t"
+
+    lines = [
+        (
+            r.get("key", ""),
+            datetime.fromtimestamp(r.get("t1", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z"),
+            datetime.fromtimestamp(r.get("t2", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z"),
+            " ".join(get_tags_from_description(r.get("ds", ""))),
+            r.get("ds", ""),
+        )
+        for r in records
+    ]
+    lines = [header, *lines]
+
+    # - substitute unsafe whitespace
+    # - join fields with separator
+    # - join lines with newline
+    return newline.join(separator.join(re.sub(r"\s+", " ", str(field)) for field in line) for line in lines)
+
+
+def get_tags_from_description(description: str) -> list[str]:
+    """
+    Extract tags from a description string.
+
+    Args:
+        description: The description string.
+
+    Returns:
+        A list of tags extracted from the description.
+    """
+    return [word for word in description.split() if word.startswith("#")]

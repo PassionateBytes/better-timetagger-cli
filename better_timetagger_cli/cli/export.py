@@ -4,8 +4,8 @@ import click
 
 from better_timetagger_cli.lib.api import get_records
 from better_timetagger_cli.lib.misc import abort
-from better_timetagger_cli.lib.output import records_to_csv
 from better_timetagger_cli.lib.parsers import parse_start_end, tags_callback
+from better_timetagger_cli.lib.records import records_to_csv
 
 
 @click.command()
