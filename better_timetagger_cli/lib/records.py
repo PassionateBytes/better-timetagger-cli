@@ -4,11 +4,11 @@
 
 import re
 import sys
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
 from datetime import datetime, timezone
 from typing import Literal, TypeVar
 
-from .misc import now_timestamp
+from .misc import abort, now_timestamp
 from .types import Record, Settings
 
 
@@ -231,3 +231,59 @@ def get_tags_from_description(description: str) -> list[str]:
         A list of tags extracted from the description.
     """
     return [word for word in description.split() if word.startswith("#")]
+
+
+def records_from_csv(
+    file: Generator[str],
+) -> list[Record]:
+    """
+    Load records from a CSV file.
+
+    Args:
+        file: An iterable of lines from a CSV file.
+
+    Returns:
+        A list of records loaded from the CSV file.
+    """
+    header = ("key", "start", "stop", "tags", "description")
+    now = now_timestamp()
+    records = []
+
+    header_line = next(file)
+    for separator in ("\t", ",", ";"):
+        header_fields = header_line.strip().split(separator)
+        if all(required in header_fields for required in header):
+            break
+    else:
+        abort(
+            f"Failed to import CSV: Missing fields in header.\n"
+            f"[dim]First line must contain each of: {', '.join(header)}"
+            f"\nLine 1: \[{header_line.strip()}][/dim]"
+        )
+
+    header_map = {field: header_fields.index(field) for field in header}
+
+    for i, line in enumerate(file, start=2):
+        fields = line.strip().split(separator)
+        if len(fields) != len(header_fields):
+            abort(
+                f"Failed to import CSV: Inconsistent number of columns.\n"
+                f"[dim]Header has {len(header_fields)} columns, line {i} has {len(fields)} columns.\n"
+                f"Line {i}: \[{line.strip()}][/dim]"
+            )
+
+        try:
+            record: Record = {
+                "key": fields[header_map["key"]],
+                "t1": int(datetime.fromisoformat(fields[header_map["start"]].replace("Z", "+00:00")).timestamp()),
+                "t2": int(datetime.fromisoformat(fields[header_map["stop"]].replace("Z", "+00:00")).timestamp()),
+                "ds": fields[header_map["description"]],
+                "mt": now,
+                "st": 0,
+            }
+        except Exception as e:
+            abort(f"Failed to import CSV: {e.__class__.__name__}\n[dim]{e}\nLine {i}: \[{line.strip()}][/dim]")
+
+        records.append(record)
+
+    return records

@@ -23,6 +23,7 @@ def print_records(
     running: Iterable[Record] = (),
     stopped: Iterable[Record] = (),
     show_keys: bool = False,
+    record_status: dict[str, str | None] | None = None,
 ) -> None:
     """
     Display records in a table format using rich.
@@ -42,6 +43,7 @@ def print_records(
         running=running,
         stopped=stopped,
         show_keys=show_keys,
+        record_status=record_status,
     )
     console.print(output)
 
@@ -53,6 +55,7 @@ def render_records(
     running: Iterable[Record] = (),
     stopped: Iterable[Record] = (),
     show_keys: bool = False,
+    record_status: dict[str, str | None] | None = None,
 ) -> Table:
     """
     Create a renderable rich object to display records.
@@ -65,6 +68,7 @@ def render_records(
         running: A list of records that are running.
         stopped: A list of records that are stopped.
         show_key: If True, show the key of each record.
+        record_status: A map of status annotations for each record key.
     """
     now = now_timestamp()
 
@@ -76,11 +80,17 @@ def render_records(
     table.add_column("Stopped", style="cyan")
     table.add_column("Duration", style="bold magenta", no_wrap=True, justify="right")
     table.add_column("Description", style="green")
+    if record_status:
+        table.add_column("Status", style="yellow")
 
     def _add_row(key: str, *args, **kwargs) -> None:
         """Optionally include the 'key' column."""
         if show_keys:
-            args = tuple(key, *args)
+            args = (key, *args)
+        if record_status:
+            status = record_status.get(key, None)
+            if status:
+                args = (*args, status)
         table.add_row(*args, **kwargs)
 
     for r in records:

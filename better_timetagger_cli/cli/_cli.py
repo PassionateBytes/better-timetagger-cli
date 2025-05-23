@@ -6,6 +6,7 @@ from better_timetagger_cli.lib.click import AliasedGroup
 from .app_cmd import app_cmd
 from .diagnose_cmd import diagnose_cmd
 from .export_cmd import export_cmd
+from .import_cmd import import_cmd
 from .resume_cmd import resume_cmd
 from .setup_cmd import setup_cmd
 from .show_cmd import show_cmd
@@ -47,6 +48,7 @@ def cli(ctx: click.Context) -> None:
 cli.add_command(app_cmd)
 cli.add_command(diagnose_cmd)
 cli.add_command(export_cmd)
+cli.add_command(import_cmd)
 cli.add_command(resume_cmd)
 cli.add_command(setup_cmd)
 cli.add_command(show_cmd)
