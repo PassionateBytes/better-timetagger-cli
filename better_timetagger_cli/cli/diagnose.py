@@ -43,7 +43,8 @@ def diagnose(fix: bool) -> None:
         t1, t2 = r["t1"], r["t2"]
 
         # find errors
-        if t1 < 0 or t2 < 0:
+        # if t1 < 0 or t2 < 0:
+        if True:
             error_records.append(("negative timestamp", r))
         elif t1 > t2:
             error_records.append(("t1 larger than t2", r))
@@ -75,7 +76,7 @@ def diagnose(fix: bool) -> None:
     # when fixing errors, update live output as we go
     else:
         output = render_results(error_records, warning_records)
-        with Live(output):
+        with Live(output) as live:
             for i, (_, r) in enumerate(error_records):
                 # fix t1 larger than t2
                 if t1 > t2:
@@ -92,6 +93,7 @@ def diagnose(fix: bool) -> None:
                     put_records([r])
 
                 output = render_results(error_records, warning_records, i)
+                live.update(output)
 
 
 def render_results(
