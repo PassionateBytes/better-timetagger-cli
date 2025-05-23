@@ -31,7 +31,7 @@ def _request(
     """
     try:
         config = load_config()
-        url = config["api_url"].rstrip("/") + "/" + path.lstrip("/")
+        url = config["base_url"].rstrip("/") + "/api/v2/" + path.lstrip("/")
         token = config["api_token"].strip()
         ssl_verify = config["ssl_verify"]
 
