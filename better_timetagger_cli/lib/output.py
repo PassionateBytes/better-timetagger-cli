@@ -74,7 +74,7 @@ def render_records(
     table.add_column(style="cyan", no_wrap=True)
     table.add_column("Started", style="cyan")
     table.add_column("Stopped", style="cyan")
-    table.add_column("Duration", style="bold magenta", no_wrap=True)
+    table.add_column("Duration", style="bold magenta", no_wrap=True, justify="right")
     table.add_column("Description", style="green")
 
     def _add_row(key: str, *args, **kwargs) -> None:
@@ -187,13 +187,12 @@ def readable_duration(duration: int | float | timedelta) -> str:
     hours, remainder = divmod(total_seconds, 60 * 60)
     minutes, _ = divmod(remainder, 60)
 
-    parts = []
+    output = ""
     if hours:
-        parts.append(f"{hours:.0f}h")
+        output += f"{hours}h "
+    output += f"{minutes:>2}m"
 
-    parts.append(f"{minutes:.0f}m")
-
-    return " ".join(parts)
+    return output.strip()
 
 
 def styled_padded(value: Any, width: int = 5, *, style: str = "magenta", padding_style: str = "dim magenta", padding: str = "0") -> Text:
