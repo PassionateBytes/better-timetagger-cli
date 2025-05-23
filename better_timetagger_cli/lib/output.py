@@ -72,10 +72,10 @@ def render_records(
     if show_keys:
         table.add_column("Key", style="blue", no_wrap=True)
     table.add_column(style="cyan", no_wrap=True)
-    table.add_column("Started", style="cyan", no_wrap=True)
-    table.add_column("Stopped", style="cyan", no_wrap=True)
+    table.add_column("Started", style="cyan")
+    table.add_column("Stopped", style="cyan")
     table.add_column("Duration", style="bold magenta", no_wrap=True)
-    table.add_column("Description", style="green", no_wrap=True)
+    table.add_column("Description", style="green")
 
     def _add_row(key: str, *args, **kwargs) -> None:
         """Optionally include the 'key' column."""
