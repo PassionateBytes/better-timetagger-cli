@@ -8,7 +8,8 @@ from rich.live import Live
 from rich.table import Table
 
 from better_timetagger_cli.lib.api import get_updates, put_records
-from better_timetagger_cli.lib.utils import readable_date_time
+from better_timetagger_cli.lib.types import Record
+from better_timetagger_cli.lib.utils import abort, readable_date_time
 
 
 @click.command()
@@ -16,70 +17,115 @@ from better_timetagger_cli.lib.utils import readable_date_time
     "-f",
     "--fix",
     is_flag=True,
-    help="Fix the records that are wrong.",
+    help="Apply fixes to corrupt records.",
 )
 def diagnose(fix: bool) -> None:
     """
-    Load all records and perform diagnostics to detect issues.
+    Check all records for common errors and inconsistencies.
+
+    Use the '--fix' option with caution. This will modify the records in your database!
+    It is recommended to back up your database before using this option.
     """
+
+    records = get_updates()["records"]
+
+    if not records:
+        abort("No records found.")
+
+    error_records = []
+    warning_records = []
+
     early_date = datetime(2000, 1, 1)
     late_date = datetime.now() + timedelta(days=1)
     very_late_date = datetime.now() + timedelta(days=365 * 2)
 
-    records = get_updates()["records"]
-    suspicious_records = []
-    wrong_records = []
-
-    for r in reversed(records):
+    for r in records:
         t1, t2 = r["t1"], r["t2"]
-        if t1 < 0 or t2 < 0:
-            wrong_records.append(("negative timestamp", r))
+
+        # find errors
+        # if t1 < 0 or t2 < 0:
+        if True:
+            error_records.append(("negative timestamp", r))
         elif t1 > t2:
-            wrong_records.append(("t1 larger than t2", r))
+            error_records.append(("t1 larger than t2", r))
         elif datetime.fromtimestamp(r["t2"]) > very_late_date:
-            wrong_records.append(("far future", r))
+            error_records.append(("far future", r))
+
+        # find inconsistencies
         elif datetime.fromtimestamp(r["t1"]) < early_date:
-            suspicious_records.append(("early", r))
+            warning_records.append(("early", r))
         elif datetime.fromtimestamp(r["t2"]) > late_date:
-            suspicious_records.append(("future", r))
+            warning_records.append(("future", r))
         elif t2 - t1 > 86400 * 2:
-            suspicious_records.append(("duration over two days", r))
+            warning_records.append(("duration over two days", r))
         elif t1 == t2 and abs(time.time() - t1) > 86400 * 2:
             ndays = round(abs(time.time() - t1) / 86400)
-            suspicious_records.append((f"running for about {ndays} days", r))
+            warning_records.append((f"running for about {ndays} days", r))
 
-    if not wrong_records and not suspicious_records:
-        print("\n[green]All records are valid.[/green]\n")
+    # all valid
+    if not error_records and not warning_records:
+        print(f"\n[green]All {len(records)} records are valid.[/green]\n")
         return
 
-    def render_table(fixed_idx: int = -1) -> Table:
-        table = Table(show_header=False, box=SIMPLE)
-        table.add_column(justify="left", style="red")
-        table.add_column(justify="left", style="magenta")
-        table.add_column(justify="left", style="green")
-        for i, (prefix, r) in enumerate(wrong_records):
-            if i <= fixed_idx:
-                table.add_row(f"{prefix}:", f"Record '{r['key']}' from {readable_date_time(r['t1'])} to {readable_date_time(r['t2'])}", "...fixed!")
-            else:
-                table.add_row(f"{prefix}:", f"Record '{r['key']}' from {readable_date_time(r['t1'])} to {readable_date_time(r['t2'])}")
-        for prefix, r in suspicious_records:
-            table.add_row(f"[yellow]{prefix}:", f"Record '{r['key']}' from {readable_date_time(r['t1'])} to {readable_date_time(r['t2'])}")
-        return table
+    # regular output
+    if not fix:
+        output = render_results(error_records, warning_records)
+        print(output)
+        return
 
-    if fix:
-        with Live() as live:
-            for i, (_, r) in enumerate(wrong_records):
+    # when fixing errors, update live output as we go
+    else:
+        output = render_results(error_records, warning_records)
+        with Live(output) as live:
+            for i, (_, r) in enumerate(error_records):
+                # fix t1 larger than t2
                 if t1 > t2:
                     r["t1"], r["t2"] = r["t2"], r["t1"]
                     put_records([r])
-                elif (t1 < 0 or t2 < 0) or (datetime.fromtimestamp(r["t2"]) > very_late_date):
+
+                # fix negative timestamp / far future
+                elif t1 < 0 or t2 < 0 or datetime.fromtimestamp(r["t2"]) > very_late_date:
                     dt = abs(r["t1"] - r["t2"])
-                    if dt > 86400 * 1.2:
-                        dt = 3600
+                    if dt > (24 * 60 * 60) * 1.2:
+                        dt = 60 * 60
                     r["t1"] = int(time.time())
                     r["t2"] = r["t1"] + dt
                     put_records([r])
-                live.update(render_table(i))
 
-    else:
-        print(render_table())
+                output = render_results(error_records, warning_records, i)
+                live.update(output)
+
+
+def render_results(
+    error_records: list[Record],
+    warning_records: list[Record],
+    fixed_idx: int = -1,
+) -> str:
+    """
+    Render the results of the diagnosis.
+
+    Args:
+        error_records: List of error records.
+        warning_records: List of warning records.
+        fixed_idx: Index of the last fixed record.
+    """
+
+    table = Table(show_header=False, box=SIMPLE)
+    table.add_column(justify="left", style="red")
+    table.add_column(justify="left", style="magenta")
+    table.add_column(justify="left", style="green")
+
+    for i, (prefix, r) in enumerate(error_records):
+        table.add_row(
+            f"{prefix}:",
+            f"Record [bold]'{r['key']}'[/bold] from {readable_date_time(r['t1'])} to {readable_date_time(r['t2'])}",
+            "...fixed!" if i <= fixed_idx else None,
+        )
+
+    for prefix, r in warning_records:
+        table.add_row(
+            f"[yellow]{prefix}:[/yellow]",
+            f"Record [bold]'{r['key']}'[/bold] from {readable_date_time(r['t1'])} to {readable_date_time(r['t2'])}",
+        )
+
+    return table

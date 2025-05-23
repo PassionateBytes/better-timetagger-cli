@@ -2,8 +2,8 @@ from time import time
 from typing import Literal
 
 import click
-import dateparser
 
+from better_timetagger_cli.cli.start import check_tags_match, parse_at
 from better_timetagger_cli.lib.api import get_runnning_records, put_records
 from better_timetagger_cli.lib.utils import abort, print_records, unify_tags_callback
 
@@ -39,33 +39,24 @@ def stop(tags: list[str], at: str | None, tags_match: Literal["any", "all"]) -> 
     The '--at' parameter supports natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
 
-    Command aliases: 'check-out', 'out'
+    Command aliases: 'stop', 'check-out', 'out'
     """
     running_records = get_runnning_records()["records"]
+    stopped_records = []
+
     if not running_records:
         abort("No running records.")
 
-    still_running_records = []
-    stopped_records = []
-
     now = int(time())
-    if at:
-        at_dt = dateparser.parse(at)
-        if not at_dt:
-            abort("Could not parse '--at'.")
-        stop_t = int(at_dt.timestamp())
-    else:
-        stop_t = now
+    stop_t = parse_at(at) or now
 
-    for r in running_records:
-        if tags:
-            match_func = any if tags_match == "any" else all
-            if not match_func(tag in r["ds"] for tag in tags):
-                still_running_records.append(r)
-        else:
+    for r in running_records.copy():
+        # Stop running tasks with matching tags
+        if check_tags_match(r, tags, tags_match):
             r["t2"] = stop_t
             r["mt"] = stop_t
             stopped_records.append(r)
+            running_records.remove(r)
 
     put_records(stopped_records)
-    print_records(stopped=stopped_records, running=still_running_records)
+    print_records(stopped=stopped_records, running=running_records)
