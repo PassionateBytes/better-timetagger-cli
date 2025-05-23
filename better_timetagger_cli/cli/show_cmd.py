@@ -82,6 +82,9 @@ def show_cmd(
     """
     List tasks of the requested time frame.
 
+    If no tags are provided, all tasks within the selected time frame will be shown.
+    Specify one or more tags to show only matching tasks.
+
     The parameters '--start' and '--end' support natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
 
