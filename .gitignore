@@ -11,3 +11,6 @@ wheels/
 
 # Editor files
 .vscode/
+
+# App outputs
+*.csv
