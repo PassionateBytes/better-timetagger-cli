@@ -1,12 +1,12 @@
-PACKAGE = ./better_timetagger_cli
+PACKAGE = ./src/better_timetagger_cli
 TESTS   = ./tests
 REPORTS = ./.reports
 
 
-.PHONY: build format lint lint-report fix fix-report typecheck typecheck-report test test-report clean
+.PHONY: build format lint fix typecheck typecheck-report test test-report clean
 
 
-build: clean format lint-report typecheck-report test-report
+build: clean format lint typecheck-report test-report
 	uv build
 
 
@@ -19,16 +19,8 @@ lint:
 	uv run ruff check ${PACKAGE} ${TESTS}
 
 
-lint-report:
-	uv run ruff check --output-format=html --output-file=${REPORTS}/lint/index.html ${PACKAGE} ${TESTS}
-
-
 fix:
 	uv run ruff check --fix ${PACKAGE} ${TESTS}
-
-
-fix-report:
-	uv run ruff check --fix --output-format=html --output-file=${REPORTS}/lint-fix/index.html ${PACKAGE} ${TESTS}
 
 
 typecheck:
@@ -54,7 +46,7 @@ clean:
 	find . -type f -name "*.pyc" -delete
 	find . -type f -name "*.pyo" -delete
 	find . -type f -name "*.pyd" -delete
-	find . -type d -name "reports" -exec rm -rf {} +
+	find . -type d -name ".reports" -exec rm -rf {} +
 	find . -type d -name "htmlcov" -exec rm -rf {} +
 	find . -type f -name ".coverage" -delete
 	find . -type d -name ".pytest_cache" -exec rm -rf {} +
