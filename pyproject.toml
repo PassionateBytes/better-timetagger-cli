@@ -1,7 +1,11 @@
 [project]
 name = "better-timetagger-cli"
 version = "0.1.0"
-description = "A better command line tool for TimeTagger. This is a more ergonomic version of the original timetagger-cli, providing better user experience and additional features."
+description = "A command line tool for TimeTagger. This is a more feature-rich and ergonomic fork of the original timetagger-cli, providing better user experience and additional features."
+authors = [
+    { name = "Paul Bütof", email = "paul@passionate-bytes.com" },
+    { name = "Almar Klein" },
+]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
