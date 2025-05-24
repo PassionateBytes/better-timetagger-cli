@@ -44,8 +44,7 @@ def diagnose_cmd(fix: bool) -> None:
         t1, t2 = r["t1"], r["t2"]
 
         # find errors
-        # if t1 < 0 or t2 < 0:
-        if True:
+        if t1 < 0 or t2 < 0:
             error_records.append(
                 ("negative timestamp", r),
             )
