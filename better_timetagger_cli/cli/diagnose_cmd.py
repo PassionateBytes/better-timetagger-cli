@@ -90,7 +90,7 @@ def diagnose_cmd(fix: bool) -> None:
     # when fixing errors, update live output as we go
     else:
         output = render_results(error_records, warning_records)
-        with Live(output) as live:
+        with Live(output, console=console) as live:
             for i, (_, r) in enumerate(error_records):
                 # fix t1 larger than t2
                 if t1 > t2:

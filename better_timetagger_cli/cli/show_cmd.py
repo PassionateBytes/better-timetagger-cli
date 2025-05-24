@@ -110,7 +110,7 @@ def show_cmd(
     # In 'follow' mode, monitor continuously for changes
     else:
         waiting_msg = "\n[red]Waiting for records...[/red]\n"
-        with Live(waiting_msg) as live:
+        with Live(waiting_msg, console=console) as live:
             for update in continuous_updates(start_dt, tags=tags, tags_match=tags_match):
                 # Re-evaluate time frame and filter cached records accordingly to support "floating" time frames
                 start_dt, end_dt = parse_start_end(start, end)
