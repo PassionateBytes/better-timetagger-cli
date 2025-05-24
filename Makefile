@@ -1,28 +1,50 @@
-MODULES = better_timetagger_cli tests
+PACKAGE = ./better_timetagger_cli
+TESTS   = ./tests
+REPORTS = ./.reports
 
 
-.PHONY: build format lint fix typecheck clean
+.PHONY: build format lint lint-report fix fix-report typecheck typecheck-report test test-report clean
 
 
-build: format lint typecheck
+build: clean format lint-report typecheck-report test-report
 	uv build
 
 
 format:
-	uv run ruff format ${MODULES}
-	uv run ruff check --fix --select I,F401 ${MODULES}
+	uv run ruff format ${PACKAGE} ${TESTS}
+	uv run ruff check --fix --select I,F401 ${PACKAGE} ${TESTS}
 
 
 lint:
-	uv run ruff check ${MODULES}
+	uv run ruff check ${PACKAGE} ${TESTS}
+
+
+lint-report:
+	uv run ruff check --output-format=html --output-file=${REPORTS}/lint/index.html ${PACKAGE} ${TESTS}
 
 
 fix:
-	uv run ruff check --fix ${MODULES}
+	uv run ruff check --fix ${PACKAGE} ${TESTS}
+
+
+fix-report:
+	uv run ruff check --fix --output-format=html --output-file=${REPORTS}/lint-fix/index.html ${PACKAGE} ${TESTS}
 
 
 typecheck:
-	uv run mypy ${MODULES}
+	uv run mypy ${PACKAGE} ${TESTS}
+
+
+typecheck-report:
+	uv run mypy --html-report=${REPORTS}/typecheck ${PACKAGE} ${TESTS}
+
+
+test:
+	uv run pytest --cov=${PACKAGE} --cov-report=term-missing ${TESTS}
+
+
+test-report:
+	uv run pytest --cov=${PACKAGE} --cov-report=term-missing --cov-report=html:${REPORTS}/covreage --report=${REPORTS}/test/index.html --template=html1/index.html ${TESTS}
 
 
 clean:
@@ -32,8 +54,9 @@ clean:
 	find . -type f -name "*.pyc" -delete
 	find . -type f -name "*.pyo" -delete
 	find . -type f -name "*.pyd" -delete
-	find . -type f -name ".coverage" -delete
+	find . -type d -name "reports" -exec rm -rf {} +
 	find . -type d -name "htmlcov" -exec rm -rf {} +
+	find . -type f -name ".coverage" -delete
 	find . -type d -name ".pytest_cache" -exec rm -rf {} +
 	find . -type d -name ".coverage" -exec rm -rf {} +
 	find . -type d -name ".mypy_cache" -exec rm -rf {} +
