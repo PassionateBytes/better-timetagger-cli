@@ -28,20 +28,9 @@ def cli(ctx: click.Context) -> None:
     """
     (Better) TimeTagger CLI
 
-    A command line interface for TimeTagger with a focus on functionality and usage ergonomics.
+    A feature-rich and ergonomic command-line interface for TimeTagger.
     """
-
-    def _before_command():
-        """Runs before cli command is executed."""
-        pass
-
-    def _after_command():
-        """Runs after cli command is executed."""
-        pass
-
-    if ctx.invoked_subcommand is not None:
-        _before_command()
-        ctx.call_on_close(_after_command)
+    pass
 
 
 # register cli commands
