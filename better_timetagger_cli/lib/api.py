@@ -9,7 +9,6 @@ from datetime import datetime
 from time import sleep
 from typing import Literal, cast
 
-import click
 import requests
 
 from .config import load_config
@@ -53,7 +52,6 @@ def api_request(
         except json.JSONDecodeError:
             pass
         abort(f"API request failed with status code: {response.status_code}\n[dim]{response_text}[/dim]")
-        raise click.Abort
 
     return response.json()
 
