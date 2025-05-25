@@ -93,7 +93,7 @@ def resume_cmd(
         return
 
     # Resume most recent record
-    if not select or len(records) == 1:
+    if not select:
         resume_description = records[0]["ds"].strip()
         ctx.invoke(start_cmd, description=resume_description, at=at, keep=keep, show_keys=show_keys)
         return
