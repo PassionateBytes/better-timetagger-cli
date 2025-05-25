@@ -167,7 +167,9 @@ def validate_strftime_format(format_string: str) -> bool:
         True if the format string is valid, False otherwise.
     """
     try:
-        datetime.now().strftime(format_string)
+        now = datetime.now().strftime(format_string)
+        if "%" in now:
+            raise ValueError("Format string contains unrecognized format codes.")
         return True
     except (ValueError, TypeError):
         return False
