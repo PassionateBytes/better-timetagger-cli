@@ -30,7 +30,7 @@ def cli(ctx: click.Context) -> None:
 
     A feature-rich and ergonomic command-line interface for TimeTagger.
     """
-    pass
+    pass  # pragma: no cover
 
 
 # register cli commands
