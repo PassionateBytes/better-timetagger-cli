@@ -12,7 +12,7 @@ class ConfigDict(TypedDict):
 
     base_url: str
     api_token: str
-    ssl_verify: bool | str
+    ssl_verify: bool
     datetime_format: str
     weekday_format: str
 

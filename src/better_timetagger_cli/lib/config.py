@@ -55,7 +55,7 @@ datetime_format = "{datetime_format}"  # -> Custom format with abbreviated month
 weekday_format = "{weekday_format}"  # -> abbreviated weekday name
 """.lstrip().replace("\r\n", "\n")
 
-DEFAULT_CONFIG_VALUES: ConfigDict = {
+DEFAULT_CONFIG_DATA = {
     "base_url": "https://timetagger.io/timetagger/",
     "api_token": "<your api token>",
     "ssl_verify": "true",
@@ -191,9 +191,10 @@ def create_default_config() -> str:
             url = urlparse(legacy_config_values["api_url"])
             url_path = Path(url.path).parent.parent
             url = url._replace(path=str(url_path))
-            config_values: ConfigDict = {
-                **DEFAULT_CONFIG_VALUES,
-                "base_url": urlunparse(url),
+            base_url = urlunparse(url).rstrip("/") + "/"
+            config_data = {
+                **DEFAULT_CONFIG_DATA,
+                "base_url": base_url,
                 "api_token": legacy_config_values["api_token"],
                 "ssl_verify": "true" if legacy_config_values["ssl_verify"] else "false",
             }
@@ -203,14 +204,14 @@ def create_default_config() -> str:
 
     # fallback to default values
     except Exception:
-        config_values = DEFAULT_CONFIG_VALUES
+        config_data = DEFAULT_CONFIG_DATA
 
     # write config file
     try:
         filepath = get_config_path(CONFIG_FILE)
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         with open(filepath, "wb") as f:
-            f.write(DEFAULT_CONFIG_TEMPLATE.format(**config_values).encode())
+            f.write(DEFAULT_CONFIG_TEMPLATE.format(**config_data).encode())
         os.chmod(filepath, 0o640)
         return filepath
 
