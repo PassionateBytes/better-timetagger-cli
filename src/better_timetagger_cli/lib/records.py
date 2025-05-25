@@ -232,7 +232,7 @@ def get_tags_from_description(description: str) -> list[str]:
     Returns:
         A list of tags extracted from the description.
     """
-    return [word for word in description.split() if word.startswith("#")]
+    return re.findall(r"#\w+", description)
 
 
 def records_from_csv(
