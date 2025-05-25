@@ -47,7 +47,7 @@ from .start_cmd import start_cmd
     "tags_match",
     type=click.Choice(["any", "all"]),
     default="all",
-    help="Tag matching mode. Filter records that match any or all tags. Default: all.",
+    help="Tag matching mode. Find records that match any or all tags. Default: all.",
 )
 @click.pass_context
 def resume_cmd(

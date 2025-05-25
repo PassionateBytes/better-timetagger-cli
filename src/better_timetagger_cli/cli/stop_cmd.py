@@ -34,7 +34,7 @@ from better_timetagger_cli.lib.records import check_record_tags_match
     "tags_match",
     type=click.Choice(["any", "all"]),
     default="all",
-    help="Tag matching mode. Filter records that match any or all tags. Default: all.",
+    help="Tag matching mode. Find records that match any or all tags. Default: all.",
 )
 def stop_cmd(
     tags: list[str],
