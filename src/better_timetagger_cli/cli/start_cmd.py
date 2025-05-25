@@ -1,4 +1,3 @@
-from typing import Literal
 
 import click
 from rich.console import Group
@@ -7,7 +6,6 @@ from better_timetagger_cli.lib.api import create_record_key, get_runnning_record
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import print_records, render_records
 from better_timetagger_cli.lib.parsers import parse_at, tags_callback
-from better_timetagger_cli.lib.records import check_record_tags_match
 from better_timetagger_cli.lib.types import Record
 
 
@@ -49,14 +47,6 @@ from better_timetagger_cli.lib.types import Record
     is_flag=True,
     help="List each record's key.",
 )
-@click.option(
-    "-x",
-    "--match",
-    "tags_match",
-    type=click.Choice(["any", "all"]),
-    default="all",
-    help="Tag matching mode. Filter records that match any or all tags. Default: all.",
-)
 def start_cmd(
     tags: list[str],
     at: str | None,
@@ -64,12 +54,13 @@ def start_cmd(
     empty: bool,
     keep: bool,
     show_keys: bool,
-    tags_match: Literal["any", "all"],
 ) -> None:
     """
     Start time tracking.
 
     Provide one or more tags to label the task.
+
+    By default, previous tasks will be stopped automatically.
 
     The '--at' parameter supports natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
@@ -105,8 +96,8 @@ def start_cmd(
                 )
             )
 
-        # Stop running tasks with matching tags, unless in 'keep' mode
-        if not keep and check_record_tags_match(r, tags, tags_match):
+        # Stop running tasks, unless in 'keep' mode
+        if not keep:
             r["t2"] = now
             r["mt"] = now
             stopped_records.append(r)
