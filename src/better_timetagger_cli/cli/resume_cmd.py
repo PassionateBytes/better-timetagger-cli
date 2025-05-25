@@ -24,6 +24,12 @@ from .start_cmd import start_cmd
     callback=tags_callback,
 )
 @click.option(
+    "-a",
+    "--at",
+    type=click.STRING,
+    help="Start the task at a specific time. Supports natural language.",
+)
+@click.option(
     "-k",
     "--keep",
     is_flag=True,
@@ -47,6 +53,7 @@ from .start_cmd import start_cmd
 def resume_cmd(
     ctx: click.Context,
     tags: list[str],
+    at: str | None,
     keep: bool,
     select: bool,
     tags_match: Literal["any", "all"],
@@ -54,7 +61,11 @@ def resume_cmd(
     """
     Start time tracking, using the same tags and description as the most recent record.
 
-    You may specify a tag, to only resume the most recent record with that specific tag.
+    You may specify a tag, to only resume the most recent record that matches the tag.
+
+    The '--at' parameter supports natural language to specify date and time.
+    You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
+
 
     Note that only records from the last 4 weeks are considered.
     """
@@ -80,7 +91,7 @@ def resume_cmd(
     # Resume most recent record
     if not select or len(records) == 1:
         resume_description = records[0]["ds"].strip()
-        ctx.invoke(start_cmd, description=resume_description, keep=keep)
+        ctx.invoke(start_cmd, description=resume_description, at=at, keep=keep)
         return
 
     # In 'select' mode, provide choice of records to resume
@@ -115,4 +126,4 @@ def resume_cmd(
             )
 
         resume_description = resume_description_choices[int(selected)]
-        ctx.invoke(start_cmd, description=resume_description, keep=keep)
+        ctx.invoke(start_cmd, description=resume_description, at=at, keep=keep)
