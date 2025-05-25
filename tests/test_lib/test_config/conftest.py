@@ -52,3 +52,16 @@ def mock_config_path(tmp_path):
         return str(config_file)
 
     return mock_get_config_path, config_file
+
+
+@pytest.fixture
+def legacy_config_file(tmp_path):
+    """Create a temporary legacy config file."""
+    config_file = tmp_path / "config.txt"
+    content = dedent("""
+        api_url = "https://example.com/timetagger/api/"
+        api_token = "legacy-test-token"
+        ssl_verify = false
+    """)
+    config_file.write_text(content)
+    return config_file
