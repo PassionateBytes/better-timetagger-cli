@@ -155,6 +155,8 @@ def check_record_tags_match(
     Returns:
         True if the record matches the tags, False otherwise.
     """
+    if not tags:
+        return True
     match_func = any if tags_match == "any" else all
     return match_func(tag in record["ds"] for tag in tags)
 
