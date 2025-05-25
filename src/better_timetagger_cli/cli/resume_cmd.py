@@ -42,6 +42,12 @@ from .start_cmd import start_cmd
     help="List matching records to select from, if multiple different records match.",
 )
 @click.option(
+    "-v",
+    "--show-keys",
+    is_flag=True,
+    help="List each record's key.",
+)
+@click.option(
     "-x",
     "--match",
     "tags_match",
@@ -56,6 +62,7 @@ def resume_cmd(
     at: str | None,
     keep: bool,
     select: bool,
+    show_keys: bool,
     tags_match: Literal["any", "all"],
 ) -> None:
     """
@@ -91,7 +98,7 @@ def resume_cmd(
     # Resume most recent record
     if not select or len(records) == 1:
         resume_description = records[0]["ds"].strip()
-        ctx.invoke(start_cmd, description=resume_description, at=at, keep=keep)
+        ctx.invoke(start_cmd, description=resume_description, at=at, keep=keep, show_keys=show_keys)
         return
 
     # In 'select' mode, provide choice of records to resume
@@ -126,4 +133,4 @@ def resume_cmd(
             )
 
         resume_description = resume_description_choices[int(selected)]
-        ctx.invoke(start_cmd, description=resume_description, at=at, keep=keep)
+        ctx.invoke(start_cmd, description=resume_description, at=at, keep=keep, show_keys=show_keys)
