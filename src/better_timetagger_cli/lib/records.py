@@ -69,13 +69,12 @@ def get_tag_stats(records: list[Record]) -> dict[str, tuple[int, int]]:
 
     tag_stats: dict[str, tuple[int, int]] = {}
     for r in records:
-        for word in r["ds"].split():
-            if word.startswith("#"):
-                stats = tag_stats.get(word, (0, 0))
-                tag_stats[word] = (
-                    stats[0] + 1,
-                    stats[1] + get_record_duration(r),
-                )
+        for tag in get_tags_from_description(r["ds"]):
+            stats = tag_stats.get(tag, (0, 0))
+            tag_stats[tag] = (
+                stats[0] + 1,
+                stats[1] + get_record_duration(r),
+            )
 
     tag_stats = dict(sorted(tag_stats.items(), key=lambda x: x[1][1], reverse=True))
 
