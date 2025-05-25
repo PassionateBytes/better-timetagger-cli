@@ -51,6 +51,42 @@ def test_missing_base_url(monkeypatch, tmp_path):
     assert exc_info.value.code == 1
 
 
+def test_missing_datetime_format(monkeypatch, tmp_path):
+    """Abort on missing datetime_format parameter."""
+    config_file = tmp_path / "config.toml"
+    config_file.write_text(
+        dedent("""
+        base_url = "https://timetagger.io/timetagger/"
+        api_token = "test-token"
+        weekday_format = "%A"
+    """)
+    )
+    monkeypatch.setattr("better_timetagger_cli.lib.config.get_config_path", lambda _: str(config_file))
+
+    with pytest.raises(SystemExit) as exc_info:
+        lib.load_config()
+
+    assert exc_info.value.code == 1
+
+
+def test_missing_weekday_format(monkeypatch, tmp_path):
+    """Abort on missing weekday_format parameter."""
+    config_file = tmp_path / "config.toml"
+    config_file.write_text(
+        dedent("""
+        base_url = "https://timetagger.io/timetagger/"
+        api_token = "test-token"
+        datetime_format = "%Y-%m-%d"
+    """)
+    )
+    monkeypatch.setattr("better_timetagger_cli.lib.config.get_config_path", lambda _: str(config_file))
+
+    with pytest.raises(SystemExit) as exc_info:
+        lib.load_config()
+
+    assert exc_info.value.code == 1
+
+
 def test_invalid_base_url_format(monkeypatch, tmp_path):
     """Abort on invalid base_url format."""
     config_file = tmp_path / "config.toml"
@@ -99,6 +135,26 @@ def test_invalid_datetime_format(monkeypatch, tmp_path):
         api_token = "test-token"
         datetime_format = "%Q"  # %Q is an invalid code
         weekday_format = "%A"
+    """)
+    )
+
+    monkeypatch.setattr("better_timetagger_cli.lib.config.get_config_path", lambda _: str(config_file))
+
+    with pytest.raises(SystemExit) as exc_info:
+        lib.load_config()
+
+    assert exc_info.value.code == 1
+
+
+def test_invalid_weekday_format(monkeypatch, tmp_path):
+    """Abort on invalid datetime format string."""
+    config_file = tmp_path / "config.toml"
+    config_file.write_text(
+        dedent("""
+        base_url = "https://timetagger.io/timetagger/"
+        api_token = "test-token"
+        datetime_format = "%Y-%m-%d"
+        weekday_format = "%Q"  # %Q is an invalid code
     """)
     )
 

@@ -63,7 +63,7 @@ DEFAULT_CONFIG_DATA = {
     "weekday_format": "%a",
 }
 
-if sys.platform.startswith("win"):
+if sys.platform.startswith("win"):  # pragma: no cover
     DEFAULT_CONFIG_TEMPLATE.replace("\n", "\r\n")
 
 
