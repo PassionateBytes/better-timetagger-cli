@@ -228,4 +228,4 @@ def highlight_tags_in_description(description: str, style: str = "underline") ->
     Returns:
         A Text object with highlighted tags.
     """
-    return re.sub(r'#\w+', lambda m: f"[{style}]{m.group(0)}[/{style}]", description)
+    return re.sub(r"#\w+", lambda m: f"[{style}]{m.group(0)}[/{style}]", description)
