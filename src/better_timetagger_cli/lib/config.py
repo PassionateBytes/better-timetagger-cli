@@ -11,6 +11,7 @@ from urllib.parse import urlparse, urlunparse
 
 import toml
 
+from .console import console
 from .misc import abort
 from .types import ConfigDict, LegacyConfigDict
 
@@ -198,6 +199,7 @@ def create_default_config() -> str:
                 "api_token": legacy_config_values["api_token"],
                 "ssl_verify": "true" if legacy_config_values["ssl_verify"] else "false",
             }
+            console.print("\n[yellow]Migrating legacy configuration to new format...[/yellow]")
 
         else:
             raise Exception("Could not load legacy config.")
