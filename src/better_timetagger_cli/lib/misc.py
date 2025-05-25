@@ -8,20 +8,20 @@ import sys
 from time import time
 from typing import NoReturn
 
-from rich.abc import RichRenderable
 from rich.console import Group
 
 from .console import console
 
 
-def abort(message: str | RichRenderable | Group) -> NoReturn:
+def abort(message: str | Group) -> NoReturn:
     """
     Abort the current command with a message.
 
     Args:
         message: The message to display before aborting.
     """
-    console.print(f"\n[red]{message}[/red]\n")
+    style = "red" if isinstance(message, str) else None
+    console.print(message, style=style)
     exit(1)
 
 
