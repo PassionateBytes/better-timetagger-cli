@@ -218,7 +218,7 @@ def styled_padded(value: Any, width: int = 5, *, style: str = "magenta", padding
         return text
 
 
-def highlight_tags_in_description(description: str, style: str = "underline") -> Text:
+def highlight_tags_in_description(description: str, style: str = "underline") -> str:
     """
     Highlight tags (marked by '#') in record descriptions.
 
@@ -228,11 +228,4 @@ def highlight_tags_in_description(description: str, style: str = "underline") ->
     Returns:
         A Text object with highlighted tags.
     """
-    text = Text()
-    for word in description.split():
-        if word.startswith("#"):
-            text.append(" ")
-            text.append(word, style=style)
-        else:
-            text.append(f" {word}")
-    return text
+    return re.sub(r'#\w+', lambda m: f"[{style}]{m.group(0)}[/{style}]", description)
