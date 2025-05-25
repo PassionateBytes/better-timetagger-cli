@@ -1,4 +1,3 @@
-
 import click
 from rich.console import Group
 
