@@ -19,8 +19,8 @@ def test_package_entrypoint() -> None:
         text=True,
     )
     assert result.returncode == 0
-    assert "Usage:" in result.output
-    assert "Options:" in result.output
-    assert "Commands:" in result.output
-    assert "-h, --help" in result.output
-    assert "--version" in result.output
+    assert "Usage:" in result.stdout
+    assert "Options:" in result.stdout
+    assert "Commands:" in result.stdout
+    assert "-h, --help" in result.stdout
+    assert "--version" in result.stdout
