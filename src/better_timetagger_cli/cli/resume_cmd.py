@@ -73,7 +73,6 @@ def resume_cmd(
     The '--at' parameter supports natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
 
-
     Note that only records from the last 4 weeks are considered.
     """
     now = now_timestamp()
@@ -87,8 +86,6 @@ def resume_cmd(
         tomorrow,
         tags=tags,
         tags_match=tags_match,
-        sort_by="t2",
-        sort_reverse=True,
     )["records"]
 
     if not records:
