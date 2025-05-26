@@ -168,7 +168,7 @@ def put_records(*records: Record | list[Record]) -> PutRecordsResponse:
         else:
             records_flattened.append(record)
 
-    response = api_request("PUT", "records", records)
+    response = api_request("PUT", "records", records_flattened)
     return cast(PutRecordsResponse, response)
 
 
