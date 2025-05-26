@@ -1,7 +1,7 @@
 import click
 from rich.console import Group
 
-from better_timetagger_cli.lib.api import create_record_key, get_runnning_records, put_records
+from better_timetagger_cli.lib.api import create_record_key, get_running_records, put_records
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import print_records, render_records
 from better_timetagger_cli.lib.parsers import parse_at, tags_callback
@@ -91,7 +91,7 @@ def start_cmd(
             abort(
                 Group(
                     "\n[red]Task with these tags and description is already running.[/red]",
-                    render_records(running=running_records, show_keys=show_keys),
+                    render_records(running_records, show_keys=show_keys),
                 )
             )
 
@@ -103,3 +103,4 @@ def start_cmd(
             running_records.remove(r)
 
     put_records(new_record, stopped_records)
+    print_records((new_record, "green"), running_records, (stopped_records, "red"), show_keys=show_keys)

@@ -2,6 +2,7 @@
 # Utilities based on `rich` to render formatted output.
 """
 
+import re
 from collections.abc import Iterable
 from datetime import datetime, timedelta
 from typing import Any
@@ -17,31 +18,23 @@ from .misc import now_timestamp
 
 
 def print_records(
-    records: Iterable[Record] = (),
-    *,
-    started: Iterable[Record] = (),
-    running: Iterable[Record] = (),
-    stopped: Iterable[Record] = (),
+    *records: tuple[Iterable[Record] | Record, str] | Iterable[Record] | Record,
+    show_index: bool = False,
     show_keys: bool = False,
     record_status: dict[str, str | None] | None = None,
 ) -> None:
     """
     Display records in a table format using rich.
 
-    Apply different styles based on the record status (started, running, stopped).
-
     Args:
-        records: A list of records to display.
-        started: A list of records that are started.
-        running: A list of records that are running.
-        stopped: A list of records that are stopped.
-        show_keys: If True, show the key of each record.
+        records: One or more lists of records to display. Optionally, provide along with a style expression as a tuple.
+        show_index: If True, show the row index of each record. Useful for row-select prompts.
+        show_keys: If True, show the key (unique identifier) of each record.
+        record_status: A map of status annotations for each record key.
     """
     output = render_records(
-        records,
-        started=started,
-        running=running,
-        stopped=stopped,
+        *records,
+        show_index=show_index,
         show_keys=show_keys,
         record_status=record_status,
     )
@@ -49,92 +42,69 @@ def print_records(
 
 
 def render_records(
-    records: Iterable[Record] = (),
-    *,
-    started: Iterable[Record] = (),
-    running: Iterable[Record] = (),
-    stopped: Iterable[Record] = (),
+    *records: tuple[Iterable[Record] | Record, str] | Iterable[Record] | Record,
     show_keys: bool = False,
+    show_index: bool = False,
     record_status: dict[str, str | None] | None = None,
 ) -> Table:
     """
     Create a renderable rich object to display records.
 
-    Apply different styles based on the record status (started, running, stopped).
-
     Args:
-        records: A list of records to display.
-        started: A list of records that are started.
-        running: A list of records that are running.
-        stopped: A list of records that are stopped.
-        show_key: If True, show the key of each record.
+        records: One or more lists of records to display. Optionally, provide along with a style expression as a tuple.
+        show_index: If True, show the row index of each record. Useful for row-select prompts.
+        show_keys: If True, show the key (unique identifier) of each record.
         record_status: A map of status annotations for each record key.
     """
     now = now_timestamp()
 
     table = Table(box=SIMPLE, min_width=65)
+
+    # extra columns left
+    if show_index:
+        table.add_column(style="blue", no_wrap=True)
     if show_keys:
         table.add_column("Key", style="blue", no_wrap=True)
+
+    # main columns
     table.add_column(style="cyan", no_wrap=True)
     table.add_column("Started", style="cyan")
     table.add_column("Stopped", style="cyan")
     table.add_column("Duration", style="bold magenta", no_wrap=True, justify="right")
     table.add_column("Description", style="green")
+
+    # extra columns right
     if record_status:
         table.add_column("Status", style="yellow")
 
-    def _add_row(key: str, *args, **kwargs) -> None:
-        """Optionally include the 'key' column."""
-        if show_keys:
-            args = (key, *args)
-        if record_status:
-            status = record_status.get(key, None)
-            if status:
-                args = (*args, status)
-        table.add_row(*args, **kwargs)
+    # unpack records and associated styles
+    for records_input in records:
+        if isinstance(records_input, tuple) and isinstance(records_input[0], list | dict) and isinstance(records_input[1], str):
+            _records, _style = records_input
+        else:
+            _records, _style = records_input, None
+        if isinstance(_records, dict):
+            _records = (_records,)
 
-    for r in records:
-        _add_row(
-            r["key"],
-            readable_weekday(r["t1"]),
-            readable_date_time(r["t1"]),
-            readable_date_time(r["t2"]) if r["t1"] != r["t2"] else "...",
-            readable_duration(r["t2"] - r["t1"]),
-            highlight_tags_in_description(r["ds"]),
-        )
+        # render records into table rows
+        for i, r in enumerate(_records):
+            columns = (
+                readable_weekday(r["t1"]),
+                readable_date_time(r["t1"]),
+                readable_date_time(r["t2"]) if r["t1"] != r["t2"] else "...",
+                readable_duration(r["t2"] - r["t1"]) if r["t1"] != r["t2"] else readable_duration(now - r["t1"]),
+                highlight_tags_in_description(r["ds"]),
+            )
+            # extra columns left
+            if show_keys:
+                columns = (r["key"], *columns)
+            if show_index:
+                columns = (f"[blue]\[{i}][/blue]" if i <= 0 else f"[dim]\[{i}][/dim]", *columns)
+            # extra columns right
+            if record_status:
+                columns = (*columns, f"[yellow]{record_status.get(r['key'], '')}[/yellow]")
 
-    for r in started:
-        _add_row(
-            r["key"],
-            readable_weekday(r["t1"]),
-            readable_date_time(now),
-            "...",
-            "...",
-            highlight_tags_in_description(r["ds"]),
-            style="green",
-        )
-
-    for r in running:
-        _add_row(
-            r["key"],
-            readable_weekday(r["t1"]),
-            readable_date_time(r["t1"]),
-            "...",
-            readable_duration(now - r["t1"]),
-            highlight_tags_in_description(r["ds"]),
-            style="cyan",
-        )
-
-    for r in stopped:
-        _add_row(
-            r["key"],
-            readable_weekday(r["t1"]),
-            readable_date_time(r["t1"]),
-            readable_date_time(r["t2"]),
-            readable_duration(r["t2"] - r["t1"]),
-            highlight_tags_in_description(r["ds"]),
-            style="red",
-        )
+            table.add_row(*columns, style=_style)
 
     return table
 

@@ -2,16 +2,13 @@ from datetime import datetime, timedelta
 from typing import Literal
 
 import click
-from rich.box import SIMPLE
 from rich.prompt import IntPrompt
-from rich.table import Table
-from rich.text import Text
 
 from better_timetagger_cli.lib.api import get_records
-from better_timetagger_cli.lib.console import console
 from better_timetagger_cli.lib.misc import abort, now_timestamp
-from better_timetagger_cli.lib.output import highlight_tags_in_description
+from better_timetagger_cli.lib.output import print_records
 from better_timetagger_cli.lib.parsers import tags_callback
+from better_timetagger_cli.lib.types import Record
 
 from .start_cmd import start_cmd
 
@@ -36,10 +33,10 @@ from .start_cmd import start_cmd
     help="Keep previous tasks running, do not stop them.",
 )
 @click.option(
-    "-s",
+    "-S",
     "--select",
     is_flag=True,
-    help="List matching records to select from, if multiple different records match.",
+    help="Show a list of matching records to select from.",
 )
 @click.option(
     "-v",
@@ -100,34 +97,28 @@ def resume_cmd(
 
     # In 'select' mode, provide choice of records to resume
     else:
-        resume_description_choices: list[str] = []
+        resume_record_choices: list[Record] = []
         for r in records:
-            # avoid duplicates
-            if any(r["ds"].strip() == choice for choice in resume_description_choices):
+            # avoid duplicate descriptions
+            if any(r["ds"].strip() == choice["ds"].strip() for choice in resume_record_choices):
                 continue
-            resume_description_choices.append(r["ds"].strip())
+            resume_record_choices.append(r)
             # max 10 choices
-            if len(resume_description_choices) >= 10:
+            if len(resume_record_choices) >= 10:
                 break
 
-        # print choices
-        table = Table(show_header=False, box=SIMPLE)
-        table.add_column(style="cyan")
-        table.add_column(style="magenta")
-        for i, choice in enumerate(resume_description_choices):
-            id = Text(f"[{i}]:", style="bold" if i <= 0 else "dim")
-            table.add_row(id, highlight_tags_in_description(choice))
-        console.print(table)
+        # prompt for choice
+        print_records(resume_record_choices, show_index=True, show_keys=show_keys)
 
         # prompt for choice
         selected = None
         while selected is None:
             selected = IntPrompt.ask(
                 "Select task to resume",
-                choices=[str(i) for i in range(len(resume_description_choices))],
+                choices=[str(i) for i in range(len(resume_record_choices))],
                 show_choices=False,
                 default=0,
             )
 
-        resume_description = resume_description_choices[int(selected)]
+        resume_description = resume_record_choices[int(selected)]["ds"].strip()
         ctx.invoke(start_cmd, description=resume_description, at=at, keep=keep, show_keys=show_keys)

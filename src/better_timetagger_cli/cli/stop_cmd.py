@@ -1,6 +1,7 @@
 from typing import Literal
 
 import click
+from rich.prompt import IntPrompt
 
 from better_timetagger_cli.lib.api import get_running_records, put_records
 from better_timetagger_cli.lib.misc import abort, now_timestamp
@@ -23,6 +24,12 @@ from better_timetagger_cli.lib.records import check_record_tags_match
     help="Stop the task at a specific time. Supports natural language.",
 )
 @click.option(
+    "-S",
+    "--select",
+    is_flag=True,
+    help="Show a list of matching records to select from.",
+)
+@click.option(
     "-v",
     "--show-keys",
     is_flag=True,
@@ -39,6 +46,7 @@ from better_timetagger_cli.lib.records import check_record_tags_match
 def stop_cmd(
     tags: list[str],
     at: str | None,
+    select: bool,
     show_keys: bool,
     tags_match: Literal["any", "all"],
 ) -> None:
@@ -60,14 +68,47 @@ def stop_cmd(
 
     now = now_timestamp()
     stop_t = parse_at(at) or now
+    stopped_records = []
 
-    for r in running_records.copy():
-        # Stop running tasks with matching tags
-        if check_record_tags_match(r, tags, tags_match):
-            r["t2"] = stop_t
-            r["mt"] = stop_t
-            stopped_records.append(r)
-            running_records.remove(r)
+    # Stop all matching records
+    if not select:
+        for r in running_records.copy():
+            # Stop running tasks with matching tags
+            if check_record_tags_match(r, tags, tags_match):
+                r["t2"] = stop_t
+                r["mt"] = stop_t
+                stopped_records.append(r)
+                running_records.remove(r)
 
-    put_records(stopped_records)
-    print_records(stopped=stopped_records, running=running_records, show_keys=show_keys)
+        if not stopped_records:
+            abort("No running records match.")
+
+        put_records(stopped_records)
+        print_records(running_records, (stopped_records, "red"), show_keys=show_keys)
+        return
+
+    # In 'select' mode, provide choice of records to stop
+    else:
+        stop_record_choices = [r for r in running_records if check_record_tags_match(r, tags, tags_match)]
+        print_records(
+            stop_record_choices,
+            show_index=True,
+            show_keys=show_keys,
+        )
+
+        selected = None
+        while selected is None:
+            selected = IntPrompt.ask(
+                "Select task to stop",
+                choices=[str(i) for i in range(len(stop_record_choices))],
+                show_choices=False,
+                default=0,
+            )
+
+        running_records.remove(stop_record_choices[selected])
+        stopped_record = stop_record_choices[selected]
+        stopped_record["t2"] = stop_t
+        stopped_record["mt"] = stop_t
+
+        put_records(stopped_record)
+        print_records(running_records, (stopped_record, "red"), show_keys=show_keys)
