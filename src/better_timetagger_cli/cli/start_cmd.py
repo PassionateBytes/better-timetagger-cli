@@ -102,5 +102,4 @@ def start_cmd(
             stopped_records.append(r)
             running_records.remove(r)
 
-    put_records([new_record, *stopped_records])
-    print_records(started=[new_record], running=running_records, stopped=stopped_records, show_keys=show_keys)
+    put_records(new_record, stopped_records)

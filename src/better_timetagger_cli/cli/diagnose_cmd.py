@@ -95,7 +95,7 @@ def diagnose_cmd(fix: bool) -> None:
                 # fix t1 larger than t2
                 if t1 > t2:
                     r["t1"], r["t2"] = r["t2"], r["t1"]
-                    put_records([r])
+                    put_records(r)
 
                 # fix negative timestamp / far future
                 elif t1 < 0 or t2 < 0 or datetime.fromtimestamp(r["t2"]) > very_late_date:
@@ -104,7 +104,7 @@ def diagnose_cmd(fix: bool) -> None:
                         dt = 60 * 60
                     r["t1"] = int(time.time())
                     r["t2"] = r["t1"] + dt
-                    put_records([r])
+                    put_records(r)
 
                 output = render_results(error_records, warning_records, i)
                 live.update(output)

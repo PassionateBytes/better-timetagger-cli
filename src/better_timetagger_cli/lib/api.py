@@ -151,7 +151,7 @@ def get_running_records(
     return response
 
 
-def put_records(records: list[Record]) -> PutRecordsResponse:
+def put_records(*records: Record | list[Record]) -> PutRecordsResponse:
     """
     Calls TimeTagger API using `PUT /records` and returns response.
 
@@ -161,6 +161,13 @@ def put_records(records: list[Record]) -> PutRecordsResponse:
     Returns:
         A dictionary containing the response from the API.
     """
+    records_flattened = []
+    for record in records:
+        if isinstance(record, list):
+            records_flattened.extend(record)
+        else:
+            records_flattened.append(record)
+
     response = api_request("PUT", "records", records)
     return cast(PutRecordsResponse, response)
 
