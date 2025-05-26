@@ -88,7 +88,7 @@ def render_records(
 
         # render records into table rows
         for i, r in enumerate(_records):
-            columns = (
+            columns: tuple[str, ...] = (
                 readable_weekday(r["t1"]),
                 readable_date_time(r["t1"]),
                 readable_date_time(r["t2"]) if r["t1"] != r["t2"] else "...",
