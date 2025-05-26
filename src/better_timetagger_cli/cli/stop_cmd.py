@@ -2,7 +2,7 @@ from typing import Literal
 
 import click
 
-from better_timetagger_cli.lib.api import get_runnning_records, put_records
+from better_timetagger_cli.lib.api import get_running_records, put_records
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import print_records
 from better_timetagger_cli.lib.parsers import parse_at, tags_callback
@@ -53,11 +53,10 @@ def stop_cmd(
 
     Command aliases: 'stop', 'check-out', 'out'
     """
-    running_records = get_runnning_records()["records"]
-    stopped_records = []
-
-    if not running_records:
-        abort("No running records.")
+    running_records = get_running_records(
+        sort_by="t1",
+        sort_reverse=False,
+    )["records"]
 
     now = now_timestamp()
     stop_t = parse_at(at) or now

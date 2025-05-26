@@ -104,7 +104,7 @@ def get_records(
     return cast(GetRecordsResponse, response)
 
 
-def get_runnning_records(
+def get_running_records(
     *,
     tags: list[str] | None = None,
     tags_match: Literal["any", "all"] = "any",

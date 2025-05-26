@@ -82,7 +82,7 @@ def start_cmd(
         "ds": description,
     }
 
-    running_records = get_runnning_records()["records"]
+    running_records = get_running_records()["records"]
     stopped_records = []
 
     for r in running_records.copy():
