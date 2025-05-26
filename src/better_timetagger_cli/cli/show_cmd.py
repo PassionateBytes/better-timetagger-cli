@@ -7,7 +7,7 @@ from rich.console import Group
 from rich.live import Live
 from rich.table import Table
 
-from better_timetagger_cli.lib.api import continuous_updates, get_records
+from better_timetagger_cli.lib.api import continuous_updates, get_records, get_updates
 from better_timetagger_cli.lib.console import console
 from better_timetagger_cli.lib.misc import abort
 from better_timetagger_cli.lib.output import readable_duration, render_records, styled_padded
@@ -41,7 +41,7 @@ from better_timetagger_cli.lib.types import Record
     "summary",
     flag_value=True,
     default=None,
-    help="Show summary only, disable table.",
+    help="Show only summary, disable table.",
 )
 @click.option(
     "-Z",
@@ -50,6 +50,18 @@ from better_timetagger_cli.lib.types import Record
     flag_value=False,
     default=None,
     help="Show table only, disable summary.",
+)
+@click.option(
+    "-H",
+    "--hidden",
+    is_flag=True,
+    help="List only hidden (i.e. removed) records in the output.",
+)
+@click.option(
+    "-r",
+    "--running",
+    is_flag=True,
+    help="List running records in the output.",
 )
 @click.option(
     "-f",
@@ -76,6 +88,8 @@ def show_cmd(
     start: str | None,
     end: str | None,
     summary: bool | None,
+    hidden: bool,
+    running: bool,
     follow: bool,
     show_keys: bool,
     tags_match: Literal["any", "all"],
@@ -91,16 +105,28 @@ def show_cmd(
 
     Command aliases: 'show', 'report', 'display'
     """
+    if running and (start or end):
+        abort("The '--running' option cannot be used with '--start' or '--end'.")
+
     start_dt, end_dt = parse_start_end(start, end)
 
     # Regular one-time output
     if not follow:
-        records = get_records(
-            start_dt,
-            end_dt,
-            tags=tags,
-            tags_match=tags_match,
-        )["records"]
+        if not running:
+            records = get_records(
+                start_dt,
+                end_dt,
+                tags=tags,
+                tags_match=tags_match,
+                hidden=hidden,
+            )["records"]
+        else:
+            records = get_updates(
+                tags=tags,
+                tags_match=tags_match,
+                hidden=hidden,
+                running=True,
+            )["records"]
 
         if not records:
             abort("No records found.")
@@ -111,7 +137,7 @@ def show_cmd(
     else:
         waiting_msg = "\n[red]Waiting for records...[/red]\n"
         with Live(waiting_msg, console=console) as live:
-            for update in continuous_updates(start_dt, tags=tags, tags_match=tags_match):
+            for update in continuous_updates(start_dt, tags=tags, tags_match=tags_match, hidden=hidden, running=running):
                 # Re-evaluate time frame and filter cached records accordingly to support "floating" time frames
                 start_dt, end_dt = parse_start_end(start, end)
                 update["records"] = [r for r in update["records"] if start_dt.timestamp() <= r["t1"] or r["t1"] == r["t2"]]

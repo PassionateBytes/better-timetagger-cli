@@ -84,11 +84,12 @@ def get_tag_stats(records: list[Record]) -> dict[str, tuple[int, int]]:
 def post_process_records(
     records: list[Record],
     *,
-    include_hidden: bool = False,
     tags: list[str] | None = None,
     tags_match: Literal["any", "all"] = "any",
     sort_by: Literal["t1", "t2", "st", "mt", "ds"] = "t2",
     sort_reverse: bool = True,
+    hidden: bool = False,
+    running: bool = False,
 ) -> list[Record]:
     """
     Post-process records after fetching them from the API.
@@ -97,21 +98,25 @@ def post_process_records(
 
     Args:
         records: A list of records to post-process.
-        include_hidden: Whether to include hidden (i.e. deleted) records. Defaults to False.
         tags: A list of tags to filter records by. Defaults to None.
         tags_match: The mode to match tags. Can be "any" or "all". Defaults to "any".
         sort_by: The field to sort the records by. Can be "t1", "t2", "st", "mt", or "ds". Defaults to "t2".
         sort_reverse: Whether to sort in reverse order. Defaults to True.
+        hidden: Whether to show hidden (i.e. deleted) records. Defaults to False.
+        running: Whether to list only running records (where t1 == t2). Defaults to False.
 
     Returns:
         A list of post-processed records.
     """
     records = normalize_records(records)
     records.sort(key=lambda r: r[sort_by], reverse=sort_reverse)
-    if tags:
-        records = [r for r in records if check_record_tags_match(r, tags, tags_match)]
-    if not include_hidden:
-        records = [r for r in records if not r["ds"].startswith("HIDDEN")]
+    records = [
+        record
+        for record in records
+        if check_record_tags_match(record, tags, tags_match)  # filter by tags
+        and record["ds"].startswith("HIDDEN") == hidden  # filter by hidden status
+        and (not running or record["t1"] == record["t2"])  # filter by running status
+    ]
     return records
 
 
@@ -140,7 +145,7 @@ def normalize_records(records: list[Record]) -> list[Record]:
 
 def check_record_tags_match(
     record: Record,
-    tags: list[str],
+    tags: list[str] | None,
     tags_match: Literal["any", "all"],
 ) -> bool:
     """

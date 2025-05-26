@@ -1,7 +1,7 @@
 import click
 from rich.console import Group
 
-from better_timetagger_cli.lib.api import create_record_key, get_running_records, put_records
+from better_timetagger_cli.lib.api import create_record_key, get_updates, put_records
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import print_records, render_records
 from better_timetagger_cli.lib.parsers import parse_at, tags_callback
@@ -82,7 +82,7 @@ def start_cmd(
         "ds": description,
     }
 
-    running_records = get_running_records()["records"]
+    running_records = get_updates(running=True)["records"]
     stopped_records = []
 
     for r in running_records.copy():

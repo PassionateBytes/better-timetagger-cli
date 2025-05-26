@@ -7,6 +7,8 @@ from .app_cmd import app_cmd
 from .diagnose_cmd import diagnose_cmd
 from .export_cmd import export_cmd
 from .import_cmd import import_cmd
+from .remove_cmd import remove_cmd
+from .restore_cmd import restore_cmd
 from .resume_cmd import resume_cmd
 from .setup_cmd import setup_cmd
 from .show_cmd import show_cmd
@@ -38,6 +40,8 @@ cli.add_command(app_cmd)
 cli.add_command(diagnose_cmd)
 cli.add_command(export_cmd)
 cli.add_command(import_cmd)
+cli.add_command(remove_cmd)
+cli.add_command(restore_cmd)
 cli.add_command(resume_cmd)
 cli.add_command(setup_cmd)
 cli.add_command(show_cmd)
