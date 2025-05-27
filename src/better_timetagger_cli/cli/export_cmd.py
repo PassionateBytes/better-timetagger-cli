@@ -45,7 +45,7 @@ from better_timetagger_cli.lib.records import records_to_csv
     "-r",
     "--running",
     is_flag=True,
-    help="List running records in the output.",
+    help="List only running records in the output.",
 )
 @click.option(
     "-x",

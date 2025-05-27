@@ -61,7 +61,7 @@ from better_timetagger_cli.lib.types import Record
     "-r",
     "--running",
     is_flag=True,
-    help="List running records in the output.",
+    help="List only running records in the output.",
 )
 @click.option(
     "-f",
