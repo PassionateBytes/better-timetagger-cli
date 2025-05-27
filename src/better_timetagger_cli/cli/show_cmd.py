@@ -9,7 +9,7 @@ from rich.table import Table
 
 from better_timetagger_cli.lib.api import continuous_updates, get_records, get_running_records
 from better_timetagger_cli.lib.console import console
-from better_timetagger_cli.lib.misc import abort
+from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import readable_duration, render_records, styled_padded
 from better_timetagger_cli.lib.parsers import parse_start_end, tags_callback
 from better_timetagger_cli.lib.records import get_tag_stats, get_total_time
@@ -141,7 +141,7 @@ def show_cmd(
                 update["records"] = [r for r in update["records"] if start_dt.timestamp() <= r["t1"] or r["t1"] == r["t2"]]
 
                 if update["records"]:
-                    live.update(render_output(summary, update["records"], start_dt, update["server_time"], show_keys))
+                    live.update(render_output(summary, update["records"], start_dt, now_timestamp(), show_keys))
                 else:
                     live.update("\n[yellow]Waiting for records...[/yellow]\n")
 
