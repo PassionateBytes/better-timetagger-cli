@@ -134,8 +134,7 @@ def show_cmd(
 
     # In 'follow' mode, monitor continuously for changes
     else:
-        waiting_msg = "\n[red]Waiting for records...[/red]\n"
-        with Live(waiting_msg, console=console) as live:
+        with Live(console=console) as live:
             for update in continuous_updates(start_dt, tags=tags, tags_match=tags_match, hidden=hidden, running=running):
                 # Re-evaluate time frame and filter cached records accordingly to support "floating" time frames
                 start_dt, end_dt = parse_start_end(start, end)
@@ -144,7 +143,7 @@ def show_cmd(
                 if update["records"]:
                     live.update(render_output(summary, update["records"], start_dt, update["server_time"], show_keys))
                 else:
-                    live.update(waiting_msg)
+                    live.update("\n[yellow]Waiting for records...[/yellow]\n")
 
 
 def render_output(summary: bool | None, records: list[Record], start_dt: int | datetime, end_dt: int | datetime, show_keys: bool) -> Group:
