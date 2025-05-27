@@ -7,7 +7,7 @@ from rich.console import Group
 from rich.live import Live
 from rich.table import Table
 
-from better_timetagger_cli.lib.api import continuous_updates, get_records, get_updates
+from better_timetagger_cli.lib.api import continuous_updates, get_records, get_running_records
 from better_timetagger_cli.lib.console import console
 from better_timetagger_cli.lib.misc import abort
 from better_timetagger_cli.lib.output import readable_duration, render_records, styled_padded
@@ -121,11 +121,10 @@ def show_cmd(
                 hidden=hidden,
             )["records"]
         else:
-            records = get_updates(
+            records = get_running_records(
                 tags=tags,
                 tags_match=tags_match,
                 hidden=hidden,
-                running=True,
             )["records"]
 
         if not records:

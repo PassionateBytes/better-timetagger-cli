@@ -3,7 +3,7 @@ from typing import Literal
 import click
 from rich.prompt import IntPrompt
 
-from better_timetagger_cli.lib.api import get_updates, put_records
+from better_timetagger_cli.lib.api import get_running_records, put_records
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import print_records
 from better_timetagger_cli.lib.parsers import parse_at, tags_callback
@@ -61,10 +61,9 @@ def stop_cmd(
 
     Command aliases: 'stop', 'check-out', 'out'
     """
-    running_records = get_updates(
+    running_records = get_running_records(
         sort_by="t1",
         sort_reverse=False,
-        running=True,
     )["records"]
 
     now = now_timestamp()

@@ -5,7 +5,7 @@
 import json
 import secrets
 from collections.abc import Generator
-from datetime import datetime
+from datetime import datetime, timedelta
 from time import sleep
 from typing import Literal, cast
 
@@ -66,6 +66,7 @@ def get_records(
     sort_by: Literal["t1", "t2", "st", "mt", "ds"] = "t2",
     sort_reverse: bool = True,
     hidden: bool = False,
+    running: bool = False,
 ) -> GetRecordsResponse:
     """
     Calls TimeTagger API using `GET /records?timerange={start}-{end}` and returns the response.
@@ -79,6 +80,7 @@ def get_records(
         sort_by: The field to sort the records by. Can be "t1", "t2", "st", "mt", or "ds". Defaults to "t2".
         sort_reverse: Whether to sort in reverse order. Defaults to True.
         hidden: Whether to include hidden (i.e. deleted) records. Defaults to False.
+        running: If True, only return currently running records (i.e. records where t1 == t2). Defaults to False.
 
     Returns:
         A dictionary containing the records from the API.
@@ -94,14 +96,68 @@ def get_records(
 
     response["records"] = post_process_records(
         response["records"],
-        hidden=hidden,
         tags=tags,
         tags_match=tags_match,
         sort_by=sort_by,
         sort_reverse=sort_reverse,
+        hidden=hidden,
+        running=running,
     )
 
     return cast(GetRecordsResponse, response)
+
+
+def get_running_records(
+    *,
+    tags: list[str] | None = None,
+    tags_match: Literal["any", "all"] = "any",
+    sort_by: Literal["t1", "t2", "st", "mt", "ds"] = "t2",
+    sort_reverse: bool = True,
+    hidden: bool = False,
+) -> GetRecordsResponse | GetRecordsResponse:
+    """
+    Searches for currently running records in the TimeTagger API.
+
+    Depending on the configuration, this will search either all existing records,
+    or limit the search to a recent time window to optimize performance.
+
+    Args:
+        tags: A list of tags to filter records by. Defaults to None.
+        tags_match: The mode to match tags. Can be "any" or "all". Defaults to "any".
+        sort_by: The field to sort the records by. Can be "t1", "t2", "st", "mt", or "ds". Defaults to "t2".
+        sort_reverse: Whether to sort in reverse order. Defaults to True.
+        hidden: Whether to include hidden (i.e. deleted) records. Defaults to False.
+        running: If True, only return currently running records (i.e. records where t1 == t2). Defaults to False.
+
+    Returns:
+        A dictionary containing the running records from the API.
+    """
+    config = load_config()
+
+    # search window disabled, search all records for running state
+    if config["running_records_search_window"] < 0:
+        return get_updates(
+            tags=tags,
+            tags_match=tags_match,
+            sort_by=sort_by,
+            sort_reverse=sort_reverse,
+            hidden=hidden,
+            running=True,
+        )
+
+    # search window enabled, search records within the configured time range for running state
+    else:
+        return get_records(
+            start=datetime.now() - timedelta(weeks=config["running_records_search_window"]),
+            end=datetime.now() + timedelta(days=1),
+            include_partial_match=True,
+            tags=tags,
+            tags_match=tags_match,
+            sort_by=sort_by,
+            sort_reverse=sort_reverse,
+            hidden=hidden,
+            running=True,
+        )
 
 
 def put_records(*records: Record | list[Record]) -> PutRecordsResponse:

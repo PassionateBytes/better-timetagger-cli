@@ -15,6 +15,7 @@ class ConfigDict(TypedDict):
     ssl_verify: bool
     datetime_format: str
     weekday_format: str
+    running_records_search_window: int
 
 
 class LegacyConfigDict(TypedDict):

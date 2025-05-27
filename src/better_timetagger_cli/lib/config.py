@@ -54,6 +54,16 @@ datetime_format = "{datetime_format}"  # -> Custom format with abbreviated month
 # For more information, visit: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes
 # weekday_format = "%A"  # -> full weekday name
 weekday_format = "{weekday_format}"  # -> abbreviated weekday name
+
+### RUNNING RECORDS SEARCH OPTIMIZATION
+# This parameter defines how the CLI will find actively running records in the database.
+# If set to -1, the CLI will search all existing records to find running ones. This is the most accurate method,
+# and makes it possible to find very long running tasks that might have been started weeks ago.
+# If set to a value above 0, the CLI will only search for running records in as many weeks recent weeks.
+# Setting this to -1 will result in slower performance, especially when there are a lot of records in the database.
+# If you are dealing with very long running tasks however, you might want tweak this value or set it to -1.
+# running_records_search_window = -1  # search all records for running records
+running_records_search_window = {running_records_search_window}  # search last 4 weeks for running records
 """.lstrip().replace("\r\n", "\n")
 
 DEFAULT_CONFIG_DATA = {
@@ -62,6 +72,7 @@ DEFAULT_CONFIG_DATA = {
     "ssl_verify": "true",
     "datetime_format": "%d-%b-%Y [bold]%H:%M[/bold]",
     "weekday_format": "%a",
+    "running_records_search_window": 4,
 }
 
 if sys.platform.startswith("win"):  # pragma: no cover
