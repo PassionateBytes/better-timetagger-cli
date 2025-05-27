@@ -19,6 +19,8 @@ See how they compare:
 | Diagnose & Fix Record Errors  |                                                     ✅                                                      |       ✅        |
 | Export to CSV                 |                                                     ✅                                                      |       ❌        |
 | Import from CSV               |                            ✅ <br> *includes dry-run mode to validate CSV files*                            |       ❌        |
+| Remove Records                |                                                     ✅                                                      |       ❌        |
+| Restore Records               |                                                     ✅                                                      |       ❌        |
 | Colored Output                |                                                     ✅                                                      |       ❌        |
 | Natural language support      |                      ✅ <br> *use phrases like '5 min ago', 'last Friday' or 'May 12'*                      |       ❌        |
 | Configurable date/time format |                                                     ✅                                                      |       ❌        |
@@ -30,7 +32,7 @@ See how they compare:
 The TimeTagger CLI requires **Python 3.10** or higher. Install with your favorite Python package manager, e.g.:
 
 ```bash
-pipx install better-time-tagger
+pipx install better-time-****tagg**er**
 ```
 
 You can now use the CLI as either `timetagger` or simply `t`.
