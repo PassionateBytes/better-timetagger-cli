@@ -288,7 +288,10 @@ def continuous_updates(
             sort_by=sort_by,
             sort_reverse=sort_reverse,
             hidden=hidden,
-            running=running,
+            # Must set this to False, otherwise we never notice when a record
+            # that's previously been running is stopped. Stopped records are
+            # handled explicitly below.
+            running=False,
         )
 
         if updates["reset"]:
@@ -313,6 +316,8 @@ def continuous_updates(
             sort_by=sort_by,
             sort_reverse=sort_reverse,
             hidden=hidden,
+            # Now that we have all data on records, even ones that became stopped,
+            # we can filter for running records accoringly.
             running=running,
         )
 
