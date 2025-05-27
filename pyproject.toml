@@ -1,12 +1,17 @@
 [project]
 name = "better-timetagger-cli"
-version = "0.1.0"
+version = "0.1.1"
 description = "A command line tool for TimeTagger. This is a more feature-rich and ergonomic fork of the original timetagger-cli, providing better user experience and additional features."
 authors = [
     { name = "Paul Bütof", email = "paul@passionate-bytes.com" },
     { name = "Almar Klein" },
 ]
+maintainers = [
+    { name = "Paul Bütof", email = "paul@passionate-bytes.com" },
+]
+license-files = ["LICENSE"]
 readme = "README.md"
+keywords = ["timetagger", "cli", "command-line", "time-tracking", "productivity", "time", "tracking", "self-hosting", "self-hosted"]
 requires-python = ">=3.10"
 dependencies = [
     "click>=8.2.0",
@@ -15,6 +20,10 @@ dependencies = [
     "rich>=14.0.0",
     "toml>=0.10.2",
 ]
+
+[project.urls]
+Repository = "https://github.com/PassionateBytes/better-timetagger-cli"
+Issues = "https://github.com/PassionateBytes/better-timetagger-cli/issues"
 
 [project.scripts]
 timetagger = "better_timetagger_cli.cli:cli"
