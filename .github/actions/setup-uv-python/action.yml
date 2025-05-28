@@ -4,9 +4,6 @@ description: 'Set up Python environment with uv and install dependencies'
 runs:
   using: "composite"
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
     - name: Install uv
       uses: astral-sh/setup-uv@v5
       

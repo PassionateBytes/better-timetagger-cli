@@ -10,6 +10,8 @@ jobs:
   format-check:
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
     - name: Setup Environment
       uses: ./.github/actions/setup-uv-python
     - name: Format Check
@@ -20,8 +22,10 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
     - name: Setup Environment
-      uses: ./.github/actions/setup-uv-pythonnc
+      uses: ./.github/actions/setup-uv-python
     - name: Lint
       run: |
         uv run ruff check ./src/better_timetagger_cli ./tests
@@ -29,8 +33,10 @@ jobs:
   typecheck:
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
     - name: Setup Environment
-      uses: ./.github/actions/setup-uv-pythonnc
+      uses: ./.github/actions/setup-uv-python
     - name: Lint
       run: |
         uv run mypy ./src/better_timetagger_cli ./tests
@@ -39,8 +45,10 @@ jobs:
     
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
     - name: Setup Environment
-      uses: ./.github/actions/setup-uv-pythonnc
+      uses: ./.github/actions/setup-uv-python
     - name: Test
       run: |
         uv run pytest --cov=./src/better_timetagger_cli --cov-report=term-missing ./tests
