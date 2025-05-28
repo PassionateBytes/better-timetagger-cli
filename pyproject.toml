@@ -6,12 +6,20 @@ authors = [
     { name = "Paul Bütof", email = "paul@passionate-bytes.com" },
     { name = "Almar Klein" },
 ]
-maintainers = [
-    { name = "Paul Bütof", email = "paul@passionate-bytes.com" },
-]
+maintainers = [{ name = "Paul Bütof", email = "paul@passionate-bytes.com" }]
 license-files = ["LICENSE"]
 readme = "README.md"
-keywords = ["timetagger", "cli", "command-line", "time-tracking", "productivity", "time", "tracking", "self-hosting", "self-hosted"]
+keywords = [
+    "timetagger",
+    "cli",
+    "command-line",
+    "time-tracking",
+    "productivity",
+    "time",
+    "tracking",
+    "self-hosting",
+    "self-hosted",
+]
 requires-python = ">=3.10"
 dependencies = [
     "click>=8.2.0",
@@ -31,6 +39,7 @@ t = "better_timetagger_cli.cli:cli"
 
 [dependency-groups]
 dev = [
+    "bump-my-version>=1.1.4",
     "mypy[reports]>=1.15.0",
     "pytest>=8.3.5",
     "pytest-cov>=6.1.1",
@@ -56,13 +65,13 @@ line-length = 160
 
 [tool.ruff.lint]
 select = [
-    "E", # pycodestyle
-    "F", # pyflakes
-    "I", # isort
+    "E",  # pycodestyle
+    "F",  # pyflakes
+    "I",  # isort
     "UP", # pyupgrade
-    "Q", # quotes
-    "B", # bugbear
-    "N", # pep8-naming
+    "Q",  # quotes
+    "B",  # bugbear
+    "N",  # pep8-naming
 ]
 ignore = ["E203", "E501"]
 
@@ -73,3 +82,11 @@ convention = "google"
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+# ===[ Bump My Version Config ]===
+[tool.bumpversion]
+tag = true
+commit = true
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"

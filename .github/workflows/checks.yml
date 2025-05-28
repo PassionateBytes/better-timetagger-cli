@@ -1,0 +1,53 @@
+name: Checks
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Environment
+        uses: ./.github/actions/setup-uv-python
+      - name: Format Check
+        run: |
+          uv run ruff format --check ./src/better_timetagger_cli ./tests
+          uv run ruff check --select I,F401 ./src/better_timetagger_cli ./tests
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Environment
+        uses: ./.github/actions/setup-uv-python
+      - name: Lint
+        run: |
+          uv run ruff check ./src/better_timetagger_cli ./tests
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Environment
+        uses: ./.github/actions/setup-uv-python
+      - name: Lint
+        run: |
+          uv run mypy ./src/better_timetagger_cli ./tests
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Environment
+        uses: ./.github/actions/setup-uv-python
+      - name: Test
+        run: |
+          uv run pytest --cov=./src/better_timetagger_cli --cov-report=term-missing ./tests

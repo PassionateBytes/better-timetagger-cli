@@ -1,0 +1,64 @@
+name: Version Bump PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: "Version bump type"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  bump-version-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Determine version numbers
+        run: |
+          CURRENT_VERSION=$(uv run bump-my-version show current_version)
+          NEW_VERSION=$(uv run bump-my-version show-bump --ascii | grep "${{ inputs.version_type }}" | awk '{print $NF}')
+          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Bump version
+        run: uv run bump-my-version bump ${{ inputs.version_type }} --no-commit --no-tag
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: version-bump-${{ env.CURRENT_VERSION }}-to-${{ env.NEW_VERSION }}
+          base: main
+          commit-message: "Bump version: ${{ env.CURRENT_VERSION }} to ${{ env.NEW_VERSION }}"
+          title: "Bump version: ${{ env.CURRENT_VERSION }} to ${{ env.NEW_VERSION }}"
+          body: |
+            Automated version bump: `${{ env.CURRENT_VERSION }}` → `${{ env.NEW_VERSION }}` **(${{ inputs.version_type }})**
+
+            This PR was created by a github workflow.
+
+            **Changes:**
+            - Updates version in `pyproject.toml`
+
+            **Next steps after merge:**
+            1. Create a GitHub release with tag `v${{ env.NEW_VERSION }}`
+            2. Release workflow will automatically publish to PyPI
+          delete-branch: true
