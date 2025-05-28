@@ -15,6 +15,11 @@ format:
 	uv run ruff check --fix --select I,F401 ${PACKAGE} ${TESTS}
 
 
+format-check:
+	uv run ruff format --check ${PACKAGE} ${TESTS}
+	uv run ruff check --select I,F401 ${PACKAGE} ${TESTS}
+
+
 lint:
 	uv run ruff check ${PACKAGE} ${TESTS}
 
