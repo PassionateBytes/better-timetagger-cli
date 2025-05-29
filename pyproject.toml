@@ -31,6 +31,7 @@ t = "better_timetagger_cli.cli:cli"
 
 [dependency-groups]
 dev = [
+    "bump-my-version>=1.1.4",
     "mypy[reports]>=1.15.0",
     "pytest>=8.3.5",
     "pytest-cov>=6.1.1",
@@ -73,3 +74,11 @@ convention = "google"
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+# ===[ Bump My Version Config ]===
+[tool.bumpversion]
+tag = true
+commit = true
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
