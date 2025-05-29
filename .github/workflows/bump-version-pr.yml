@@ -46,17 +46,12 @@ jobs:
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
 
       - name: Bump version, commit, tag
-        run: uv run bump-my-version bump ${{ inputs.version_type }} --no-tag
-
-      - name: Push changes
-        run: |
-          git push --set-upstream origin ${{ env.BRANCH_NAME }}
+        run: uv run bump-my-version bump ${{ inputs.version_type }} --no-commit --no-tag
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          base: ${{ github.event.repository.default_branch }}
           branch: ${{ env.BRANCH_NAME }}
           title: "Bump version: ${{ env.CURRENT_VERSION }} to ${{ env.NEW_VERSION }}"
           body: |
