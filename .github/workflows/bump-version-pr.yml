@@ -48,6 +48,10 @@ jobs:
       - name: Bump version, commit, tag
         run: uv run bump-my-version bump ${{ inputs.version_type }} --no-tag
 
+      - name: Push changes
+        run: |
+          git push --set-upstream origin ${{ env.BRANCH_NAME }}
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v7
         with:
