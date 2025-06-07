@@ -2,30 +2,32 @@
 
 Track your time with TimeTagger from the command line.
 
-This is a more feature-rich and ergonomic fork of the original [timetagger-cli](https://github.com/almarklein/timetagger_cli) by [Almar Klein](https://github.com/almarklein), providing additional features and improved ergonomics.
+This is a more feature-rich and ergonomic fork of the original [timetagger-cli](https://github.com/almarklein/timetagger_cli) by [Almar Klein](https://github.com/almarklein).
 
 ### What's new?
 
 This project does everything that the original timetracker-cli did, but it adds some great features and usibility improvements.  
 See how they compare:
 
-|                                   |                                         **better-timetagger-cli**                                          | timetagger-cli |
-| --------------------------------- | :--------------------------------------------------------------------------------------------------------: | :------------: |
-| **Start Tasks**                   |                                ✅ <br> *adjustable time* <br> *and more...*                                 |       ✅        |
-| **Stop Tasks**                    |                                ✅ <br> *adjustable time* <br> *and more...*                                 |       ✅        |
-| **Resume Tasks**                  |           ✅ <br> *adjustable time* <br> *simplified UX for record selection* <br> *and more...*            |       ✅        |
-| **Display Status**                |                                    ✅ <br> *includes breakdown per tag*                                     |       ✅        |
-| **Show Records**                  | ✅  <br> *filter by tags* <br> *optional summary or summary-only* <br> *live monitoring* <br> *and more...* |       ✅        |
-| **Diagnose & Fix Record Errors**  |                                                     ✅                                                      |       ✅        |
-| **Export to CSV**                 |                                                     ✅                                                      |       ❌        |
-| **Import from CSV**               |                            ✅ <br> *includes dry-run mode to validate CSV files*                            |       ❌        |
-| **Remove Records**                |                                                     ✅                                                      |       ❌        |
-| **Restore Records**               |                                                     ✅                                                      |       ❌        |
-| **Colored Output**                |                                                     ✅                                                      |       ❌        |
-| **Natural language support**      |                      ✅ <br> *use phrases like '5 min ago', 'last Friday' or 'May 12'*                      |       ❌        |
-| **Configurable date/time format** |                                                     ✅                                                      |       ❌        |
-| **Command aliases**               |                   ✅ <br> e.g.`t in` and `t out`, are an alias for `t start` and `t stop`                   |       ❌        |
-| **Command shortcuts**             |                              ✅ <br> Abbreviate commands like `t out` to `t o`                              |       ❌        |
+|                                     | **better-timetagger-cli** | timetagger-cli |
+| ----------------------------------- | :-----------------------: | :------------: |
+| Start / stop tasks                  |             ✅             |       ✅        |
+| Resume previous tasks               |             ✅             |       ✅        |
+| Display status update               |             ✅             |       ✅        |
+| List records by timeframe           |             ✅             |       ✅        |
+| Diagnose & fix database errors      |             ✅             |       ✅        |
+| Natural language support date/time  |             ✅             |       ✅        |
+| Easily tag records                  |             ✅             |       ❌        |
+| Filter tasks by tags                |             ✅             |       ❌        |
+| Summary per tag                     |             ✅             |       ❌        |
+| Hide / restore records              |             ✅             |       ❌        |
+| Export records to CSV               |             ✅             |       ❌        |
+| Import records from CSV             |             ✅             |       ❌        |
+| Preview records from CSV            |             ✅             |       ❌        |
+| Color-code output and render tables |             ✅             |       ❌        |
+| Output rounded record times         |             ✅             |       ❌        |
+| Configurable date/time formats      |             ✅             |       ❌        |
+| Command aliases                     |             ✅             |       ❌        |
 
 ## Installation
 
@@ -54,7 +56,7 @@ t setup
 ### Migrating from `timetagger-cli`
 
 If you previously had the original `timetagger-cli` package installed, your old configuration will be migrated to the new format automatically.
-The `t setup` command recognizes the od configuration autmatically and fetches its configuration values when creating the new configuration file.
+The `t setup` command recognizes the existing configuration autmatically and fetches its configuration values when creating the new configuration file.
 This does not modify or remove the legacy configuration file, so you can keep using it if you need to.
 
 ```bash
