@@ -52,7 +52,7 @@ def test_missing_base_url(monkeypatch, tmp_path):
 
 
 def test_missing_datetime_format(monkeypatch, tmp_path):
-    """Abort on missing datetime_format parameter."""
+    """Abort on missing datetime_format parameter falls back to default value."""
     config_file = tmp_path / "config.toml"
     config_file.write_text(
         dedent("""
@@ -63,14 +63,10 @@ def test_missing_datetime_format(monkeypatch, tmp_path):
     )
     monkeypatch.setattr("better_timetagger_cli.lib.config.get_config_path", lambda _: str(config_file))
 
-    with pytest.raises(SystemExit) as exc_info:
-        lib.load_config()
-
-    assert exc_info.value.code == 1
-
+    assert lib.load_config()["datetime_format"] == "%d-%b-%Y [bold]%H:%M[/bold]"
 
 def test_missing_weekday_format(monkeypatch, tmp_path):
-    """Abort on missing weekday_format parameter."""
+    """Abort on missing weekday_format parameter falls back to default value."""
     config_file = tmp_path / "config.toml"
     config_file.write_text(
         dedent("""
@@ -81,10 +77,7 @@ def test_missing_weekday_format(monkeypatch, tmp_path):
     )
     monkeypatch.setattr("better_timetagger_cli.lib.config.get_config_path", lambda _: str(config_file))
 
-    with pytest.raises(SystemExit) as exc_info:
-        lib.load_config()
-
-    assert exc_info.value.code == 1
+    assert lib.load_config()["weekday_format"] == "%a"
 
 
 def test_invalid_base_url_format(monkeypatch, tmp_path):
