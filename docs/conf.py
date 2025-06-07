@@ -77,6 +77,5 @@ copyright = f"{datetime.now().year}, {author}"
 html_show_copyright = True
 html_show_sphinx = False
 html_sidebars = {"**": ["globaltoc.html", "versions.html"]}
-html_theme_options = {"display_version": True}
 pygments_style = "stata-dark"
 pygments_dark_style = "stata-dark"

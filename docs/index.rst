@@ -40,3 +40,12 @@ Demo
    :controls: true
    :cols: 80
    :rows: 25
+
+.. toctree::
+   :hidden:
+   :maxdepth: 1
+
+   source/quickstart
+   source/install
+   source/config
+   source/cli
