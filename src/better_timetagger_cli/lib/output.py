@@ -99,7 +99,7 @@ def render_records(
             if show_keys:
                 columns = (r["key"], *columns)
             if show_index:
-                columns = (f"[blue]\[{i}][/blue]" if i <= 0 else f"[dim]\[{i}][/dim]", *columns)
+                columns = (f"[blue]\\[{i}][/blue]" if i <= 0 else f"[dim]\\[{i}][/dim]", *columns)
             # extra columns right
             if record_status:
                 columns = (*columns, f"[yellow]{record_status.get(r['key'], '')}[/yellow]")
