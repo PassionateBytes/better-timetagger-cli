@@ -27,7 +27,7 @@ def diagnose_cmd(fix: bool) -> None:
     Use the '--fix' option with caution. This will modify the records in your database!
     It is recommended to back up your database before using this option.
 
-    Command aliases: 'diagnose', 'diag' 
+    Command aliases: 'diagnose', 'diag'
     """
 
     records = get_updates()["records"]
