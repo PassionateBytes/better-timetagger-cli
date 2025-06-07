@@ -120,15 +120,17 @@ def load_config(*, abort_on_error: bool = True, cache=True) -> ConfigDict | None
         if "api_token" not in config or not config["api_token"]:
             raise ValueError("Parameter 'api_token' not set.")
         if "ssl_verify" not in config or not config["ssl_verify"]:
-            config |= {"ssl_verify": True}
+            config |= {"ssl_verify": True if DEFAULT_CONFIG_DATA["ssl_verify"] == "true" else False}
         if "datetime_format" not in config:
-            raise ValueError("Parameter 'datetime_format' not set.")
+            config |= {"datetime_format": DEFAULT_CONFIG_DATA["datetime_format"]}
         if not validate_strftime_format(config["datetime_format"]):
             raise ValueError("Parameter 'datetime_format' is invalid.")
         if "weekday_format" not in config:
-            raise ValueError("Parameter 'weekday_format' not set.")
+            config |= {"weekday_format": DEFAULT_CONFIG_DATA["weekday_format"]}
         if not validate_strftime_format(config["weekday_format"]):
             raise ValueError("Parameter 'weekday_format' is invalid.")
+        if "running_records_search_window" not in config:
+            config |= {"running_records_search_window": DEFAULT_CONFIG_DATA["running_records_search_window"]}
 
     except Exception as e:
         if abort_on_error:
