@@ -7,12 +7,12 @@ from better_timetagger_cli.lib.config import load_config
 from better_timetagger_cli.lib.console import console
 
 
-@click.command(("app", "web"))  # type: ignore[call-overload]
+@click.command(("app", "open"))  # type: ignore[call-overload]
 def app_cmd() -> None:
     """
     Open the TimeTagger web app in the default browser.
 
-    Command aliases: 'app', 'web'
+    Command aliases: 'app', 'open'
     """
 
     config = load_config()
