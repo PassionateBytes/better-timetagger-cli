@@ -2,7 +2,7 @@
 
 Track your time with TimeTagger from the command line.
 
-This is a more feature-rich and ergonomic fork of the original [timetagger-cli](https://github.com/almarklein/timetagger-cli) by [Almar Klein](https://github.com/almarklein), providing additional features and improved ergonomics.
+This is a more feature-rich and ergonomic fork of the original [timetagger-cli](https://github.com/almarklein/timetagger_cli) by [Almar Klein](https://github.com/almarklein), providing additional features and improved ergonomics.
 
 ### What's new?
 
