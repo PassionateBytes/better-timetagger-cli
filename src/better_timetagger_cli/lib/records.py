@@ -236,7 +236,7 @@ def get_tags_from_description(description: str) -> list[str]:
     Returns:
         A list of tags extracted from the description.
     """
-    return re.findall(r"#\w+", description)
+    return re.findall(r"#\S+", description)
 
 
 def records_from_csv(
