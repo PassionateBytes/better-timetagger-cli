@@ -8,7 +8,7 @@ from better_timetagger_cli.lib.parsers import parse_at, tags_callback
 from better_timetagger_cli.lib.types import Record
 
 
-@click.command(("start", "check-in", "in"))  # type: ignore[call-overload]
+@click.command(("start", "check-in", "in", "i"))  # type: ignore[call-overload]
 @click.argument(
     "tags",
     type=click.STRING,
@@ -64,7 +64,7 @@ def start_cmd(
     The '--at' parameter supports natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
 
-    Command aliases: 'start', 'check-in', 'in'
+    Command aliases: 'start', 'check-in', 'in', 'i'
     """
     description = f"{' '.join(tags)} {description}".strip()
 

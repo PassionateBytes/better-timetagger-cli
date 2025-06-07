@@ -13,7 +13,7 @@ from better_timetagger_cli.lib.types import Record
 from .start_cmd import start_cmd
 
 
-@click.command()
+@click.command(("resume", "continue", "r"))  # type: ignore[call-overload]
 @click.argument(
     "tags",
     type=click.STRING,
@@ -71,6 +71,8 @@ def resume_cmd(
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
 
     Note that only records from the last 4 weeks are considered.
+
+    Command aliases: 'resume', 'continue', 'r'
     """
     now = now_timestamp()
     now_dt = datetime.fromtimestamp(now)
