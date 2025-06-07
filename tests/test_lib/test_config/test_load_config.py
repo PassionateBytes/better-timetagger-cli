@@ -65,6 +65,7 @@ def test_missing_datetime_format(monkeypatch, tmp_path):
 
     assert lib.load_config()["datetime_format"] == "%d-%b-%Y [bold]%H:%M[/bold]"
 
+
 def test_missing_weekday_format(monkeypatch, tmp_path):
     """Abort on missing weekday_format parameter falls back to default value."""
     config_file = tmp_path / "config.toml"
