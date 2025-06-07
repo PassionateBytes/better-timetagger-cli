@@ -13,7 +13,7 @@ from better_timetagger_cli.lib.output import readable_date_time
 from better_timetagger_cli.lib.types import Record
 
 
-@click.command(("diagnose", "diag"))
+@click.command(("diagnose", "diag"))  # type: ignore[call-overload]
 @click.option(
     "-f",
     "--fix",

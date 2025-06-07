@@ -49,7 +49,7 @@ class AliasedGroup(click.Group):
             return rv
 
         # Try alias match
-        rv = click.Group.get_command(self, ctx, self._alias_map.get(cmd_name))
+        rv = click.Group.get_command(self, ctx, self._alias_map.get(cmd_name, ""))
         if rv is not None:
             return rv
 
