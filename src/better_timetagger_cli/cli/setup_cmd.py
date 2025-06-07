@@ -5,7 +5,7 @@ from better_timetagger_cli.lib.console import console
 from better_timetagger_cli.lib.misc import open_in_editor
 
 
-@click.command(("setup", "configure"))  # type: ignore[call-overload]
+@click.command(("setup", "config", "init"))  # type: ignore[call-overload]
 @click.option(
     "-e",
     "--editor",
@@ -17,7 +17,7 @@ def setup_cmd(editor: str | None) -> None:
     """
     Edit the configuration file for the TimeTagger CLI.
 
-    Command aliases: 'setup', 'configure'
+    Command aliases: 'setup', 'config', 'init'
     """
 
     filename = ensure_config_file()

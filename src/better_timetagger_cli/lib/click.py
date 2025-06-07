@@ -9,9 +9,7 @@ import click
 
 class AliasedGroup(click.Group):
     """
-    Custom click group class that allows commands to be called by their shortest unique name.
-
-    See: https://click.palletsprojects.com/en/stable/advanced/#command-aliases
+    Custom click group that allows commands to have multiple aliases.
     """
 
     def __init__(self, *args, **kwargs) -> None:
@@ -50,17 +48,12 @@ class AliasedGroup(click.Group):
         if rv is not None:
             return rv
 
-        # Fallback to shortest unique prefix
-        matches = [
-            x
-            for x in self.list_commands(ctx)
-            if x.startswith(cmd_name) or any(alias.startswith(cmd_name) for alias in self._alias_map if self._alias_map[alias] == x)
-        ]
-        if not matches:
-            return None
-        elif len(matches) == 1:
-            return click.Group.get_command(self, ctx, matches[0])
-        return ctx.fail(f"Ambiguous command. Choose either of: {', '.join(sorted(matches))}")
+        # Try alias match
+        rv = click.Group.get_command(self, ctx, self._alias_map.get(cmd_name))
+        if rv is not None:
+            return rv
+
+        return None
 
     def resolve_command(self, ctx, args) -> tuple[str | None, click.Command | None, list[str]]:
         # Resolve alias before handing off

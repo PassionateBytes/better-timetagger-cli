@@ -99,7 +99,7 @@ def render_records(
             if show_keys:
                 columns = (r["key"], *columns)
             if show_index:
-                columns = (f"[blue]\[{i}][/blue]" if i <= 0 else f"[dim]\[{i}][/dim]", *columns)
+                columns = (f"[blue]\\[{i}][/blue]" if i <= 0 else f"[dim]\\[{i}][/dim]", *columns)
             # extra columns right
             if record_status:
                 columns = (*columns, f"[yellow]{record_status.get(r['key'], '')}[/yellow]")
@@ -198,4 +198,4 @@ def highlight_tags_in_description(description: str, style: str = "underline") ->
     Returns:
         A Text object with highlighted tags.
     """
-    return re.sub(r"#\w+", lambda m: f"[{style}]{m.group(0)}[/{style}]", description.replace("\\", ""))
+    return re.sub(r"#\S+", lambda m: f"[{style}]{m.group(0)}[/{style}]", description.replace("\\", ""))

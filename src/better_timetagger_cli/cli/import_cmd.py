@@ -65,6 +65,8 @@ def import_cmd(
 
     The parameters '--start' and '--end' support natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
+
+    Command aliases: 'import'
     """
     start_dt, end_dt = parse_start_end(start, end)
     if file is None:

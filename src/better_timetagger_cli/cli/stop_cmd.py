@@ -10,7 +10,7 @@ from better_timetagger_cli.lib.parsers import parse_at, tags_callback
 from better_timetagger_cli.lib.records import check_record_tags_match
 
 
-@click.command(("stop", "check-out", "out"))  # type: ignore[call-overload]
+@click.command(("stop", "check-out", "out", "o"))  # type: ignore[call-overload]
 @click.argument(
     "tags",
     type=click.STRING,
@@ -59,7 +59,7 @@ def stop_cmd(
     The '--at' parameter supports natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
 
-    Command aliases: 'stop', 'check-out', 'out'
+    Command aliases: 'stop', 'check-out', 'out', 'o'
     """
     running_records = get_running_records(
         sort_by="t1",
@@ -76,7 +76,7 @@ def stop_cmd(
             # Stop running tasks with matching tags
             if check_record_tags_match(r, tags, tags_match):
                 r["t2"] = stop_t
-                r["mt"] = stop_t
+                r["mt"] = now
                 stopped_records.append(r)
                 running_records.remove(r)
 
@@ -108,7 +108,7 @@ def stop_cmd(
         running_records.remove(stop_record_choices[selected])
         stopped_record = stop_record_choices[selected]
         stopped_record["t2"] = stop_t
-        stopped_record["mt"] = stop_t
+        stopped_record["mt"] = now
 
         put_records(stopped_record)
         print_records(running_records, (stopped_record, "red"), show_keys=show_keys)

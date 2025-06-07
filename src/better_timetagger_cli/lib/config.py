@@ -110,6 +110,8 @@ def load_config(*, abort_on_error: bool = True, cache=True) -> ConfigDict | None
     filepath = get_config_path(CONFIG_FILE)
 
     try:
+        if not os.path.exists(filepath):
+            filepath = create_default_config()
         with open(filepath, "rb") as f:
             config = toml.loads(f.read().decode())
 

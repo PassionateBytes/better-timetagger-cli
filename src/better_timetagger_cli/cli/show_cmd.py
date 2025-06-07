@@ -16,7 +16,7 @@ from better_timetagger_cli.lib.records import get_tag_stats, get_total_time
 from better_timetagger_cli.lib.types import Record
 
 
-@click.command(("show", "report", "display"))  # type: ignore[call-overload]
+@click.command(("show", "report", "display", "list", "ls", "d"))  # type: ignore[call-overload]
 @click.argument(
     "tags",
     type=click.STRING,
@@ -103,7 +103,7 @@ def show_cmd(
     The parameters '--start' and '--end' support natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
 
-    Command aliases: 'show', 'report', 'display'
+    Command aliases: 'show', 'report', 'display', 'list', 'ls', 'd'
     """
     if running and (start or end):
         abort("The '--running' option cannot be used with '--start' or '--end'.")

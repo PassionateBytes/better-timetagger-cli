@@ -236,7 +236,7 @@ def get_tags_from_description(description: str) -> list[str]:
     Returns:
         A list of tags extracted from the description.
     """
-    return re.findall(r"#\w+", description)
+    return re.findall(r"#\S+", description)
 
 
 def records_from_csv(
@@ -264,7 +264,7 @@ def records_from_csv(
         abort(
             f"Failed to import CSV: Missing fields in header.\n"
             f"[dim]First line must contain each of: {', '.join(header)}"
-            f"\nLine 1: \[{header_line.strip()}][/dim]"
+            f"\nLine 1: \\[{header_line.strip()}][/dim]"
         )
 
     header_map = {field: header_fields.index(field) for field in header}
@@ -275,7 +275,7 @@ def records_from_csv(
             abort(
                 f"Failed to import CSV: Inconsistent number of columns.\n"
                 f"[dim]Header has {len(header_fields)} columns, line {i} has {len(fields)} columns.\n"
-                f"Line {i}: \[{line.strip()}][/dim]"
+                f"Line {i}: \\[{line.strip()}][/dim]"
             )
 
         try:
@@ -288,7 +288,7 @@ def records_from_csv(
                 "st": 0,
             }
         except Exception as e:
-            abort(f"Failed to import CSV: {e.__class__.__name__}\n[dim]{e}\nLine {i}: \[{line.strip()}][/dim]")
+            abort(f"Failed to import CSV: {e.__class__.__name__}\n[dim]{e}\nLine {i}: \\[{line.strip()}][/dim]")
 
         records.append(record)
 

@@ -5,7 +5,7 @@ from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import print_records
 
 
-@click.command(("remove", "hide"))  # type: ignore[call-overload]
+@click.command(("remove", "hide", "rm"))  # type: ignore[call-overload]
 @click.argument(
     "keys",
     type=click.STRING,
@@ -27,7 +27,7 @@ def remove_cmd(
 
     Restore hidden records with 't restore'.
 
-    Command aliases: 'remove', 'hide'
+    Command aliases: 'remove', 'hide', 'rm'
     """
     now = now_timestamp()
     if not keys:

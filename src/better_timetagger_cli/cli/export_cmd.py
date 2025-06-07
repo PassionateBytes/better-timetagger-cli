@@ -9,7 +9,7 @@ from better_timetagger_cli.lib.parsers import parse_start_end, tags_callback
 from better_timetagger_cli.lib.records import records_to_csv
 
 
-@click.command()
+@click.command(("export", "csv"))  # type: ignore[call-overload]
 @click.argument(
     "tags",
     type=click.STRING,
@@ -72,6 +72,8 @@ def export_cmd(
 
     The parameters '--start' and '--end' support natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
+
+    Command aliases: 'export', 'csv'
     """
     if running and (start or end):
         abort("The '--running' option cannot be used with '--start' or '--end'.")
