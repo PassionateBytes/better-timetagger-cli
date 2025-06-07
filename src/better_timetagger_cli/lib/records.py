@@ -239,6 +239,48 @@ def get_tags_from_description(description: str) -> list[str]:
     return re.findall(r"#\w+", description)
 
 
+def round_records(records: list[Record], round_to: int) -> list[Record]:
+    """
+    Round start and end times of records to the nearest specified minute-interval.
+
+    Instead of simply rounding both the start and end times to their nearest interval,
+    we round based on the duration of the record. This ensures the resulting record
+    duration remains consistent and accurate.
+
+    Round up, in case rounded record duration would be 0. This avoids confusion,
+    because records with no duration are generally interpreted as running records.
+
+    Args:
+        records: A list of records to round.
+        round_to: The number of minutes to round to (e.g., 5 for 5-minute intervals).
+
+    Returns:
+        A list of records with rounded start and end times.
+    """
+    round_to_seconds = round_to * 60
+    rounded_records = []
+
+    for record in records:
+        duration_rounded = round((record["t2"] - record["t1"]) / round_to_seconds) * round_to_seconds
+        if duration_rounded <= 0 and record["t1"] != record["t2"]:
+            duration_rounded = round_to_seconds
+
+        t1_rounded = round(record["t1"] / round_to_seconds) * round_to_seconds
+        t2_rounded = t1_rounded + duration_rounded
+
+        rounded_records.append(
+            Record(
+                {
+                    **record,
+                    "t1": t1_rounded,
+                    "t2": t2_rounded,
+                }
+            )
+        )
+
+    return rounded_records
+
+
 def records_from_csv(
     file: Generator[str],
 ) -> list[Record]:

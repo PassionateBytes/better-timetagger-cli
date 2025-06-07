@@ -6,7 +6,7 @@ from better_timetagger_cli.lib.api import get_records, get_running_records
 from better_timetagger_cli.lib.console import console
 from better_timetagger_cli.lib.misc import abort
 from better_timetagger_cli.lib.parsers import parse_start_end, tags_callback
-from better_timetagger_cli.lib.records import records_to_csv
+from better_timetagger_cli.lib.records import records_to_csv, round_records
 
 
 @click.command()
@@ -36,13 +36,21 @@ from better_timetagger_cli.lib.records import records_to_csv
     help="Include records earlier than this time. Supports natural language.",
 )
 @click.option(
+    "-r",
+    "--round",
+    is_flag=False,
+    flag_value=5,
+    type=click.IntRange(min=1),
+    help="Round records to the nearest N minutes. Default: 5 minutes.",
+)
+@click.option(
     "-H",
     "--hidden",
     is_flag=True,
     help="List only hidden (i.e. removed) records in the output.",
 )
 @click.option(
-    "-r",
+    "-R",
     "--running",
     is_flag=True,
     help="List only running records in the output.",
@@ -60,6 +68,7 @@ def export_cmd(
     file: click.File | None,
     start: str | None,
     end: str | None,
+    round: int,
     hidden: bool,
     running: bool,
     tags_match: Literal["any", "all"],
@@ -99,6 +108,9 @@ def export_cmd(
 
     if not records:
         abort("No records found.")
+
+    if round:
+        records = round_records(records, round)
 
     csv = records_to_csv(records)
 

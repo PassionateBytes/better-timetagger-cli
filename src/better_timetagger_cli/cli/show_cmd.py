@@ -12,7 +12,7 @@ from better_timetagger_cli.lib.console import console
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import readable_duration, render_records, styled_padded
 from better_timetagger_cli.lib.parsers import parse_start_end, tags_callback
-from better_timetagger_cli.lib.records import get_tag_stats, get_total_time
+from better_timetagger_cli.lib.records import get_tag_stats, get_total_time, round_records
 from better_timetagger_cli.lib.types import Record
 
 
@@ -36,6 +36,26 @@ from better_timetagger_cli.lib.types import Record
     help="Show records earlier than this time. Supports natural language.",
 )
 @click.option(
+    "-r",
+    "--round",
+    is_flag=False,
+    flag_value=5,
+    type=click.IntRange(min=1),
+    help="Round records to the nearest N minutes. Default: 5 minutes.",
+)
+@click.option(
+    "-H",
+    "--hidden",
+    is_flag=True,
+    help="List only hidden (i.e. removed) records in the output.",
+)
+@click.option(
+    "-R",
+    "--running",
+    is_flag=True,
+    help="List only running records in the output.",
+)
+@click.option(
     "-z",
     "--summary",
     "summary",
@@ -50,18 +70,6 @@ from better_timetagger_cli.lib.types import Record
     flag_value=False,
     default=None,
     help="Show table only, disable summary.",
-)
-@click.option(
-    "-H",
-    "--hidden",
-    is_flag=True,
-    help="List only hidden (i.e. removed) records in the output.",
-)
-@click.option(
-    "-r",
-    "--running",
-    is_flag=True,
-    help="List only running records in the output.",
 )
 @click.option(
     "-f",
@@ -87,9 +95,10 @@ def show_cmd(
     tags: list[str],
     start: str | None,
     end: str | None,
-    summary: bool | None,
+    round: int | None,
     hidden: bool,
     running: bool,
+    summary: bool | None,
     follow: bool,
     show_keys: bool,
     tags_match: Literal["any", "all"],
@@ -130,6 +139,9 @@ def show_cmd(
         if not records:
             abort("No records found.")
 
+        if round:
+            records = round_records(records, round)
+
         console.print(render_output(summary, records, start_dt, end_dt, show_keys))
 
     # In 'follow' mode, monitor continuously for changes
@@ -138,7 +150,11 @@ def show_cmd(
             for update in continuous_updates(start_dt, tags=tags, tags_match=tags_match, hidden=hidden, running=running):
                 # Re-evaluate time frame and filter cached records accordingly to support "floating" time frames
                 start_dt, end_dt = parse_start_end(start, end)
-                update["records"] = [r for r in update["records"] if start_dt.timestamp() <= r["t1"] or r["t1"] == r["t2"]]
+                start_timestamp = start_dt.timestamp()
+                update["records"] = [r for r in update["records"] if start_timestamp <= r["t2"] or r["t1"] == r["t2"]]
+
+                if round:
+                    update["records"] = round_records(update["records"], round)
 
                 if update["records"]:
                     live.update(render_output(summary, update["records"], start_dt, now_timestamp(), show_keys))
