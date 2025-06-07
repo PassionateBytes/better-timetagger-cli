@@ -47,7 +47,7 @@ jobs:
   run-tests:
     needs: check-version-change
     if: needs.check-version-change.outputs.version_changed == 'true'
-    uses: ./.github/workflows/ci.yml
+    uses: ./.github/workflows/check.yml
 
   create-release:
     needs: [check-version-change, run-tests]
