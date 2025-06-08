@@ -6,6 +6,12 @@ on:
     paths:
       - "pyproject.toml"
   workflow_dispatch:
+    inputs:
+      force_release:
+        description: 'Force release even if version unchanged'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   check-version-change:
@@ -13,11 +19,12 @@ jobs:
     outputs:
       version_changed: ${{ steps.version_check.outputs.changed }}
       new_version: ${{ steps.version_check.outputs.version }}
+      should_release: ${{ steps.decision.outputs.should_release }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2 # Need previous commit to compare
+          fetch-depth: 0 # Fetch full history for comprehensive version checking
 
       - name: Setup environment
         uses: ./.github/actions/setup-uv-python
@@ -28,44 +35,81 @@ jobs:
           # Get current version
           CURRENT_VERSION=$(uv run bump-my-version show current_version)
           echo "Current version: $CURRENT_VERSION"
-
-          # Check if pyproject.toml changed in the last commit
-          if git diff HEAD~1 HEAD --name-only | grep -q "pyproject.toml"; then
-            echo "Version file changed"
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          else
-            echo "Version file not changed"
+          
+          # Check if this version already has a release/tag
+          if git tag --list | grep -q "^v${CURRENT_VERSION}$"; then
+            echo "Version $CURRENT_VERSION already has a release"
             echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Version $CURRENT_VERSION is new"
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Make release decision
+        id: decision
+        run: |
+          VERSION_CHANGED="${{ steps.version_check.outputs.changed }}"
+          FORCE_RELEASE="${{ github.event.inputs.force_release }}"
+          
+          if [[ "$VERSION_CHANGED" == "true" || "$FORCE_RELEASE" == "true" ]]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            echo "Will proceed with release"
+          else
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            echo "No release needed - version unchanged and not forced"
           fi
 
-  run-tests:
+  run-checks:
     needs: check-version-change
-    if: needs.check-version-change.outputs.version_changed == 'true'
+    if: needs.check-version-change.outputs.should_release == 'true'
     uses: ./.github/workflows/checks.yml
 
   create-release:
-    needs: [check-version-change, run-tests]
-    if: needs.check-version-change.outputs.version_changed == 'true'
+    needs: [check-version-change, run-checks]
+    if: needs.check-version-change.outputs.should_release == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get the latest tag (previous version)
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [[ -n "$LATEST_TAG" ]]; then
+            echo "## What's Changed" > changelog.md
+            echo "" >> changelog.md
+            git log ${LATEST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges >> changelog.md
+            echo "" >> changelog.md
+            echo "" >> changelog.md
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG}...v${{ needs.check-version-change.outputs.new_version }}" >> changelog.md
+          else
+            echo "## What's Changed" > changelog.md
+            echo "" >> changelog.md
+            echo "Initial release v${{ needs.check-version-change.outputs.new_version }}" >> changelog.md
+          fi
+          
+          # Set multiline output
+          {
+            echo 'changelog<<EOF'
+            cat changelog.md
+            echo EOF
+          } >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ needs.check-version-change.outputs.new_version }}
-          release_name: Release v${{ needs.check-version-change.outputs.new_version }}
-          body: |
-            ## What's Changed
-            Version bump to v${{ needs.check-version-change.outputs.new_version }}
-
-            **Full Changelog**: https://github.com/${{ github.repository }}/compare/v${{ needs.check-version-change.outputs.new_version }}...v${{ needs.check-version-change.outputs.new_version }}
+          name: Release v${{ needs.check-version-change.outputs.new_version }}
+          body: ${{ steps.changelog.outputs.changelog }}
           draft: false
           prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-and-publish:
     needs: [create-release, check-version-change]
@@ -87,7 +131,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dist
+          name: dist-${{ needs.check-version-change.outputs.new_version }}
           path: dist/
 
       - name: Publish to PyPI
