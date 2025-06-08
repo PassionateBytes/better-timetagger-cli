@@ -4,7 +4,7 @@ Configuration
 Configuration File
 ------------------
 
-Before using the CLI for the first time, you must configure the **Base URL** of your TimeTagger instance, along with your **API Key**.
+Before using the CLI for the first time, you must configure the **Base URL** of your TimeTagger instance, along with your **API Token**.
 Additional configuration values are provided in the default configuration file, along with descriptive comments.
 
 Open the configuration toml file with:

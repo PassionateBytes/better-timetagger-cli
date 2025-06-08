@@ -7,11 +7,12 @@ Quickstart
 
     $ pipx install better-timetagger-cli
 
-**2. Open the configuration file and configure your :code:`base_url` and :code:`api_key`.**
+**2. Update the configuration with your :code:`base_url` and :code:`api_token`.**
 
 .. code-block:: bash
 
     $ t setup
+    # TimeTagger config file: /path/to/timetagger_cli/config.toml
 
 **3. Review CLI commands and options.**
 
