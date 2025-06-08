@@ -5,6 +5,7 @@ on:
     branches: [main, dev]
   pull_request:
     branches: [main, dev]
+  workflow_call:
 
 jobs:
   format-check:
@@ -12,9 +13,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Setup Environment
+
+      - name: Setup environment
         uses: ./.github/actions/setup-uv-python
-      - name: Format Check
+      
+      - name: Check formatting
         run: |
           uv run ruff format --check ./src/better_timetagger_cli ./tests
           uv run ruff check --select I,F401 ./src/better_timetagger_cli ./tests
@@ -24,9 +27,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Setup Environment
+      
+      - name: Setup environment
         uses: ./.github/actions/setup-uv-python
-      - name: Lint
+      
+      - name: Check linting
         run: |
           uv run ruff check ./src/better_timetagger_cli ./tests
 
@@ -35,9 +40,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Setup Environment
+      
+      - name: Setup environment
         uses: ./.github/actions/setup-uv-python
-      - name: Lint
+      
+      - name: Check types
         run: |
           uv run mypy ./src/better_timetagger_cli ./tests
 
@@ -46,8 +53,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Setup Environment
+      
+      - name: Setup environment
         uses: ./.github/actions/setup-uv-python
-      - name: Test
+      
+      - name: Run tests
         run: |
           uv run pytest --cov=./src/better_timetagger_cli --cov-report=term-missing ./tests
