@@ -8,131 +8,74 @@ on:
   workflow_dispatch:
     inputs:
       force_release:
-        description: 'Force release even if version unchanged'
-        required: false
-        default: false
+        description: 'Force release'
         type: boolean
+        default: false
+
+permissions:
+  contents: write
+  id-token: write
 
 jobs:
-  check-version-change:
+  release:
     runs-on: ubuntu-latest
-    outputs:
-      version_changed: ${{ steps.version_check.outputs.changed }}
-      new_version: ${{ steps.version_check.outputs.version }}
-      should_release: ${{ steps.decision.outputs.should_release }}
+    environment: release
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Fetch full history for comprehensive version checking
 
       - name: Setup environment
         uses: ./.github/actions/setup-uv-python
 
-      - name: Check if version changed
-        id: version_check
+      - name: Get version
+        id: version
         run: |
-          # Get current version
-          CURRENT_VERSION=$(uv run bump-my-version show current_version)
-          echo "Current version: $CURRENT_VERSION"
+          VERSION=$(uv run bump-my-version show current_version)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+
+      - name: Check if release needed
+        id: check
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          FORCE="${{ github.event.inputs.force_release }}"
           
-          # Check if this version already has a release/tag
-          if git tag --list | grep -q "^v${CURRENT_VERSION}$"; then
-            echo "Version $CURRENT_VERSION already has a release"
-            echo "changed=false" >> $GITHUB_OUTPUT
+          # Check if tag exists using GitHub API
+          if curl -s "https://api.github.com/repos/${{ github.repository }}/git/refs/tags/v$VERSION" | grep -q '"ref"'; then
+            echo "Tag v$VERSION already exists"
+            SHOULD_RELEASE="false"
           else
-            echo "Version $CURRENT_VERSION is new"
-            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Tag v$VERSION does not exist"
+            SHOULD_RELEASE="true"
           fi
           
-          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Make release decision
-        id: decision
-        run: |
-          VERSION_CHANGED="${{ steps.version_check.outputs.changed }}"
-          FORCE_RELEASE="${{ github.event.inputs.force_release }}"
-          
-          if [[ "$VERSION_CHANGED" == "true" || "$FORCE_RELEASE" == "true" ]]; then
-            echo "should_release=true" >> $GITHUB_OUTPUT
-            echo "Will proceed with release"
-          else
-            echo "should_release=false" >> $GITHUB_OUTPUT
-            echo "No release needed - version unchanged and not forced"
-          fi
-
-  run-checks:
-    needs: check-version-change
-    if: needs.check-version-change.outputs.should_release == 'true'
-    uses: ./.github/workflows/checks.yml
-
-  create-release:
-    needs: [check-version-change, run-checks]
-    if: needs.check-version-change.outputs.should_release == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Generate changelog
-        id: changelog
-        run: |
-          # Get the latest tag (previous version)
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          
-          if [[ -n "$LATEST_TAG" ]]; then
-            echo "## What's Changed" > changelog.md
-            echo "" >> changelog.md
-            git log ${LATEST_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges >> changelog.md
-            echo "" >> changelog.md
-            echo "" >> changelog.md
-            echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG}...v${{ needs.check-version-change.outputs.new_version }}" >> changelog.md
-          else
-            echo "## What's Changed" > changelog.md
-            echo "" >> changelog.md
-            echo "Initial release v${{ needs.check-version-change.outputs.new_version }}" >> changelog.md
+          # Override if forced
+          if [[ "$FORCE" == "true" ]]; then
+            echo "Release forced"
+            SHOULD_RELEASE="true"
           fi
           
-          # Set multiline output
-          {
-            echo 'changelog<<EOF'
-            cat changelog.md
-            echo EOF
-          } >> $GITHUB_OUTPUT
+          echo "should_release=$SHOULD_RELEASE" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Run tests
+        if: steps.check.outputs.should_release == 'true'
+        uses: ./.github/workflows/checks.yml
+
+      - name: Build package
+        if: steps.check.outputs.should_release == 'true'
+        run: uv build
+
+      - name: Create release
+        if: steps.check.outputs.should_release == 'true'
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ needs.check-version-change.outputs.new_version }}
-          name: Release v${{ needs.check-version-change.outputs.new_version }}
-          body: ${{ steps.changelog.outputs.changelog }}
-          draft: false
-          prerelease: false
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
+          files: dist/*
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-and-publish:
-    needs: [create-release, check-version-change]
-    runs-on: ubuntu-latest
-    environment: release
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup environment
-        uses: ./.github/actions/setup-uv-python
-
-      - name: Build package
-        run: uv build
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-${{ needs.check-version-change.outputs.new_version }}
-          path: dist/
-
       - name: Publish to PyPI
+        if: steps.check.outputs.should_release == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
