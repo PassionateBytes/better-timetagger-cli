@@ -161,15 +161,15 @@ def test_invalid_weekday_format(monkeypatch, tmp_path):
 
 
 def test_missing_config_file(monkeypatch, tmp_path):
-    """Abort when config file doesn't exist."""
+    """Automatically create default config when config file doesn't exist."""
     non_existent = tmp_path / "non_existent.toml"
 
     monkeypatch.setattr("better_timetagger_cli.lib.config.get_config_path", lambda _: str(non_existent))
 
-    with pytest.raises(SystemExit) as exc_info:
-        lib.load_config()
-
-    assert exc_info.value.code == 1
+    config = lib.load_config()
+    assert config is not None
+    assert config["base_url"] == "https://timetagger.io/timetagger/"
+    assert config["api_token"] == "<your api token>"
 
 
 def test_invalid_toml_syntax(monkeypatch, tmp_path):
