@@ -17,9 +17,11 @@ permissions:
   id-token: write
 
 jobs:
-  release:
+  check-release:
     runs-on: ubuntu-latest
-    environment: release
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -57,25 +59,35 @@ jobs:
           
           echo "should_release=$SHOULD_RELEASE" >> $GITHUB_OUTPUT
 
-      - name: Run tests
-        if: steps.check.outputs.should_release == 'true'
-        uses: ./.github/workflows/checks.yml
+  run-tests:
+    needs: check-release
+    if: needs.check-release.outputs.should_release == 'true'
+    uses: ./.github/workflows/checks.yml
+
+  release:
+    needs: [check-release, run-tests]
+    if: needs.check-release.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/setup-uv-python
 
       - name: Build package
-        if: steps.check.outputs.should_release == 'true'
         run: uv build
 
       - name: Create release
-        if: steps.check.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ steps.version.outputs.version }}
-          name: Release v${{ steps.version.outputs.version }}
+          tag_name: v${{ needs.check-release.outputs.version }}
+          name: Release v${{ needs.check-release.outputs.version }}
           files: dist/*
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to PyPI
-        if: steps.check.outputs.should_release == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
