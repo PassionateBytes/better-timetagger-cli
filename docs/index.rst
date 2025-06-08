@@ -42,8 +42,14 @@ Demo
 .. toctree::
    :hidden:
    :maxdepth: 1
+   :caption: Documentation
 
    source/quickstart
    source/install
    source/config
    source/cli
+
+.. sidebar-links::
+
+   Repository <https://github.com/PassionateBytes/better-timetagger-cli/>
+   PyPI Page <https://pypi.org/project/better-timetagger-cli/>
