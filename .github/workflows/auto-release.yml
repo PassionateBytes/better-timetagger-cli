@@ -86,6 +86,13 @@ jobs:
           name: Release v${{ needs.check-release.outputs.version }}
           files: dist/*
           generate_release_notes: true
+          append_body: true
+          body: |
+            ## Installation
+
+            ```bash
+            $ pipx upgrade --install better-timetagger-cli
+            ```
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
