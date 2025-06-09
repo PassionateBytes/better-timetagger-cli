@@ -22,3 +22,4 @@ _build/
 .reports/
 htmlcov/
 .coverage
+.mypy_cache/
