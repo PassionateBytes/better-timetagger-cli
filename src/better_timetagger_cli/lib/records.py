@@ -34,7 +34,7 @@ def get_total_time(records: list[Record], start: int | datetime, end: int | date
 
     for r in records:
         t1 = r["t1"]
-        t2 = r["t2"] if r["t1"] != r["t2"] else now
+        t2 = r["t2"] if not r["_running"] else now
         total += min(end, t2) - max(start, t1)
 
     return total
@@ -52,7 +52,7 @@ def get_record_duration(record: Record) -> int:
     """
     now = now_timestamp()
     t1 = record["t1"]
-    t2 = record["t2"] if record["t1"] != record["t2"] else now
+    t2 = record["t2"] if not record["_running"] else now
     return t2 - t1
 
 
@@ -111,11 +111,11 @@ def post_process_records(
     records = normalize_records(records)
     records.sort(key=lambda r: r[sort_by], reverse=sort_reverse)
     records = [
-        record
-        for record in records
-        if check_record_tags_match(record, tags, tags_match)  # filter by tags
-        and record["ds"].startswith("HIDDEN") == hidden  # filter by hidden status
-        and (not running or record["t1"] == record["t2"])  # filter by running status
+        {**r, "_running": r["t1"] == r["t2"]}  # determine a running flag
+        for r in records
+        if check_record_tags_match(r, tags, tags_match)  # filter by tags
+        and r["ds"].startswith("HIDDEN") == hidden  # filter by hidden status
+        and (not running or r["t1"] == r["t2"])  # filter by running status
     ]
     return records
 
@@ -247,9 +247,6 @@ def round_records(records: list[Record], round_to: int) -> list[Record]:
     we round based on the duration of the record. This ensures the resulting record
     duration remains consistent and accurate.
 
-    Round up, in case rounded record duration would be 0. This avoids confusion,
-    because records with no duration are generally interpreted as running records.
-
     Args:
         records: A list of records to round.
         round_to: The number of minutes to round to (e.g., 5 for 5-minute intervals).
@@ -262,7 +259,7 @@ def round_records(records: list[Record], round_to: int) -> list[Record]:
 
     for record in records:
         duration_rounded = round((record["t2"] - record["t1"]) / round_to_seconds) * round_to_seconds
-        if duration_rounded <= 0 and record["t1"] != record["t2"]:
+        if duration_rounded <= 0 and record["_running"]:
             duration_rounded = round_to_seconds
 
         t1_rounded = round(record["t1"] / round_to_seconds) * round_to_seconds
@@ -321,7 +318,7 @@ def records_from_csv(
             )
 
         try:
-            record: Record = {
+            record: Record = {  # type: ignore[typeddict-item]
                 "key": fields[header_map["key"]],
                 "t1": int(datetime.fromisoformat(fields[header_map["start"]].replace("Z", "+00:00")).timestamp()),
                 "t2": int(datetime.fromisoformat(fields[header_map["stop"]].replace("Z", "+00:00")).timestamp()),
@@ -329,6 +326,7 @@ def records_from_csv(
                 "mt": now,
                 "st": 0,
             }
+            record["_running"] = record["t1"] == record["t2"]  # determine running state
         except Exception as e:
             abort(f"Failed to import CSV: {e.__class__.__name__}\n[dim]{e}\nLine {i}: \\[{line.strip()}][/dim]")
 

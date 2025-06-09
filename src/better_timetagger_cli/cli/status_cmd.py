@@ -35,9 +35,9 @@ def status_cmd() -> None:
 
     # Collect records
     month_records = get_records(first_of_this_month, first_of_next_month)["records"]
-    week_records = [r for r in month_records if r["t1"] < t_week2 and (r["t1"] == r["t2"] or r["t2"] > t_week1)]
-    day_records = [r for r in week_records if r["t1"] < t_day2 and (r["t1"] == r["t2"] or r["t2"] > t_day1)]
-    running_records = [r for r in week_records if r["t1"] == r["t2"]]
+    week_records = [r for r in month_records if r["t1"] < t_week2 and (r["_running"] or r["t2"] > t_week1)]
+    day_records = [r for r in week_records if r["t1"] < t_day2 and (r["_running"] or r["t2"] > t_day1)]
+    running_records = [r for r in week_records if r["_running"]]
 
     # Calculate totals
     total_month = get_total_time(month_records, first_of_this_month, first_of_next_month)

@@ -155,7 +155,7 @@ def show_cmd(
                 # Re-evaluate time frame and filter cached records accordingly to support "floating" time frames
                 start_dt, end_dt = parse_start_end(start, end)
                 start_timestamp = start_dt.timestamp()
-                update["records"] = [r for r in update["records"] if start_timestamp <= r["t2"] or r["t1"] == r["t2"]]
+                update["records"] = [r for r in update["records"] if start_timestamp <= r["t2"] or r["_running"]]
 
                 if round:
                     update["records"] = round_records(update["records"], round)

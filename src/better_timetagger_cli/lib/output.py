@@ -91,8 +91,8 @@ def render_records(
             columns: tuple[str, ...] = (
                 readable_weekday(r["t1"]),
                 readable_date_time(r["t1"]),
-                readable_date_time(r["t2"]) if r["t1"] != r["t2"] else "...",
-                readable_duration(r["t2"] - r["t1"]) if r["t1"] != r["t2"] else readable_duration(now - r["t1"]),
+                readable_date_time(r["t2"]) if not r["_running"] else "...",
+                readable_duration(r["t2"] - r["t1"]) if not r["_running"] else readable_duration(now - r["t1"]),
                 highlight_tags_in_description(r["ds"]),
             )
             # extra columns left

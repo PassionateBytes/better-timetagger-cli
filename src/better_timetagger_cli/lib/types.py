@@ -40,6 +40,9 @@ class Record(TypedDict):
     ds: str
     st: float
 
+    # client side flag
+    _running: bool
+
 
 class Settings(TypedDict):
     """

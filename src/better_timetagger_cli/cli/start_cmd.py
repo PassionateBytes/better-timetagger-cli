@@ -84,6 +84,7 @@ def start_cmd(
         "mt": now,
         "st": 0,
         "ds": description,
+        "_running": True,
     }
 
     running_records = get_running_records()["records"]
