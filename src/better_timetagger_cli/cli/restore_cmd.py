@@ -1,11 +1,16 @@
 import click
 
 from better_timetagger_cli.lib.api import get_updates, put_records
+from better_timetagger_cli.lib.click import AliasCommand
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import print_records
 
 
-@click.command(("restore", "unhide"))  # type: ignore[call-overload]
+@click.command(
+    "restore",
+    aliases=("unhide",),
+    cls=AliasCommand,
+)
 @click.argument(
     "keys",
     type=click.STRING,
@@ -19,8 +24,6 @@ def restore_cmd(
 
     Specify one or more record keys to restore.
     To list hidden records and their keys, use 't show --hidden --show-keys'.
-
-    Command aliases: 'restore', 'unhide'
     """
     now = now_timestamp()
     if not keys:
