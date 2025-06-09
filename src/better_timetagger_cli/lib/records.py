@@ -167,40 +167,6 @@ def merge_by_key(
     return merged_data
 
 
-def records_to_csv(records: Iterable[Record]) -> str:
-    """
-    Convert records to CSV.
-
-    This produces the same CSV format as the TimeTagger web app.
-
-    Args:
-        records: A list of records to convert.
-
-    Returns:
-        A string representing the records in CSV format.
-    """
-    header = ("key", "start", "stop", "tags", "description")
-    newline = "\n" if not sys.platform.startswith("win") else "\r\n"
-    separator = "\t"
-
-    lines = [
-        (
-            r.get("key", ""),
-            datetime.fromtimestamp(r.get("t1", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z"),
-            datetime.fromtimestamp(r.get("t2", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z") if not r["_running"] else "",
-            " ".join(get_tags_from_description(r.get("ds", ""))),
-            r.get("ds", ""),
-        )
-        for r in records
-    ]
-    lines = [header, *lines]
-
-    # - substitute unsafe whitespace
-    # - join fields with separator
-    # - join lines with newline
-    return newline.join(separator.join(re.sub(r"\s+", " ", str(field)) for field in line) for line in lines)
-
-
 def get_tags_from_description(description: str) -> list[str]:
     """
     Extract tags from a description string.
@@ -248,6 +214,40 @@ def round_records(records: list[Record], round_to: int) -> list[Record]:
         )
 
     return rounded_records
+
+
+def records_to_csv(records: Iterable[Record]) -> str:
+    """
+    Convert records to CSV.
+
+    This produces the same CSV format as the TimeTagger web app.
+
+    Args:
+        records: A list of records to convert.
+
+    Returns:
+        A string representing the records in CSV format.
+    """
+    header = ("key", "start", "stop", "tags", "description")
+    newline = "\n" if not sys.platform.startswith("win") else "\r\n"
+    separator = "\t"
+
+    lines = [
+        (
+            r.get("key", ""),
+            datetime.fromtimestamp(r.get("t1", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z"),
+            datetime.fromtimestamp(r.get("t2", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z") if not r["_running"] else "",
+            " ".join(get_tags_from_description(r.get("ds", ""))),
+            r.get("ds", ""),
+        )
+        for r in records
+    ]
+    lines = [header, *lines]
+
+    # - substitute unsafe whitespace
+    # - join fields with separator
+    # - join lines with newline
+    return newline.join(separator.join(re.sub(r"\s+", " ", str(field)) for field in line) for line in lines)
 
 
 def records_from_csv(
