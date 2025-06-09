@@ -8,7 +8,7 @@ from collections.abc import Generator, Iterable
 from datetime import datetime, timezone
 from typing import Literal, TypeVar
 
-from .misc import abort, now_timestamp
+from .misc import abort, now_timestamp, round_timestamp
 from .types import Record, Settings
 
 
@@ -40,22 +40,6 @@ def get_total_time(records: list[Record], start: int | datetime, end: int | date
     return total
 
 
-def get_record_duration(record: Record) -> int:
-    """
-    Get the duration of a record.
-
-    Args:
-        record: A record dictionary containing 't1' and 't2' timestamps.
-
-    Returns:
-        The duration in seconds.
-    """
-    now = now_timestamp()
-    t1 = record["t1"]
-    t2 = record["t2"] if not record["_running"] else now
-    return t2 - t1
-
-
 def get_tag_stats(records: list[Record]) -> dict[str, tuple[int, int]]:
     """
     Get statistics for each tag in the records. Results are sorted by tag's total duration.
@@ -66,14 +50,18 @@ def get_tag_stats(records: list[Record]) -> dict[str, tuple[int, int]]:
     Returns:
         A tuple with 1) the number of occurrences of the tag and 2) the total duration for that tag.
     """
-
+    now = now_timestamp()
     tag_stats: dict[str, tuple[int, int]] = {}
+
     for r in records:
         for tag in get_tags_from_description(r["ds"]):
             stats = tag_stats.get(tag, (0, 0))
+            t1 = r["t1"]
+            t2 = r["t2"] if not r["_running"] else now
+            duration = t2 - t1
             tag_stats[tag] = (
                 stats[0] + 1,
-                stats[1] + get_record_duration(r),
+                stats[1] + duration,
             )
 
     tag_stats = dict(sorted(tag_stats.items(), key=lambda x: x[1][1], reverse=True))
@@ -108,6 +96,8 @@ def post_process_records(
     Returns:
         A list of post-processed records.
     """
+    now = now_timestamp()
+
     records = [
         {
             "key": r.get("key", ""),
@@ -116,7 +106,8 @@ def post_process_records(
             "t2": r.get("t2", 0),
             "ds": r.get("ds", ""),
             "st": r.get("st", 0),
-            "_running": r["t1"] == r["t2"],  # determine running state
+            "_running": r.get("t1", 0) == r.get("t2", 0),  # determine running state
+            "_duration": (r.get("t2", 0) if r.get("t1", 0) != r.get("t2", 0) else now) - r.get("t1", 0),  # determine duration
         }
         for r in records
         if check_record_tags_match(r, tags, tags_match)  # filter by tags
@@ -238,12 +229,11 @@ def round_records(records: list[Record], round_to: int) -> list[Record]:
     Returns:
         A list of records with rounded start and end times.
     """
-    round_to_seconds = round_to * 60
     rounded_records = []
 
     for record in records:
-        duration_rounded = round((record["t2"] - record["t1"]) / round_to_seconds) * round_to_seconds
-        t1_rounded = round(record["t1"] / round_to_seconds) * round_to_seconds
+        duration_rounded = round_timestamp(record["_duration"], round_to)
+        t1_rounded = round_timestamp(record["t1"], round_to)
         t2_rounded = t1_rounded + duration_rounded
 
         rounded_records.append(
@@ -252,6 +242,7 @@ def round_records(records: list[Record], round_to: int) -> list[Record]:
                     **record,
                     "t1": t1_rounded,
                     "t2": t2_rounded,
+                    "_duration": duration_rounded,
                 }
             )
         )
@@ -311,6 +302,7 @@ def records_from_csv(
                 "mt": now,
                 "st": 0,
                 "_running": t1 == t2,  # determine running state
+                "_duration": (t2 if t1 != t2 else now) - t1,  # determine duration
             }
         except Exception as e:
             abort(f"Failed to import CSV: {e.__class__.__name__}\n[dim]{e}\nLine {i}: \\[{line.strip()}][/dim]")

@@ -40,8 +40,9 @@ class Record(TypedDict):
     ds: str
     st: float
 
-    # client side flag
+    # client side attributes
     _running: bool
+    _duration: int
 
 
 class Settings(TypedDict):

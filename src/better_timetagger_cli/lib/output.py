@@ -14,7 +14,6 @@ from rich.text import Text
 from .api import Record
 from .config import load_config
 from .console import console
-from .misc import now_timestamp
 
 
 def print_records(
@@ -56,8 +55,6 @@ def render_records(
         show_keys: If True, show the key (unique identifier) of each record.
         record_status: A map of status annotations for each record key.
     """
-    now = now_timestamp()
-
     table = Table(box=SIMPLE, min_width=65)
 
     # extra columns left
@@ -92,7 +89,7 @@ def render_records(
                 readable_weekday(r["t1"]),
                 readable_date_time(r["t1"]),
                 readable_date_time(r["t2"]) if not r["_running"] else "...",
-                readable_duration(r["t2"] - r["t1"]) if not r["_running"] else readable_duration(now - r["t1"]),
+                readable_duration(r["_duration"]),
                 highlight_tags_in_description(r["ds"]),
             )
             # extra columns left
