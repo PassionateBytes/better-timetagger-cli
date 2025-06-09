@@ -1,20 +1,20 @@
 Quickstart
 ==========
 
-**1. Install the :code:`better-timetagger-cli` package.**
+**1.** Install the :code:`better-timetagger-cli` package.
 
 .. code-block:: bash
 
     $ pipx install better-timetagger-cli
 
-**2. Update the configuration with your :code:`base_url` and :code:`api_token`.**
+**2.** Update the configuration with your :code:`base_url` and :code:`api_token`.
 
 .. code-block:: bash
 
     $ t setup
     # TimeTagger config file: /path/to/timetagger_cli/config.toml
 
-**3. Review CLI commands and options.**
+**3.** Review CLI commands and options.
 
 .. code-block:: bash
 
@@ -34,7 +34,7 @@ Quickstart
     #   ...
 
 
-**4. Manage your time with the command line interface.**
+**4.** Manage your time with the command line interface.
 
 .. code-block:: bash
 

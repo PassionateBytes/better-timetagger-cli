@@ -4,8 +4,9 @@ Installation
 Install with pipx
 -----------------
 
-| We recommend using `pipx <https://pipx.pypa.io/stable/>`_ to install this package.
-| Pipx allows you to install and run Python applications in isolated environments, which is particularly useful for command-line tools like this one.
+We recommend using `pipx <https://pipx.pypa.io/stable/>`_ to install this package. |br|
+Pipx is specifically designed to install Python command-line applications.
+It and manages applications in isolated python environments, keeping your global Python environment clean and avoiding dependency conflicts.
 
 .. code-block:: bash
 
