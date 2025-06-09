@@ -23,7 +23,7 @@ keywords = [
 requires-python = ">=3.10"
 dependencies = [
     "click>=8.2.0",
-    "dateparser>=1.2.1",
+    "parsedatetime>=2.6",
     "requests>=2.32.3",
     "rich>=14.0.0",
     "toml>=0.10.2",
@@ -54,7 +54,6 @@ dev = [
     "sphinx-rtd-theme>=3.0.0",
     "sphinx-toolbox>=4.0.0",
     "sphinxcontrib-asciinema>=0.4.2",
-    "types-dateparser>=1.2.0.20250516",
     "types-requests>=2.32.0.20250515",
     "types-toml>=0.10.8.20240310",
 ]
