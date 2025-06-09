@@ -14,7 +14,7 @@ from better_timetagger_cli.lib.records import round_records
 
 @click.command(
     "show",
-    aliases=("display", "list", "ls", "d"),
+    aliases=("display", "ls", "s", "d"),
     cls=AliasCommand,
 )
 @click.argument(
