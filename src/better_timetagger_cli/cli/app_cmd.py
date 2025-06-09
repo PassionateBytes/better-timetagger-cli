@@ -12,6 +12,8 @@ def app_cmd() -> None:
     """
     Open the TimeTagger web app in the default browser.
 
+    In case the application fails to open the browser, the URL will be printed to the console.
+
     Command aliases: 'app', 'open'
     """
 

@@ -16,7 +16,7 @@ from better_timetagger_cli.lib.records import get_tag_stats, get_total_time, rou
 from better_timetagger_cli.lib.types import Record
 
 
-@click.command(("show", "report", "display", "list", "ls", "d"))  # type: ignore[call-overload]
+@click.command(("show", "display", "list", "ls", "d"))  # type: ignore[call-overload]
 @click.argument(
     "tags",
     type=click.STRING,
@@ -27,13 +27,13 @@ from better_timetagger_cli.lib.types import Record
     "-s",
     "--start",
     type=click.STRING,
-    help="Show records later than this time. Supports natural language.",
+    help="Include only records later than this time. Supports natural language.",
 )
 @click.option(
     "-e",
     "--end",
     type=click.STRING,
-    help="Show records earlier than this time. Supports natural language.",
+    help="Include only records earlier than this time. Supports natural language.",
 )
 @click.option(
     "-r",
@@ -41,19 +41,19 @@ from better_timetagger_cli.lib.types import Record
     is_flag=False,
     flag_value=5,
     type=click.IntRange(min=1),
-    help="Round records to the nearest N minutes. Default: 5 minutes.",
+    help="Round record times to a regular interval in minutes. Specify a value to round to that number of minutes (e.g., '--round 10' for 10 minutes). If used as a flag without a value (e.g., '--round'), defaults to 5 minutes.",
 )
 @click.option(
     "-H",
     "--hidden",
     is_flag=True,
-    help="List only hidden (i.e. removed) records in the output.",
+    help="Include only hidden (i.e. removed) records in the output.",
 )
 @click.option(
     "-R",
     "--running",
     is_flag=True,
-    help="List only running records in the output.",
+    help="Include only running records in the output.",
 )
 @click.option(
     "-z",
@@ -61,7 +61,7 @@ from better_timetagger_cli.lib.types import Record
     "summary",
     flag_value=True,
     default=None,
-    help="Show only summary, disable table.",
+    help="Show only the summary, disable table.",
 )
 @click.option(
     "-Z",
@@ -69,19 +69,19 @@ from better_timetagger_cli.lib.types import Record
     "summary",
     flag_value=False,
     default=None,
-    help="Show table only, disable summary.",
+    help="Show only the table, disable summary.",
 )
 @click.option(
     "-f",
     "--follow",
     is_flag=True,
-    help="Continuously monitor for changes and update the output in real time. If used with a relative '--start' time (like '2 hours ago'), the moniroted time frame will follow the current time.",
+    help="Continuously monitor for changes and update the output in real time. If used with a relative '--start' time (like '2 hours ago'), the monitored time frame will follow the current time.",
 )
 @click.option(
     "-v",
     "--show-keys",
     is_flag=True,
-    help="List each record's key.",
+    help="List each record's unique key. Useful to when you want to remove or restore records.",
 )
 @click.option(
     "-x",
@@ -89,7 +89,7 @@ from better_timetagger_cli.lib.types import Record
     "tags_match",
     type=click.Choice(["any", "all"]),
     default="any",
-    help="Tag matching mode. Filter records that match any or all tags. Default: any.",
+    help="Tag matching mode. Include records that match either 'any' or 'all' tags. Default: any.",
 )
 def show_cmd(
     tags: list[str],
@@ -112,7 +112,7 @@ def show_cmd(
     The parameters '--start' and '--end' support natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
 
-    Command aliases: 'show', 'report', 'display', 'list', 'ls', 'd'
+    Command aliases: 'show', 'display', 'list', 'ls', 'd'
     """
     if running and (start or end):
         abort("The '--running' option cannot be used with '--start' or '--end'.")

@@ -21,19 +21,19 @@ from better_timetagger_cli.lib.records import records_to_csv, round_records
     "--output",
     "file",
     type=click.File("w"),
-    help="Output file. If not specified, output to stdout.",
+    help="Output file. If not specified, print the output to stdout.",
 )
 @click.option(
     "-s",
     "--start",
     type=click.STRING,
-    help="Include records later than this time. Supports natural language.",
+    help="Include only records later than this time. Supports natural language.",
 )
 @click.option(
     "-e",
     "--end",
     type=click.STRING,
-    help="Include records earlier than this time. Supports natural language.",
+    help="Include only records earlier than this time. Supports natural language.",
 )
 @click.option(
     "-r",
@@ -41,19 +41,19 @@ from better_timetagger_cli.lib.records import records_to_csv, round_records
     is_flag=False,
     flag_value=5,
     type=click.IntRange(min=1),
-    help="Round records to the nearest N minutes. Default: 5 minutes.",
+    help="Round record times to a regular interval in minutes. Specify a value to round to that number of minutes (e.g., '--round 10' for 10 minutes). If used as a flag without a value (e.g., '--round'), defaults to 5 minutes.",
 )
 @click.option(
     "-H",
     "--hidden",
     is_flag=True,
-    help="List only hidden (i.e. removed) records in the output.",
+    help="Include only hidden (i.e. removed) records in the output.",
 )
 @click.option(
     "-R",
     "--running",
     is_flag=True,
-    help="List only running records in the output.",
+    help="Include only running records in the output.",
 )
 @click.option(
     "-x",
@@ -61,7 +61,7 @@ from better_timetagger_cli.lib.records import records_to_csv, round_records
     "tags_match",
     type=click.Choice(["any", "all"]),
     default="any",
-    help="Tag matching mode. Include records that match any or all tags. Default: any.",
+    help="Tag matching mode. Include records that match either 'any' or 'all' tags. Default: any.",
 )
 def export_cmd(
     tags: list[str],

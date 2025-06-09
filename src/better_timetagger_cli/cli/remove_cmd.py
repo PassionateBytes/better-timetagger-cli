@@ -17,15 +17,12 @@ def remove_cmd(
     """
     Hide TimeTagger records.
 
-    Specify one or more keys of records to remove from view.
+    Specify one or more record keys to remove.
     To list record keys, use 't show --show-keys'.
 
-    Note that this command marks records as 'HIDDEN' in the TimeTagger database.
-    This effectively removes them from view, but they can be restored if necessary.
-
-    To list hidden records, use 't show --hidden'.
-
-    Restore hidden records with 't restore'.
+    This command marks records as 'HIDDEN' in the TimeTagger instance.
+    This effectively removes them from view, but they can be restored
+    later using the 't restore' command.
 
     Command aliases: 'remove', 'hide', 'rm'
     """
