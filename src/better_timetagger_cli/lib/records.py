@@ -259,9 +259,6 @@ def round_records(records: list[Record], round_to: int) -> list[Record]:
 
     for record in records:
         duration_rounded = round((record["t2"] - record["t1"]) / round_to_seconds) * round_to_seconds
-        if duration_rounded <= 0 and record["_running"]:
-            duration_rounded = round_to_seconds
-
         t1_rounded = round(record["t1"] / round_to_seconds) * round_to_seconds
         t2_rounded = t1_rounded + duration_rounded
 
