@@ -65,10 +65,10 @@ def start_cmd(
     Provide one or more tags to label the task.
     Tags can be entered without the leading hashtag '#'.
 
-    By default, previous tasks will be stopped automatically. Use '--keep' to keep them running.
-
     The '--at' parameter supports natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
+
+    By default, currently running tasks will be stopped automatically. Use '--keep' to keep them running.
     """
     description = f"{' '.join(tags)} {description}".strip()
 

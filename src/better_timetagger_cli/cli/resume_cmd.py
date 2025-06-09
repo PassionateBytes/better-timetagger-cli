@@ -35,7 +35,7 @@ from .start_cmd import start_cmd
     "-k",
     "--keep",
     is_flag=True,
-    help="Keep previous tasks running, do not stop them.",
+    help="Keep previous tasks running, do not stop them automatically.",
 )
 @click.option(
     "-S",
@@ -74,6 +74,8 @@ def resume_cmd(
 
     The '--at' parameter supports natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
+
+    By default, currently running tasks will be stopped automatically. Use '--keep' to keep them running.
 
     Note that only records from the last 4 weeks are considered.
     """
