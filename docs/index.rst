@@ -36,7 +36,7 @@ Demo
 .. asciinema:: source/demo.cast
    :autoplay: true
    :controls: true
-   :cols: 81
+   :cols: 82
    :rows: 25
 
 .. toctree::
