@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+
 import click
 
 
@@ -51,6 +52,7 @@ class AliasCommand(AliasesMixin, click.Command):
             pass
     ```
     """
+
     pass
 
 
@@ -84,7 +86,7 @@ class AliasedGroup(AliasesMixin, click.Group):
 
         # If not found, retrieve by alias
         for cmd in self.commands.values():
-            if hasattr(cmd, 'aliases') and cmd_name in getattr(cmd, "aliases", ()):
+            if hasattr(cmd, "aliases") and cmd_name in getattr(cmd, "aliases", ()):
                 return cmd
 
         return None
