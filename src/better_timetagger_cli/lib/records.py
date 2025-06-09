@@ -8,7 +8,7 @@ from collections.abc import Generator, Iterable
 from datetime import datetime, timezone
 from typing import Literal, TypeVar
 
-from .misc import abort, now_timestamp
+from .misc import abort, now_timestamp, round_timestamp
 from .types import Record, Settings
 
 
@@ -34,26 +34,10 @@ def get_total_time(records: list[Record], start: int | datetime, end: int | date
 
     for r in records:
         t1 = r["t1"]
-        t2 = r["t2"] if r["t1"] != r["t2"] else now
+        t2 = r["t2"] if not r["_running"] else now
         total += min(end, t2) - max(start, t1)
 
     return total
-
-
-def get_record_duration(record: Record) -> int:
-    """
-    Get the duration of a record.
-
-    Args:
-        record: A record dictionary containing 't1' and 't2' timestamps.
-
-    Returns:
-        The duration in seconds.
-    """
-    now = now_timestamp()
-    t1 = record["t1"]
-    t2 = record["t2"] if record["t1"] != record["t2"] else now
-    return t2 - t1
 
 
 def get_tag_stats(records: list[Record]) -> dict[str, tuple[int, int]]:
@@ -66,14 +50,18 @@ def get_tag_stats(records: list[Record]) -> dict[str, tuple[int, int]]:
     Returns:
         A tuple with 1) the number of occurrences of the tag and 2) the total duration for that tag.
     """
-
+    now = now_timestamp()
     tag_stats: dict[str, tuple[int, int]] = {}
+
     for r in records:
         for tag in get_tags_from_description(r["ds"]):
             stats = tag_stats.get(tag, (0, 0))
+            t1 = r["t1"]
+            t2 = r["t2"] if not r["_running"] else now
+            duration = t2 - t1
             tag_stats[tag] = (
                 stats[0] + 1,
-                stats[1] + get_record_duration(r),
+                stats[1] + duration,
             )
 
     tag_stats = dict(sorted(tag_stats.items(), key=lambda x: x[1][1], reverse=True))
@@ -108,29 +96,9 @@ def post_process_records(
     Returns:
         A list of post-processed records.
     """
-    records = normalize_records(records)
-    records.sort(key=lambda r: r[sort_by], reverse=sort_reverse)
+    now = now_timestamp()
+
     records = [
-        record
-        for record in records
-        if check_record_tags_match(record, tags, tags_match)  # filter by tags
-        and record["ds"].startswith("HIDDEN") == hidden  # filter by hidden status
-        and (not running or record["t1"] == record["t2"])  # filter by running status
-    ]
-    return records
-
-
-def normalize_records(records: list[Record]) -> list[Record]:
-    """
-    Ensure that all records have the required keys with expected types.
-
-    Args:
-        records: A list of records to normalize.
-
-    Returns:
-        A list of normalized records.
-    """
-    return [
         {
             "key": r.get("key", ""),
             "mt": r.get("mt", 0),
@@ -138,9 +106,16 @@ def normalize_records(records: list[Record]) -> list[Record]:
             "t2": r.get("t2", 0),
             "ds": r.get("ds", ""),
             "st": r.get("st", 0),
+            "_running": r.get("t1", 0) == r.get("t2", 0),  # determine running state
+            "_duration": (r.get("t2", 0) if r.get("t1", 0) != r.get("t2", 0) else now) - r.get("t1", 0),  # determine duration
         }
         for r in records
+        if check_record_tags_match(r, tags, tags_match)  # filter by tags
+        and r["ds"].startswith("HIDDEN") == hidden  # filter by hidden status
+        and (not running or r["t1"] == r["t2"])  # filter by running status
     ]
+    records.sort(key=lambda r: r[sort_by], reverse=sort_reverse)
+    return records
 
 
 def check_record_tags_match(
@@ -192,40 +167,6 @@ def merge_by_key(
     return merged_data
 
 
-def records_to_csv(records: Iterable[Record]) -> str:
-    """
-    Convert records to CSV.
-
-    This produces the same CSV format as the TimeTagger web app.
-
-    Args:
-        records: A list of records to convert.
-
-    Returns:
-        A string representing the records in CSV format.
-    """
-    header = ("key", "start", "stop", "tags", "description")
-    newline = "\n" if not sys.platform.startswith("win") else "\r\n"
-    separator = "\t"
-
-    lines = [
-        (
-            r.get("key", ""),
-            datetime.fromtimestamp(r.get("t1", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z"),
-            datetime.fromtimestamp(r.get("t2", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z"),
-            " ".join(get_tags_from_description(r.get("ds", ""))),
-            r.get("ds", ""),
-        )
-        for r in records
-    ]
-    lines = [header, *lines]
-
-    # - substitute unsafe whitespace
-    # - join fields with separator
-    # - join lines with newline
-    return newline.join(separator.join(re.sub(r"\s+", " ", str(field)) for field in line) for line in lines)
-
-
 def get_tags_from_description(description: str) -> list[str]:
     """
     Extract tags from a description string.
@@ -247,9 +188,6 @@ def round_records(records: list[Record], round_to: int) -> list[Record]:
     we round based on the duration of the record. This ensures the resulting record
     duration remains consistent and accurate.
 
-    Round up, in case rounded record duration would be 0. This avoids confusion,
-    because records with no duration are generally interpreted as running records.
-
     Args:
         records: A list of records to round.
         round_to: The number of minutes to round to (e.g., 5 for 5-minute intervals).
@@ -257,15 +195,11 @@ def round_records(records: list[Record], round_to: int) -> list[Record]:
     Returns:
         A list of records with rounded start and end times.
     """
-    round_to_seconds = round_to * 60
     rounded_records = []
 
     for record in records:
-        duration_rounded = round((record["t2"] - record["t1"]) / round_to_seconds) * round_to_seconds
-        if duration_rounded <= 0 and record["t1"] != record["t2"]:
-            duration_rounded = round_to_seconds
-
-        t1_rounded = round(record["t1"] / round_to_seconds) * round_to_seconds
+        duration_rounded = round_timestamp(record["_duration"], round_to)
+        t1_rounded = round_timestamp(record["t1"], round_to)
         t2_rounded = t1_rounded + duration_rounded
 
         rounded_records.append(
@@ -274,11 +208,46 @@ def round_records(records: list[Record], round_to: int) -> list[Record]:
                     **record,
                     "t1": t1_rounded,
                     "t2": t2_rounded,
+                    "_duration": duration_rounded,
                 }
             )
         )
 
     return rounded_records
+
+
+def records_to_csv(records: Iterable[Record]) -> str:
+    """
+    Convert records to CSV.
+
+    This produces the same CSV format as the TimeTagger web app.
+
+    Args:
+        records: A list of records to convert.
+
+    Returns:
+        A string representing the records in CSV format.
+    """
+    header = ("key", "start", "stop", "tags", "description")
+    newline = "\n" if not sys.platform.startswith("win") else "\r\n"
+    separator = "\t"
+
+    lines = [
+        (
+            r.get("key", ""),
+            datetime.fromtimestamp(r.get("t1", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z"),
+            datetime.fromtimestamp(r.get("t2", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z") if not r["_running"] else "",
+            " ".join(get_tags_from_description(r.get("ds", ""))),
+            r.get("ds", ""),
+        )
+        for r in records
+    ]
+    lines = [header, *lines]
+
+    # - substitute unsafe whitespace
+    # - join fields with separator
+    # - join lines with newline
+    return newline.join(separator.join(re.sub(r"\s+", " ", str(field)) for field in line) for line in lines)
 
 
 def records_from_csv(
@@ -312,7 +281,7 @@ def records_from_csv(
     header_map = {field: header_fields.index(field) for field in header}
 
     for i, line in enumerate(file, start=2):
-        fields = line.strip().split(separator)
+        fields = line.strip("\r\n").split(separator)
         if len(fields) != len(header_fields):
             abort(
                 f"Failed to import CSV: Inconsistent number of columns.\n"
@@ -321,13 +290,19 @@ def records_from_csv(
             )
 
         try:
+            t1_import = fields[header_map["start"]].strip().replace("Z", "+00:00")
+            t2_import = fields[header_map["stop"]].strip().replace("Z", "+00:00") or t1_import
+            t1 = int(datetime.fromisoformat(t1_import).timestamp())
+            t2 = int(datetime.fromisoformat(t2_import).timestamp())
             record: Record = {
-                "key": fields[header_map["key"]],
-                "t1": int(datetime.fromisoformat(fields[header_map["start"]].replace("Z", "+00:00")).timestamp()),
-                "t2": int(datetime.fromisoformat(fields[header_map["stop"]].replace("Z", "+00:00")).timestamp()),
-                "ds": fields[header_map["description"]],
+                "key": fields[header_map["key"]].strip(),
+                "t1": t1,
+                "t2": t2,
+                "ds": fields[header_map["description"]].strip(),
                 "mt": now,
                 "st": 0,
+                "_running": t1 == t2,  # determine running state
+                "_duration": (t2 if t1 != t2 else now) - t1,  # determine duration
             }
         except Exception as e:
             abort(f"Failed to import CSV: {e.__class__.__name__}\n[dim]{e}\nLine {i}: \\[{line.strip()}][/dim]")
