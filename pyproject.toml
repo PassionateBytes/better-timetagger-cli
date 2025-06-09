@@ -1,6 +1,6 @@
 [project]
 name = "better-timetagger-cli"
-version = "0.2.5"
+version = "0.2.6"
 description = "A command line tool for TimeTagger. This is a more feature-rich and ergonomic fork of the original timetagger-cli, providing better user experience and additional features."
 authors = [
     { name = "Paul Bütof", email = "paul@passionate-bytes.com" },
