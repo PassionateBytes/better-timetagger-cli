@@ -4,7 +4,7 @@ Track your time with [TimeTagger](https://timetagger.app/) from the command line
 
 TimeTagger is a (self-)hosted time tracking tool that helps you keep track of time spent on your tasks and projects.
 
-This project provides a command-line interface (CLI) for the TimeTagger time tracking application, allowing you to manage your time entries directly from your terminal. It is a more feature-rich and ergonomic fork of the original `timetagger-cli <https://github.com/almarklein/timetagger_cli>`_ by `Almar Klein <https://github.com/almarklein>`_, adding a more user-friendly interface along with a number of new features, such as:
+This project provides a command-line interface (CLI) for the TimeTagger time tracking application, allowing you to manage your time entries directly from your terminal. It is a more feature-rich and ergonomic fork of the original [timetagger-cli](https://github.com/almarklein/timetagger_cli) by [Almar Klein](https://github.com/almarklein), adding a more user-friendly interface along with a number of new features, such as:
 
 |                                     | **better-timetagger-cli** | timetagger-cli |
 | ----------------------------------- | :-----------------------: | :------------: |
