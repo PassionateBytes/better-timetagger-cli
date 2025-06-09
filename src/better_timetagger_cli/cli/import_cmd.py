@@ -5,7 +5,7 @@ import click
 
 from better_timetagger_cli.lib.api import put_records
 from better_timetagger_cli.lib.misc import abort
-from better_timetagger_cli.lib.output import print_records
+from better_timetagger_cli.lib.output import print_records_with_summary
 from better_timetagger_cli.lib.parsers import parse_start_end, tags_callback
 from better_timetagger_cli.lib.records import post_process_records, records_from_csv
 
@@ -42,6 +42,28 @@ from better_timetagger_cli.lib.records import post_process_records, records_from
     help="Only display the records that would be imported. Do not actually import them to your TimeTagger instance.",
 )
 @click.option(
+    "-z",
+    "--summary",
+    "summary",
+    flag_value=True,
+    default=None,
+    help="Show only the summary, disable table.",
+)
+@click.option(
+    "-Z",
+    "--no-summary",
+    "summary",
+    flag_value=False,
+    default=None,
+    help="Show only the table, disable summary.",
+)
+@click.option(
+    "-v",
+    "--show-keys",
+    is_flag=True,
+    help="List each record's unique key. Useful to when you want to remove or restore records.",
+)
+@click.option(
     "-x",
     "--match",
     "tags_match",
@@ -55,6 +77,8 @@ def import_cmd(
     start: str | None,
     end: str | None,
     dry_run: bool,
+    summary: bool | None,
+    show_keys: bool,
     tags_match: Literal["any", "all"],
 ) -> None:
     """
@@ -73,16 +97,13 @@ def import_cmd(
             abort("No input. Use '--file' or pipe data to stdin.")
         file = click.get_text_stream("stdin")
 
-    records = records_from_csv(file)  # type: ignore[arg-type]
-    records = post_process_records(
-        records,
-        tags=tags,
-        tags_match=tags_match,
-    )
+    # Load records
+    records = records_from_csv(file, start=start_dt, end=end_dt)  # type: ignore[arg-type]
+    records = post_process_records(records, tags=tags, tags_match=tags_match)
 
     # In 'dry_run' mode, display the records and exit.
     if dry_run:
-        print_records(records)
+        print_records_with_summary(records, summary=summary, start_dt=start_dt, end_dt=end_dt, show_keys=show_keys)
         return
 
     # Upload records to server and update the output.
@@ -94,7 +115,7 @@ def import_cmd(
     for key in response["failed"]:
         record_status[key] = "[red]...failed![/red]"
 
-    print_records(records, record_status=record_status)
+    print_records_with_summary(records, summary=summary, start_dt=start_dt, end_dt=end_dt, show_keys=show_keys, record_status=record_status)
 
     if response["errors"]:
         error_msg = "\n".join(f"Import Error: {error}" for error in response["errors"])

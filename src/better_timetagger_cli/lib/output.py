@@ -3,17 +3,19 @@
 """
 
 import re
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from datetime import datetime, timedelta
 from typing import Any
 
 from rich.box import SIMPLE
+from rich.console import Group
 from rich.table import Table
 from rich.text import Text
 
 from .api import Record
 from .config import load_config
 from .console import console
+from .records import get_tag_stats, get_total_time
 
 
 def print_records(
@@ -106,6 +108,134 @@ def render_records(
     return table
 
 
+def render_summary(
+    records: Sequence[Record],
+    *,
+    start_dt: int | datetime,
+    end_dt: int | datetime,
+) -> Table:
+    """
+    Create a rich object to display a summary of the records.
+
+    Args:
+        records: List of records to summarize.
+        start_dt: Start date and time for the summary.
+        end_dt: End date and time for the summary.
+
+    Returns:
+        Table: A rich table object containing the summary.
+    """
+    total = get_total_time(records, start_dt, end_dt)
+    tag_stats = get_tag_stats(records)
+
+    records_padding_length = max(len(str(len(records))), 5)
+
+    table = Table(show_header=False, box=SIMPLE)
+    table.add_column(style="cyan", no_wrap=True)
+    table.add_column(style="yellow", no_wrap=True)
+    table.add_column(style="magenta", no_wrap=True)
+
+    table.add_row(
+        "Total:",
+        styled_padded(len(records), records_padding_length),
+        readable_duration(total),
+        style="bold",
+    )
+
+    if tag_stats:
+        for tag, (count, duration) in tag_stats.items():
+            table.add_row(
+                f"[green]{tag}:[/green]",
+                styled_padded(count, records_padding_length),
+                readable_duration(duration),
+            )
+
+    return table
+
+
+def print_records_with_summary(
+    records: Sequence[Record],
+    *,
+    summary: bool | None,
+    start_dt: int | datetime,
+    end_dt: int | datetime,
+    show_index: bool = False,
+    show_keys: bool = False,
+    record_status: dict[str, str | None] | None = None,
+) -> None:
+    """
+    Display records in a table format using rich.
+
+    Args:
+        records: List of records to display.
+        summary: Flag to indicate whether to show summary, records or both.
+        start_dt: Start date and time for the records.
+        end_dt: End date and time for the records.
+        show_index: If True, show the row index of each record. Useful for row-select prompts.
+        show_keys: If True, show the key (unique identifier) of each record.
+        record_status: A map of status annotations for each record key.
+    """
+    output = render_records_with_summary(
+        records,
+        summary=summary,
+        start_dt=start_dt,
+        end_dt=end_dt,
+        show_index=show_index,
+        show_keys=show_keys,
+        record_status=record_status,
+    )
+    console.print(output)
+
+
+def render_records_with_summary(
+    records: Sequence[Record],
+    *,
+    summary: bool | None,
+    start_dt: int | datetime,
+    end_dt: int | datetime,
+    show_index: bool = False,
+    show_keys: bool = False,
+    record_status: dict[str, str | None] | None = None,
+) -> Group:
+    """
+    Render the output for the show command.
+
+    Args:
+        records: List of records to display.
+        summary: Flag to indicate whether to show summary, records or both.
+        start_dt: Start date and time for the records.
+        end_dt: End date and time for the records.
+        show_index: Flag to indicate whether to show row index.
+        show_keys: Flag to indicate whether to show record keys.
+        record_status: A map of status annotations for each record key.
+
+    Returns:
+        A rich console group containing the rendered output.
+    """
+    renderables = []
+
+    if summary is not False:
+        renderables.append(
+            render_summary(
+                records,
+                start_dt=start_dt,
+                end_dt=end_dt,
+            )
+        )
+
+    if summary is not True:
+        renderables.append(
+            render_records(
+                records,
+                show_index=show_index,
+                show_keys=show_keys,
+                record_status=record_status,
+            )
+        )
+
+    return Group(*renderables)
+
+
 def readable_date_time(timestamp: int | float | datetime) -> str:
     """
     Turn a timestamp into a readable string.
@@ -172,7 +302,7 @@ def readable_duration(duration: int | float | timedelta) -> str:
     return output.strip()
 
 
-def styled_padded(value: Any, width: int = 5, *, style: str = "magenta", padding_style: str = "dim magenta", padding: str = "0") -> Text:
+def styled_padded(value: Any, width: int = 5, *, style: str = "yellow", padding_style: str = "yellow dim", padding: str = "0") -> Text:
     value_str = str(value)
     len_padding = width - len(value_str)
 
