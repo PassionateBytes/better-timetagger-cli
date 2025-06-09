@@ -196,7 +196,7 @@ def records_to_csv(records: Iterable[Record]) -> str:
         (
             r.get("key", ""),
             datetime.fromtimestamp(r.get("t1", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z"),
-            datetime.fromtimestamp(r.get("t2", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z"),
+            datetime.fromtimestamp(r.get("t2", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z") if not r["_running"] else "",
             " ".join(get_tags_from_description(r.get("ds", ""))),
             r.get("ds", ""),
         )
@@ -290,7 +290,7 @@ def records_from_csv(
     header_map = {field: header_fields.index(field) for field in header}
 
     for i, line in enumerate(file, start=2):
-        fields = line.strip().split(separator)
+        fields = line.strip("\r\n").split(separator)
         if len(fields) != len(header_fields):
             abort(
                 f"Failed to import CSV: Inconsistent number of columns.\n"
@@ -299,15 +299,19 @@ def records_from_csv(
             )
 
         try:
-            record: Record = {  # type: ignore[typeddict-item]
-                "key": fields[header_map["key"]],
-                "t1": int(datetime.fromisoformat(fields[header_map["start"]].replace("Z", "+00:00")).timestamp()),
-                "t2": int(datetime.fromisoformat(fields[header_map["stop"]].replace("Z", "+00:00")).timestamp()),
-                "ds": fields[header_map["description"]],
+            t1_import = fields[header_map["start"]].strip().replace("Z", "+00:00")
+            t2_import = fields[header_map["stop"]].strip().replace("Z", "+00:00") or t1_import
+            t1 = int(datetime.fromisoformat(t1_import).timestamp())
+            t2 = int(datetime.fromisoformat(t2_import).timestamp())
+            record: Record = {
+                "key": fields[header_map["key"]].strip(),
+                "t1": t1,
+                "t2": t2,
+                "ds": fields[header_map["description"]].strip(),
                 "mt": now,
                 "st": 0,
+                "_running": t1 == t2,  # determine running state
             }
-            record["_running"] = record["t1"] == record["t2"]  # determine running state
         except Exception as e:
             abort(f"Failed to import CSV: {e.__class__.__name__}\n[dim]{e}\nLine {i}: \\[{line.strip()}][/dim]")
 
