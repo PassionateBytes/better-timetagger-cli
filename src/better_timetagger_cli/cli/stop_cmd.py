@@ -4,13 +4,14 @@ import click
 from rich.prompt import IntPrompt
 
 from better_timetagger_cli.lib.api import get_running_records, put_records
+from better_timetagger_cli.lib.click import AliasCommand
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import print_records
 from better_timetagger_cli.lib.parsers import parse_at, tags_callback
 from better_timetagger_cli.lib.records import check_record_tags_match
 
 
-@click.command(("stop", "out", "o"))  # type: ignore[call-overload]
+@click.command("stop", aliases=("out", "o"), cls=AliasCommand)
 @click.argument(
     "tags",
     type=click.STRING,
@@ -55,11 +56,10 @@ def stop_cmd(
 
     If no tags are provided, all running tasks will be stopped.
     Specify one or more tags to stop only matching tasks.
+    Tags can be entered without the leading hashtag '#'.
 
     The '--at' parameter supports natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
-
-    Command aliases: 'stop', 'out', 'o'
     """
     running_records = get_running_records(
         sort_by="t1",

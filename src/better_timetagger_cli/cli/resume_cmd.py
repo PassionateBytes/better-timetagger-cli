@@ -5,6 +5,7 @@ import click
 from rich.prompt import IntPrompt
 
 from better_timetagger_cli.lib.api import get_records
+from better_timetagger_cli.lib.click import AliasCommand
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import print_records
 from better_timetagger_cli.lib.parsers import tags_callback
@@ -13,7 +14,11 @@ from better_timetagger_cli.lib.types import Record
 from .start_cmd import start_cmd
 
 
-@click.command(("resume", "r"))  # type: ignore[call-overload]
+@click.command(
+    "resume",
+    aliases=("r",),
+    cls=AliasCommand,
+)
 @click.argument(
     "tags",
     type=click.STRING,
@@ -71,8 +76,6 @@ def resume_cmd(
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
 
     Note that only records from the last 4 weeks are considered.
-
-    Command aliases: 'resume', 'r'
     """
     now = now_timestamp()
     now_dt = datetime.fromtimestamp(now)

@@ -1,11 +1,16 @@
 import click
 
 from better_timetagger_cli.lib.api import get_updates, put_records
+from better_timetagger_cli.lib.click import AliasCommand
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import print_records
 
 
-@click.command(("remove", "hide", "rm"))  # type: ignore[call-overload]
+@click.command(
+    "remove",
+    aliases=("hide", "rm"),
+    cls=AliasCommand,
+)
 @click.argument(
     "keys",
     type=click.STRING,
@@ -23,8 +28,6 @@ def remove_cmd(
     This command marks records as 'HIDDEN' in the TimeTagger instance.
     This effectively removes them from view, but they can be restored
     later using the 't restore' command.
-
-    Command aliases: 'remove', 'hide', 'rm'
     """
     now = now_timestamp()
     if not keys:

@@ -2,13 +2,18 @@ import click
 from rich.console import Group
 
 from better_timetagger_cli.lib.api import create_record_key, get_running_records, put_records
+from better_timetagger_cli.lib.click import AliasCommand
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import print_records, render_records
 from better_timetagger_cli.lib.parsers import parse_at, tags_callback
 from better_timetagger_cli.lib.types import Record
 
 
-@click.command(("start", "in", "i"))  # type: ignore[call-overload]
+@click.command(
+    "start",
+    aliases=("in", "i"),
+    cls=AliasCommand,
+)
 @click.argument(
     "tags",
     type=click.STRING,
@@ -58,13 +63,12 @@ def start_cmd(
     Start time tracking.
 
     Provide one or more tags to label the task.
+    Tags can be entered without the leading hashtag '#'.
 
     By default, previous tasks will be stopped automatically. Use '--keep' to keep them running.
 
     The '--at' parameter supports natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
-
-    Command aliases: 'start', 'in', 'i'
     """
     description = f"{' '.join(tags)} {description}".strip()
 

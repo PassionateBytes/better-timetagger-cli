@@ -3,13 +3,18 @@ from typing import Literal
 import click
 
 from better_timetagger_cli.lib.api import get_records, get_running_records
+from better_timetagger_cli.lib.click import AliasCommand
 from better_timetagger_cli.lib.console import console
 from better_timetagger_cli.lib.misc import abort
 from better_timetagger_cli.lib.parsers import parse_start_end, tags_callback
 from better_timetagger_cli.lib.records import records_to_csv, round_records
 
 
-@click.command(("export", "csv"))  # type: ignore[call-overload]
+@click.command(
+    "export",
+    aliases=("csv",),
+    cls=AliasCommand,
+)
 @click.argument(
     "tags",
     type=click.STRING,
@@ -78,11 +83,10 @@ def export_cmd(
 
     If no tags are provided, all tasks within the selected time frame will be included.
     Specify one or more tags to include only matching tasks.
+    Tags can be entered without the leading hashtag '#'.
 
     The parameters '--start' and '--end' support natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
-
-    Command aliases: 'export', 'csv'
     """
     if running and (start or end):
         abort("The '--running' option cannot be used with '--start' or '--end'.")

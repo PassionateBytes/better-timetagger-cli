@@ -11,12 +11,10 @@ from better_timetagger_cli.lib.output import readable_duration, styled_padded
 from better_timetagger_cli.lib.records import get_tag_stats, get_total_time
 
 
-@click.command()
+@click.command("status")
 def status_cmd() -> None:
     """
     Get an overview of today, this week and this month.
-
-    Command aliases: 'status'
     """
 
     # Relevant dates

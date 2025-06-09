@@ -10,7 +10,7 @@ from better_timetagger_cli.lib.parsers import parse_start_end, tags_callback
 from better_timetagger_cli.lib.records import post_process_records, records_from_csv
 
 
-@click.command()
+@click.command("import")
 @click.argument(
     "tags",
     type=click.STRING,
@@ -62,11 +62,10 @@ def import_cmd(
 
     If no tags are provided, all tasks within the selected time frame will be included.
     Specify one or more tags to include only matching tasks.
+    Tags can be entered without the leading hashtag '#'.
 
     The parameters '--start' and '--end' support natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
-
-    Command aliases: 'import'
     """
     start_dt, end_dt = parse_start_end(start, end)
     if file is None:

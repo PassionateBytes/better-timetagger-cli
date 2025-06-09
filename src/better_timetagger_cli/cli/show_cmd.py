@@ -8,6 +8,7 @@ from rich.live import Live
 from rich.table import Table
 
 from better_timetagger_cli.lib.api import continuous_updates, get_records, get_running_records
+from better_timetagger_cli.lib.click import AliasCommand
 from better_timetagger_cli.lib.console import console
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import readable_duration, render_records, styled_padded
@@ -16,7 +17,11 @@ from better_timetagger_cli.lib.records import get_tag_stats, get_total_time, rou
 from better_timetagger_cli.lib.types import Record
 
 
-@click.command(("show", "display", "list", "ls", "d"))  # type: ignore[call-overload]
+@click.command(
+    "show",
+    aliases=("display", "list", "ls", "d"),
+    cls=AliasCommand,
+)
 @click.argument(
     "tags",
     type=click.STRING,
@@ -108,11 +113,10 @@ def show_cmd(
 
     If no tags are provided, all tasks within the selected time frame will be shown.
     Specify one or more tags to show only matching tasks.
+    Tags can be entered without the leading hashtag '#'.
 
     The parameters '--start' and '--end' support natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
-
-    Command aliases: 'show', 'display', 'list', 'ls', 'd'
     """
     if running and (start or end):
         abort("The '--running' option cannot be used with '--start' or '--end'.")
