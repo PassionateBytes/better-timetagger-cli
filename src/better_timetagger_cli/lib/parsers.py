@@ -23,7 +23,7 @@ def tags_callback(ctx: click.Context, param: click.Parameter, tags: list[str]) -
     return tags
 
 
-def parse_datetime(input: str) -> datetime | None:
+def parse_datetime(input: str) -> datetime:
     """
     Parse nartural language date and time input.
 
@@ -51,7 +51,7 @@ def parse_datetime(input: str) -> datetime | None:
         return datetime(*time_struct[:6])
 
     else:
-        return None
+        abort(f"Could not parse input: {input}")
 
 
 def parse_start_end(
@@ -71,11 +71,6 @@ def parse_start_end(
     start_dt = parse_datetime(start) if start else datetime(2000, 1, 1)
     end_dt = parse_datetime(end) if end else datetime(3000, 1, 1)
 
-    if start_dt is None:
-        abort("Could not parse '--start'.")
-    if end_dt is None:
-        abort("Could not parse '--end'.")
-
     return start_dt, end_dt
 
 
@@ -91,7 +86,6 @@ def parse_at(at: str | None) -> int | None:
     """
     if at:
         at_dt = parse_datetime(at)
-        if not at_dt:
-            abort("Could not parse '--at'.")
         return int(at_dt.timestamp())
+
     return None

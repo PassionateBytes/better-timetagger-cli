@@ -12,7 +12,7 @@ from .misc import abort, now_timestamp, round_timestamp
 from .types import Record, Settings
 
 
-def get_total_time(records: list[Record], start: int | datetime, end: int | datetime) -> int:
+def get_total_time(records: Iterable[Record], start: int | datetime, end: int | datetime) -> int:
     """
     Calculate the total time spent on records within a given time range.
 
@@ -40,7 +40,7 @@ def get_total_time(records: list[Record], start: int | datetime, end: int | date
     return total
 
 
-def get_tag_stats(records: list[Record]) -> dict[str, tuple[int, int]]:
+def get_tag_stats(records: Iterable[Record]) -> dict[str, tuple[int, int]]:
     """
     Get statistics for each tag in the records. Results are sorted by tag's total duration.
 
@@ -252,16 +252,26 @@ def records_to_csv(records: Iterable[Record]) -> str:
 
 def records_from_csv(
     file: Generator[str],
+    *,
+    start: int | datetime | None = None,
+    end: int | datetime | None = None,
 ) -> list[Record]:
     """
     Load records from a CSV file.
 
     Args:
         file: An iterable of lines from a CSV file.
+        start: The start time to filter records. Can be a timestamp or a datetime object.
+        end: The end time to filter records. Can be a timestamp or a datetime object.
 
     Returns:
         A list of records loaded from the CSV file.
     """
+    if isinstance(start, datetime):
+        start = int(start.timestamp())
+    if isinstance(end, datetime):
+        end = int(end.timestamp())
+
     header = ("key", "start", "stop", "tags", "description")
     now = now_timestamp()
     records = []
@@ -306,6 +316,12 @@ def records_from_csv(
             }
         except Exception as e:
             abort(f"Failed to import CSV: {e.__class__.__name__}\n[dim]{e}\nLine {i}: \\[{line.strip()}][/dim]")
+
+        # filter by date/time range
+        if start is not None and t2 < start:
+            continue
+        if end is not None and t1 > end:
+            continue
 
         records.append(record)
 
