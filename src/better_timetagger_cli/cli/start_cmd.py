@@ -58,6 +58,7 @@ def start_cmd(
     Start time tracking.
 
     Provide one or more tags to label the task.
+    Tags can be entered without the leading hashtag '#'.
 
     By default, previous tasks will be stopped automatically. Use '--keep' to keep them running.
 
