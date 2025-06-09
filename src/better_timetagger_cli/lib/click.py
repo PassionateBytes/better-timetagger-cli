@@ -39,17 +39,12 @@ class AliasedGroup(click.Group):
             self._alias_map[alias] = primary
 
     def get_command(self, ctx, cmd_name) -> click.Command | None:
-        # Resolve alias if required
+        # Resolve aliases
         if cmd_name in self._alias_map:
             cmd_name = self._alias_map[cmd_name]
 
-        # Try direct match
+        # Fetch the command
         rv = click.Group.get_command(self, ctx, cmd_name)
-        if rv is not None:
-            return rv
-
-        # Try alias match
-        rv = click.Group.get_command(self, ctx, self._alias_map.get(cmd_name, ""))
         if rv is not None:
             return rv
 
