@@ -13,7 +13,7 @@ from better_timetagger_cli.lib.types import Record
 from .start_cmd import start_cmd
 
 
-@click.command(("resume", "continue", "r"))  # type: ignore[call-overload]
+@click.command(("resume", "r"))  # type: ignore[call-overload]
 @click.argument(
     "tags",
     type=click.STRING,
@@ -36,13 +36,13 @@ from .start_cmd import start_cmd
     "-S",
     "--select",
     is_flag=True,
-    help="Show a list of matching records to select from.",
+    help="Select a record to resume from a list of options.",
 )
 @click.option(
     "-v",
     "--show-keys",
     is_flag=True,
-    help="List each record's key.",
+    help="List each record's unique key. Useful to when you want to remove or restore records.",
 )
 @click.option(
     "-x",
@@ -50,7 +50,7 @@ from .start_cmd import start_cmd
     "tags_match",
     type=click.Choice(["any", "all"]),
     default="all",
-    help="Tag matching mode. Find records that match any or all tags. Default: all.",
+    help="Tag matching mode. Include records that match either 'any' or 'all' tags. Default: all.",
 )
 @click.pass_context
 def resume_cmd(
@@ -72,7 +72,7 @@ def resume_cmd(
 
     Note that only records from the last 4 weeks are considered.
 
-    Command aliases: 'resume', 'continue', 'r'
+    Command aliases: 'resume', 'r'
     """
     now = now_timestamp()
     now_dt = datetime.fromtimestamp(now)

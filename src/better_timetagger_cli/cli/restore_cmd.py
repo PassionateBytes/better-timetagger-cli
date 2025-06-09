@@ -17,8 +17,8 @@ def restore_cmd(
     """
     Unhide TimeTagger records.
 
-    Specify one or more keys of records to restore.
-    To list hidden record keys, use 't show --hidden --show-keys'.
+    Specify one or more record keys to restore.
+    To list hidden records and their keys, use 't show --hidden --show-keys'.
 
     Command aliases: 'restore', 'unhide'
     """

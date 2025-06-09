@@ -10,7 +10,7 @@ from better_timetagger_cli.lib.parsers import parse_at, tags_callback
 from better_timetagger_cli.lib.records import check_record_tags_match
 
 
-@click.command(("stop", "check-out", "out", "o"))  # type: ignore[call-overload]
+@click.command(("stop", "out", "o"))  # type: ignore[call-overload]
 @click.argument(
     "tags",
     type=click.STRING,
@@ -27,13 +27,13 @@ from better_timetagger_cli.lib.records import check_record_tags_match
     "-S",
     "--select",
     is_flag=True,
-    help="Show a list of matching records to select from.",
+    help="Select a record to resume from a list of options.",
 )
 @click.option(
     "-v",
     "--show-keys",
     is_flag=True,
-    help="List each record's key.",
+    help="List each record's unique key. Useful to when you want to remove or restore records.",
 )
 @click.option(
     "-x",
@@ -41,7 +41,7 @@ from better_timetagger_cli.lib.records import check_record_tags_match
     "tags_match",
     type=click.Choice(["any", "all"]),
     default="all",
-    help="Tag matching mode. Find records that match any or all tags. Default: all.",
+    help="Tag matching mode. Include records that match either 'any' or 'all' tags. Default: all.",
 )
 def stop_cmd(
     tags: list[str],
@@ -59,7 +59,7 @@ def stop_cmd(
     The '--at' parameter supports natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
 
-    Command aliases: 'stop', 'check-out', 'out', 'o'
+    Command aliases: 'stop', 'out', 'o'
     """
     running_records = get_running_records(
         sort_by="t1",

@@ -13,7 +13,7 @@ from better_timetagger_cli.lib.output import readable_date_time
 from better_timetagger_cli.lib.types import Record
 
 
-@click.command(("diagnose", "diag"))  # type: ignore[call-overload]
+@click.command()
 @click.option(
     "-f",
     "--fix",
@@ -27,7 +27,7 @@ def diagnose_cmd(fix: bool) -> None:
     Use the '--fix' option with caution. This will modify the records in your database!
     It is recommended to back up your database before using this option.
 
-    Command aliases: 'diagnose', 'diag'
+    Command aliases: 'diagnose'
     """
 
     records = get_updates()["records"]

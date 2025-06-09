@@ -8,7 +8,7 @@ from better_timetagger_cli.lib.parsers import parse_at, tags_callback
 from better_timetagger_cli.lib.types import Record
 
 
-@click.command(("start", "check-in", "in", "i"))  # type: ignore[call-overload]
+@click.command(("start", "in", "i"))  # type: ignore[call-overload]
 @click.argument(
     "tags",
     type=click.STRING,
@@ -38,13 +38,13 @@ from better_timetagger_cli.lib.types import Record
     "-k",
     "--keep",
     is_flag=True,
-    help="Keep previous tasks running, do not stop them.",
+    help="Keep previous tasks running, do not stop them automatically.",
 )
 @click.option(
     "-v",
     "--show-keys",
     is_flag=True,
-    help="List each record's key.",
+    help="List each record's unique key. Useful to when you want to remove or restore records.",
 )
 def start_cmd(
     tags: list[str],
@@ -59,12 +59,12 @@ def start_cmd(
 
     Provide one or more tags to label the task.
 
-    By default, previous tasks will be stopped automatically.
+    By default, previous tasks will be stopped automatically. Use '--keep' to keep them running.
 
     The '--at' parameter supports natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
 
-    Command aliases: 'start', 'check-in', 'in', 'i'
+    Command aliases: 'start', 'in', 'i'
     """
     description = f"{' '.join(tags)} {description}".strip()
 
