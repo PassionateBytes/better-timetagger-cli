@@ -30,6 +30,7 @@ dependencies = [
 ]
 
 [project.urls]
+Documentation = "https://better-timetagger-cli.readthedocs.io"
 Repository = "https://github.com/PassionateBytes/better-timetagger-cli"
 Issues = "https://github.com/PassionateBytes/better-timetagger-cli/issues"
 
