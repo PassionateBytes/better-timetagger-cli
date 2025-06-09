@@ -108,29 +108,7 @@ def post_process_records(
     Returns:
         A list of post-processed records.
     """
-    records = normalize_records(records)
-    records.sort(key=lambda r: r[sort_by], reverse=sort_reverse)
     records = [
-        {**r, "_running": r["t1"] == r["t2"]}  # determine a running flag
-        for r in records
-        if check_record_tags_match(r, tags, tags_match)  # filter by tags
-        and r["ds"].startswith("HIDDEN") == hidden  # filter by hidden status
-        and (not running or r["t1"] == r["t2"])  # filter by running status
-    ]
-    return records
-
-
-def normalize_records(records: list[Record]) -> list[Record]:
-    """
-    Ensure that all records have the required keys with expected types.
-
-    Args:
-        records: A list of records to normalize.
-
-    Returns:
-        A list of normalized records.
-    """
-    return [
         {
             "key": r.get("key", ""),
             "mt": r.get("mt", 0),
@@ -138,9 +116,15 @@ def normalize_records(records: list[Record]) -> list[Record]:
             "t2": r.get("t2", 0),
             "ds": r.get("ds", ""),
             "st": r.get("st", 0),
+            "_running": r["t1"] == r["t2"],  # determine running state
         }
         for r in records
+        if check_record_tags_match(r, tags, tags_match)  # filter by tags
+        and r["ds"].startswith("HIDDEN") == hidden  # filter by hidden status
+        and (not running or r["t1"] == r["t2"])  # filter by running status
     ]
+    records.sort(key=lambda r: r[sort_by], reverse=sort_reverse)
+    return records
 
 
 def check_record_tags_match(
