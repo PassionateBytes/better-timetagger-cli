@@ -1,7 +1,7 @@
 import click
 
 from better_timetagger_cli.lib.api import get_updates, put_records
-from better_timetagger_cli.lib.click import AliasCommand
+from better_timetagger_cli.lib.cli import AliasCommand
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import print_records
 

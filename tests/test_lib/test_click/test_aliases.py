@@ -1,7 +1,7 @@
 import click
 import pytest
 
-import better_timetagger_cli.lib.click as lib
+import better_timetagger_cli.lib.cli as lib
 
 
 def test_alias_command_init_with_no_aliases():

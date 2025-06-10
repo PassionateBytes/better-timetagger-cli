@@ -4,7 +4,7 @@ import click
 from rich.live import Live
 
 from better_timetagger_cli.lib.api import continuous_updates, get_records, get_running_records
-from better_timetagger_cli.lib.click import AliasCommand
+from better_timetagger_cli.lib.cli import AliasCommand
 from better_timetagger_cli.lib.console import console
 from better_timetagger_cli.lib.misc import abort, now_timestamp
 from better_timetagger_cli.lib.output import render_records_with_summary

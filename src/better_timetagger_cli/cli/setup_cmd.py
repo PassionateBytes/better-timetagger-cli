@@ -1,6 +1,6 @@
 import click
 
-from better_timetagger_cli.lib.click import AliasCommand
+from better_timetagger_cli.lib.cli import AliasCommand
 from better_timetagger_cli.lib.config import ensure_config_file
 from better_timetagger_cli.lib.console import console
 from better_timetagger_cli.lib.misc import open_in_editor

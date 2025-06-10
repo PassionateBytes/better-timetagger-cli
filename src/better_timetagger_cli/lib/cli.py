@@ -1,3 +1,9 @@
+"""
+### CLI Framework Extensions
+
+Custom classes and utilities to extend the `click` library.
+"""
+
 from collections.abc import Iterable
 
 import click
