@@ -3,6 +3,7 @@
 """
 
 import re
+import secrets
 import sys
 from collections.abc import Generator, Iterable
 from datetime import datetime, timezone
@@ -10,6 +11,24 @@ from typing import Literal, TypeVar
 
 from .misc import abort, now_timestamp, round_timestamp
 from .types import Record, Settings
+
+
+def create_record_key(length: int = 8) -> str:
+    """
+    Generate a unique id for records, in the form of an 8-character string.
+
+    The value is used to uniquely identify the record of one user.
+    Assuming a user who has been creating 100 records a day, for 20 years (about 1M records),
+    the chance of a collision for a new record is about 1 in 50 milion.
+
+    Args:
+        length: The length of the random string to generate. Default is 8.
+
+    Returns:
+        A string of 8 random characters.
+    """
+    chars = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    return "".join([secrets.choice(chars) for _ in range(length)])
 
 
 def get_total_time(records: Iterable[Record], start: int | datetime, end: int | datetime) -> int:
