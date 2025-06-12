@@ -12,7 +12,7 @@ from typing import Literal, cast
 
 import requests
 
-from .config import load_config
+from .config import get_config
 from .misc import abort
 from .records import merge_by_key, post_process_records
 from .types import GetRecordsResponse, GetSettingsResponse, GetUpdatesResponse, PutRecordsResponse, PutSettingsResponse, Record, Settings
@@ -34,8 +34,9 @@ def api_request(
     Returns:
         The JSON-decoded response from the API.
     """
+    config = get_config()
+
     try:
-        config = load_config()
         url = config["base_url"].rstrip("/") + "/api/v2/" + path.lstrip("/")
         token = config["api_token"].strip()
         ssl_verify = config["ssl_verify"]
@@ -133,7 +134,7 @@ def get_running_records(
     Returns:
         A dictionary containing the running records from the API.
     """
-    config = load_config()
+    config = get_config()
 
     # search window disabled, search all records for running state
     if config["running_records_search_window"] < 0:

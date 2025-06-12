@@ -5,3 +5,5 @@
 from rich.console import Console
 
 console = Console(highlight=False)
+
+stderr = Console(stderr=True, highlight=False)

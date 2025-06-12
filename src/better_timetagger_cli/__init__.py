@@ -8,3 +8,4 @@ def __getattr__(name):
 
 
 __version__: str
+__author__ = "PassionateBytes"

@@ -9,7 +9,7 @@ from collections.abc import Iterable
 import click
 
 
-class AliasesMixin:
+class AliasesMixin(click.Command):
     """
     Mixin class that provides alias functionality for Click commands and groups.
     """
@@ -41,7 +41,7 @@ class AliasesMixin:
                 formatter.write_dl((a, "") for a in name_and_aliases)
 
 
-class AliasCommand(AliasesMixin, click.Command):
+class AliasCommand(AliasesMixin):
     """
     A custom click command that supports aliases.
 

@@ -10,7 +10,7 @@ from typing import NoReturn
 
 from rich.console import Group
 
-from .console import console
+from .console import stderr
 
 
 def abort(message: str | Group) -> NoReturn:
@@ -21,7 +21,7 @@ def abort(message: str | Group) -> NoReturn:
         message: The message to display before aborting.
     """
     style = "red" if isinstance(message, str) else None
-    console.print(message, style=style)
+    stderr.print(message, style=style)
     exit(1)
 
 
@@ -39,9 +39,8 @@ def open_in_editor(path: str, editor: str | None = None) -> None:
     """
     if editor:
         subprocess.call((editor, path))
-        return
 
-    if sys.platform.startswith("darwin"):
+    elif sys.platform.startswith("darwin"):
         subprocess.call(("open", path))
 
     elif sys.platform.startswith("win"):
@@ -57,7 +56,7 @@ def open_in_editor(path: str, editor: str | None = None) -> None:
             subprocess.call((os.getenv("EDITOR", "nano"), path))
 
     else:
-        console.print(f"\n[red]Unsupported platform: {sys.platform}. Please open the file manually.[/red]")
+        stderr.print(f"\nUnsupported platform: {sys.platform}. Please open the file manually.", style="yellow")
 
 
 def now_timestamp() -> int:

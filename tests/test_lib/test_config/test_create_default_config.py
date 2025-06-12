@@ -1,200 +1,282 @@
 """Tests for the create_default_config function."""
 
-import stat
-from unittest.mock import patch
+import os
 
 import pytest
-import toml
+import tomlkit
 
-import better_timetagger_cli.lib.config as lib
+from better_timetagger_cli.lib.config import (
+    DEFAULT_CONFIG,
+    LegacyConfigDict,
+    create_default_config,
+)
 
 
-def test_create_default_config_with_default_values(monkeypatch, mock_config_path):
-    """Create default config file with factory default values."""
-    mock_get_config_path, config_file = mock_config_path
-    monkeypatch.setattr("better_timetagger_cli.lib.config.get_config_path", mock_get_config_path)
+# Fixtures
+@pytest.fixture
+def temp_config_path(tmp_path):
+    """Return a temporary config file path."""
+    return str(tmp_path / "config.toml")
 
-    # Mock load_legacy_config to return None (no legacy config)
+
+@pytest.fixture
+def mock_stderr(monkeypatch):
+    """Mock stderr.print to capture output."""
+    messages = []
+
+    def mock_print(msg, *args, **kwargs):
+        messages.append(msg)
+
+    monkeypatch.setattr("better_timetagger_cli.lib.config.stderr.print", mock_print)
+    return messages
+
+
+@pytest.fixture
+def legacy_config_dict() -> LegacyConfigDict:
+    """Return a valid legacy configuration dictionary."""
+    return {
+        "api_url": "https://example.com/timetagger/api/v1",
+        "api_token": "legacy-token-123",
+        "ssl_verify": False,
+    }
+
+
+# Tests for creating new config without legacy
+def test_create_config_with_default_values(temp_config_path, monkeypatch):
+    """Create config file with default values when no legacy config exists."""
     monkeypatch.setattr("better_timetagger_cli.lib.config.load_legacy_config", lambda: None)
 
-    result_path = lib.create_default_config()
+    result = create_default_config(temp_config_path)
 
-    assert result_path == str(config_file)
-    assert config_file.exists()
+    assert result == temp_config_path
+    assert os.path.exists(temp_config_path)
 
-    # Verify file permissions (readable by owner and group, not world)
-    file_stat = config_file.stat()
-    assert stat.filemode(file_stat.st_mode) == "-rw-r-----"
+    # Verify content
+    with open(temp_config_path) as f:
+        config = tomlkit.load(f)
 
-    # Verify config content
-    content = config_file.read_text()
-
-    config_data = toml.loads(content)
-    assert config_data["base_url"] == lib.DEFAULT_CONFIG_DATA["base_url"]
-    assert config_data["api_token"] == lib.DEFAULT_CONFIG_DATA["api_token"]
-    assert config_data["ssl_verify"] is (True if lib.DEFAULT_CONFIG_DATA["ssl_verify"] == "true" else False)
-    assert config_data["datetime_format"] == lib.DEFAULT_CONFIG_DATA["datetime_format"]
-    assert config_data["weekday_format"] == lib.DEFAULT_CONFIG_DATA["weekday_format"]
+    assert config["base_url"] == DEFAULT_CONFIG["base_url"]
+    assert config["api_token"] == DEFAULT_CONFIG["api_token"]
+    assert config["ssl_verify"] == DEFAULT_CONFIG["ssl_verify"]
+    assert config["datetime_format"] == DEFAULT_CONFIG["datetime_format"]
+    assert config["weekday_format"] == DEFAULT_CONFIG["weekday_format"]
+    assert config["running_records_search_window"] == DEFAULT_CONFIG["running_records_search_window"]
 
 
-def test_create_default_config_with_legacy_values(monkeypatch, mock_config_path, legacy_config_file):
-    """Create default config file using values from legacy config."""
-    mock_get_config_path, config_file = mock_config_path
-    monkeypatch.setattr("better_timetagger_cli.lib.config.get_config_path", mock_get_config_path)
+def test_preserve_comments_in_created_file(temp_config_path):
+    """Preserve all comments from DEFAULT_CONFIG in created file."""
+    create_default_config(temp_config_path)
 
-    # Mock load_legacy_config to return legacy values
-    legacy_config = {"api_url": "https://example.com/timetagger/api/", "api_token": "legacy-test-token", "ssl_verify": False}
-    monkeypatch.setattr("better_timetagger_cli.lib.config.load_legacy_config", lambda: legacy_config)
+    with open(temp_config_path) as f:
+        content = f.read()
 
-    result_path = lib.create_default_config()
-
-    assert result_path == str(config_file)
-    assert config_file.exists()
-
-    # Verify config content uses legacy values
-    content = config_file.read_text()
-    config_data = toml.loads(content)
-    assert config_data["base_url"] == "https://example.com/"  # URL path adjusted
-    assert config_data["api_token"] == "legacy-test-token"
-    assert config_data["ssl_verify"] is False
-    # Other values should remain default
-    assert config_data["datetime_format"] == lib.DEFAULT_CONFIG_DATA["datetime_format"]
-    assert config_data["weekday_format"] == lib.DEFAULT_CONFIG_DATA["weekday_format"]
+    # Check for key comment sections
+    assert "# Configuration for Better-TimeTagger-CLI" in content
+    assert "# =======[ TIMETAGGER URL ]=======" in content
+    assert "# =======[ API TOKEN ]=======" in content
+    assert "# =======[ SSL CERTIFICATE VERIFICATION ]=======" in content
+    assert "# =======[ DATE/TIME FORMAT ]=======" in content
+    assert "# =======[ WEEKDAY FORMAT ]=======" in content
+    assert "# =======[ SEARCH OPTIMIZATION ]=======" in content
 
 
-def test_create_default_config_creates_directory(monkeypatch, tmp_path):
-    """Create config directory if it doesn't exist."""
-    config_dir = tmp_path / "nested" / "timetagger_cli"
-    config_file = config_dir / "config.toml"
+def test_create_parent_directories_if_missing(tmp_path):
+    """Create parent directories when they don't exist."""
+    nested_path = str(tmp_path / "deep" / "nested" / "dir" / "config.toml")
 
-    def mock_get_config_path(filename):
-        return str(config_file)
+    result = create_default_config(nested_path)
 
-    monkeypatch.setattr("better_timetagger_cli.lib.config.get_config_path", mock_get_config_path)
-    monkeypatch.setattr("better_timetagger_cli.lib.config.load_legacy_config", lambda: None)
-
-    # Ensure directory doesn't exist initially
-    assert not config_dir.exists()
-
-    result_path = lib.create_default_config()
-
-    assert result_path == str(config_file)
-    assert config_dir.exists()
-    assert config_file.exists()
+    assert result == nested_path
+    assert os.path.exists(nested_path)
+    assert os.path.isdir(os.path.dirname(nested_path))
 
 
-def test_create_default_config_handles_legacy_config_error(monkeypatch, mock_config_path):
-    """Fall back to default values when legacy config loading fails."""
-    mock_get_config_path, config_file = mock_config_path
-    monkeypatch.setattr("better_timetagger_cli.lib.config.get_config_path", mock_get_config_path)
+def test_set_file_permissions_to_0640(temp_config_path):
+    """Set file permissions to 0640 for security."""
+    create_default_config(temp_config_path)
 
-    # Mock load_legacy_config to raise an exception
-    def failing_legacy_load():
-        raise Exception("Legacy config error")
+    # Get file permissions
+    file_stat = os.stat(temp_config_path)
+    octal_perms = oct(file_stat.st_mode)[-3:]
 
-    monkeypatch.setattr("better_timetagger_cli.lib.config.load_legacy_config", failing_legacy_load)
-
-    result_path = lib.create_default_config()
-
-    assert result_path == str(config_file)
-    assert config_file.exists()
-
-    # Verify config uses default values
-    content = config_file.read_text()
-
-    config_data = toml.loads(content)
-    assert config_data["base_url"] == lib.DEFAULT_CONFIG_DATA["base_url"]
-    assert config_data["api_token"] == lib.DEFAULT_CONFIG_DATA["api_token"]
+    assert octal_perms == "640"
 
 
-def test_create_default_config_file_write_error(monkeypatch, tmp_path):
-    """Abort when unable to write config file."""
-    # Create a directory where the config file should be (causing write error)
-    config_path = tmp_path / "config.toml"
-    config_path.mkdir()
+# Tests for legacy config migration
+def test_migrate_legacy_config_values(monkeypatch, temp_config_path, legacy_config_dict, mock_stderr):
+    """Migrate values from legacy config when it exists."""
+    # Mock load_legacy_config to return test data
+    monkeypatch.setattr("better_timetagger_cli.lib.config.load_legacy_config", lambda: legacy_config_dict)
 
-    def mock_get_config_path(filename):
-        return str(config_path)
+    create_default_config(temp_config_path)
 
-    monkeypatch.setattr("better_timetagger_cli.lib.config.get_config_path", mock_get_config_path)
-    monkeypatch.setattr("better_timetagger_cli.lib.config.load_legacy_config", lambda: None)
+    # Verify migration message
+    assert "\nMigrating legacy configuration to new format..." in mock_stderr
 
-    with pytest.raises(SystemExit) as exc_info:
-        lib.create_default_config()
+    # Verify migrated values
+    with open(temp_config_path) as f:
+        config = tomlkit.load(f)
 
-    assert exc_info.value.code == 1
+    assert config["base_url"] == "https://example.com/timetagger/"
+    assert config["api_token"] == "legacy-token-123"
+    assert config["ssl_verify"] is False
 
-
-def test_create_default_config_permission_error(monkeypatch, mock_config_path):
-    """Abort when unable to set file permissions."""
-    mock_get_config_path, config_file = mock_config_path
-    monkeypatch.setattr("better_timetagger_cli.lib.config.get_config_path", mock_get_config_path)
-    monkeypatch.setattr("better_timetagger_cli.lib.config.load_legacy_config", lambda: None)
-
-    # Mock os.chmod to raise an exception
-    def failing_chmod(path, mode):
-        raise OSError("Permission denied")
-
-    with patch("os.chmod", failing_chmod):
-        with pytest.raises(SystemExit) as exc_info:
-            lib.create_default_config()
-
-        assert exc_info.value.code == 1
+    # Verify other values remain default
+    assert config["datetime_format"] == DEFAULT_CONFIG["datetime_format"]
+    assert config["weekday_format"] == DEFAULT_CONFIG["weekday_format"]
 
 
-def test_create_default_config_legacy_url_parsing(monkeypatch, mock_config_path):
-    """Parse legacy API URL correctly to extract base URL."""
-    mock_get_config_path, config_file = mock_config_path
-    monkeypatch.setattr("better_timetagger_cli.lib.config.get_config_path", mock_get_config_path)
-
-    # Test various legacy URL formats
+def test_convert_legacy_api_url_to_base_url(monkeypatch, temp_config_path):
+    """Convert legacy api_url format to base_url format correctly."""
     test_cases = [
-        {"legacy_url": "https://example.com/timetagger/api/", "expected_base": "https://example.com/"},
-        {"legacy_url": "http://localhost:8080/timetagger/api/", "expected_base": "http://localhost:8080/"},
-        {"legacy_url": "https://subdomain.example.com/path/timetagger/api/", "expected_base": "https://subdomain.example.com/path/"},
+        {"api_url": "https://timetagger.io/timetagger/api/v1", "expected": "https://timetagger.io/timetagger/"},
+        {"api_url": "http://localhost:8080/timetagger/api/v1", "expected": "http://localhost:8080/timetagger/"},
+        {"api_url": "https://custom.domain/my-app/timetagger/api/v1", "expected": "https://custom.domain/my-app/timetagger/"},
     ]
 
-    for test_case in test_cases:
-        # Reset config file for each test
-        if config_file.exists():
-            config_file.unlink()
+    for case in test_cases:
+        legacy = {
+            "api_url": case["api_url"],
+            "api_token": "token",
+            "ssl_verify": True,
+        }
 
-        legacy_config = {"api_url": test_case["legacy_url"], "api_token": "test-token", "ssl_verify": True}
-        monkeypatch.setattr("better_timetagger_cli.lib.config.load_legacy_config", lambda: legacy_config)  # noqa: B023
+        monkeypatch.setattr("better_timetagger_cli.lib.config.load_legacy_config", lambda: legacy)  # noqa: B023
 
-        lib.create_default_config()
+        create_default_config(temp_config_path)
 
-        content = config_file.read_text()
+        with open(temp_config_path) as f:
+            config = tomlkit.load(f)
 
-        config_data = toml.loads(content)
-        assert config_data["base_url"] == test_case["expected_base"]
+        assert config["base_url"] == case["expected"]
 
 
-def test_create_default_config_ssl_verify_conversion(monkeypatch, mock_config_path):
-    """Convert legacy ssl_verify boolean to string format."""
-    mock_get_config_path, config_file = mock_config_path
-    monkeypatch.setattr("better_timetagger_cli.lib.config.get_config_path", mock_get_config_path)
+def test_handle_legacy_config_load_failure_gracefully(monkeypatch, temp_config_path, mock_stderr):
+    """Use default values when legacy config loading fails."""
+    # Mock load_legacy_config to raise exception
+    monkeypatch.setattr("better_timetagger_cli.lib.config.load_legacy_config", lambda: (_ for _ in ()).throw(FileNotFoundError("Legacy config not found")))
 
-    # Test ssl_verify = True
-    legacy_config_true = {"api_url": "https://example.com/timetagger/api/", "api_token": "test-token", "ssl_verify": True}
-    monkeypatch.setattr("better_timetagger_cli.lib.config.load_legacy_config", lambda: legacy_config_true)
+    create_default_config(temp_config_path)
 
-    lib.create_default_config()
+    # Should not print migration message
+    assert not mock_stderr
 
-    content = config_file.read_text()
+    # Should create file with defaults
+    with open(temp_config_path) as f:
+        config = tomlkit.load(f)
 
-    config_data = toml.loads(content)
-    assert config_data["ssl_verify"] is True
+    assert config["base_url"] == DEFAULT_CONFIG["base_url"]
+    assert config["api_token"] == DEFAULT_CONFIG["api_token"]
 
-    # Reset and test ssl_verify = False
-    config_file.unlink()
 
-    legacy_config_false = {"api_url": "https://example.com/timetagger/api/", "api_token": "test-token", "ssl_verify": False}
-    monkeypatch.setattr("better_timetagger_cli.lib.config.load_legacy_config", lambda: legacy_config_false)
+# Tests for error handling
+def test_abort_when_unable_to_create_directory(monkeypatch, tmp_path):
+    """Abort with error message when directory creation fails."""
+    read_only_path = str(tmp_path / "readonly" / "config.toml")
 
-    lib.create_default_config()
+    # Mock makedirs to raise PermissionError
+    def mock_makedirs(*args, **kwargs):
+        raise PermissionError("Permission denied")
 
-    content = config_file.read_text()
+    monkeypatch.setattr("os.makedirs", mock_makedirs)
 
-    config_data = toml.loads(content)
-    assert config_data["ssl_verify"] is False
+    # Mock abort
+    abort_called = False
+    abort_message = ""
+
+    def mock_abort(msg):
+        nonlocal abort_called, abort_message
+        abort_called = True
+        abort_message = msg
+        raise SystemExit(msg)
+
+    monkeypatch.setattr("better_timetagger_cli.lib.config.abort", mock_abort)
+
+    with pytest.raises(SystemExit):
+        create_default_config(read_only_path)
+
+    assert abort_called
+    assert "Could not create default config file: PermissionError" in abort_message
+    assert "Permission denied" in abort_message
+
+
+def test_abort_when_unable_to_write_file(monkeypatch, temp_config_path):
+    """Abort with error message when file writing fails."""
+    # Create parent directory
+    os.makedirs(os.path.dirname(temp_config_path), exist_ok=True)
+
+    # Mock open to raise IOError
+    original_open = open
+
+    def mock_open(path, mode="r"):
+        if mode == "w" and path == temp_config_path:
+            raise IOError("Disk full")  # noqa: UP024
+        return original_open(path, mode)
+
+    monkeypatch.setattr("builtins.open", mock_open)
+
+    # Mock abort
+    abort_message = ""
+
+    def mock_abort(msg):
+        nonlocal abort_message
+        abort_message = msg
+        raise SystemExit(msg)
+
+    monkeypatch.setattr("better_timetagger_cli.lib.config.abort", mock_abort)
+
+    with pytest.raises(SystemExit):
+        create_default_config(temp_config_path)
+
+    assert "Could not create default config file: OSError" in abort_message
+    assert "Disk full" in abort_message
+
+
+def test_abort_when_unable_to_set_permissions(monkeypatch, temp_config_path):
+    """Abort with error message when chmod fails."""
+
+    # Mock chmod to raise exception
+    def mock_chmod(path, mode):
+        raise OSError("Operation not permitted")
+
+    monkeypatch.setattr("os.chmod", mock_chmod)
+
+    # Mock abort
+    abort_message = ""
+
+    def mock_abort(msg):
+        nonlocal abort_message
+        abort_message = msg
+        raise SystemExit(msg)
+
+    monkeypatch.setattr("better_timetagger_cli.lib.config.abort", mock_abort)
+
+    with pytest.raises(SystemExit):
+        create_default_config(temp_config_path)
+
+    assert "Could not create default config file: OSError" in abort_message
+    assert "Operation not permitted" in abort_message
+
+
+def test_return_filepath_on_success(temp_config_path):
+    """Return the filepath when config creation succeeds."""
+    result = create_default_config(temp_config_path)
+
+    assert result == temp_config_path
+    assert isinstance(result, str)
+
+
+def test_handle_existing_file_overwrite(temp_config_path):
+    """Overwrite existing config file without error."""
+    # Create an existing file
+    with open(temp_config_path, "w") as f:
+        f.write("old content")
+
+    create_default_config(temp_config_path)
+
+    # Verify file was overwritten
+    with open(temp_config_path) as f:
+        content = f.read()
+
+    assert "old content" not in content
+    assert "Configuration for Better-TimeTagger-CLI" in content

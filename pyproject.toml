@@ -1,10 +1,9 @@
 [project]
 name = "better-timetagger-cli"
 version = "0.5.2"
-description = "A command line tool for TimeTagger. This is a more feature-rich and ergonomic fork of the original timetagger-cli, providing better user experience and additional features."
+description = "A command line tool for TimeTagger. This is a more feature-rich and ergonomic fork of the original timetagger-cli (by Almar Klein), providing better user experience and additional features."
 authors = [
     { name = "Paul Bütof", email = "paul@passionate-bytes.com" },
-    { name = "Almar Klein" },
 ]
 maintainers = [{ name = "Paul Bütof", email = "paul@passionate-bytes.com" }]
 license-files = ["LICENSE"]
@@ -24,9 +23,10 @@ requires-python = ">=3.10"
 dependencies = [
     "click>=8.2.0",
     "parsedatetime>=2.6",
+    "platformdirs>=4.3.8",
     "requests>=2.32.3",
     "rich>=14.0.0",
-    "toml>=0.10.2",
+    "tomlkit>=0.13.2",
 ]
 
 [project.urls]

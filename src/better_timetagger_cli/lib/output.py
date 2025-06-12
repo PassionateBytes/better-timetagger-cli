@@ -13,7 +13,7 @@ from rich.table import Table
 from rich.text import Text
 
 from .api import Record
-from .config import load_config
+from .config import get_config
 from .console import console
 from .records import get_tag_stats, get_total_time
 
@@ -246,7 +246,7 @@ def readable_date_time(timestamp: int | float | datetime) -> str:
     Returns:
         A string representing the timestamp in date and time format.
     """
-    config = load_config()
+    config = get_config()
 
     if isinstance(timestamp, datetime):
         value = timestamp
@@ -266,7 +266,7 @@ def readable_weekday(timestamp: int | float | datetime) -> str:
     Returns:
         A string representing the timestamp as weekday
     """
-    config = load_config()
+    config = get_config()
 
     if isinstance(timestamp, datetime):
         value = timestamp
