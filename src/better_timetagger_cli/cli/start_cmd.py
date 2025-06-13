@@ -85,7 +85,7 @@ def start_cmd(
         "st": 0,
         "ds": description,
         "_running": True,
-        "_duration": 0,
+        "_duration": now - start_t,
     }
 
     running_records = get_running_records()["records"]
@@ -103,7 +103,7 @@ def start_cmd(
 
         # Stop running tasks, unless in 'keep' mode
         if not keep:
-            r["t2"] = now
+            r["t2"] = start_t
             r["mt"] = now
             stopped_records.append(r)
             running_records.remove(r)
