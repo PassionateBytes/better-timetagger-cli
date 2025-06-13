@@ -1,36 +1,63 @@
 import click
 import pytest
 
-import better_timetagger_cli.lib.cli as lib
+from better_timetagger_cli.lib.cli import AliasCommand, AliasedGroup
+
+
+@pytest.fixture
+def cli_with_aliases():
+    """Create CLI with aliased commands for testing."""
+
+    @click.group(cls=AliasedGroup)
+    def cli():
+        """Test CLI with aliased commands."""
+        pass
+
+    @cli.command(cls=AliasCommand, aliases=["s", "display", "list"])
+    def show():
+        """Show information."""
+        click.echo("Showing data")
+
+    @cli.command(cls=AliasCommand, aliases=["del", "rm"])
+    def delete():
+        """Delete items."""
+        click.echo("Deleting items")
+
+    @cli.command()  # Regular command without aliases
+    def create():
+        """Create items."""
+        click.echo("Creating items")
+
+    return cli
 
 
 def test_alias_command_init_with_no_aliases():
     """AliasCommand initializes with empty aliases tuple when none provided."""
-    cmd = lib.AliasCommand(name="test")
+    cmd = AliasCommand(name="test")
     assert cmd.aliases == ()
 
 
 def test_alias_command_init_with_string_alias():
     """AliasCommand converts single string alias to tuple."""
-    cmd = lib.AliasCommand(name="test", aliases="t")
+    cmd = AliasCommand(name="test", aliases="t")
     assert cmd.aliases == ("t",)
 
 
 def test_alias_command_init_with_iterable_aliases():
     """AliasCommand converts iterable aliases to tuple."""
-    cmd = lib.AliasCommand(name="test", aliases=["t", "tst", "testing"])
+    cmd = AliasCommand(name="test", aliases=["t", "tst", "testing"])
     assert cmd.aliases == ("t", "tst", "testing")
 
 
 def test_alias_command_init_with_invalid_aliases():
     """AliasCommand raises TypeError for invalid alias types."""
     with pytest.raises(TypeError):
-        lib.AliasCommand(name="test", aliases=123)
+        AliasCommand(name="test", aliases=123)
 
 
 def test_format_help_without_aliases():
     """Help output excludes aliases section when no aliases present."""
-    cmd = lib.AliasCommand(name="test", help="A test command")
+    cmd = AliasCommand(name="test", help="A test command")
     ctx = click.Context(cmd)
     formatter = click.HelpFormatter()
 
@@ -42,7 +69,7 @@ def test_format_help_without_aliases():
 
 def test_format_help_with_aliases():
     """Help output includes aliases section and all alias names."""
-    cmd = lib.AliasCommand(name="test", aliases=["foo", "bar"], help="A test command")
+    cmd = AliasCommand(name="test", aliases=["foo", "bar"], help="A test command")
     ctx = click.Context(cmd)
     formatter = click.HelpFormatter()
 
@@ -151,17 +178,17 @@ def test_invalid_alias_command_execution(cli_runner, cli_with_aliases):
 def test_complex_cli_with_nested_commands(cli_runner):
     """Nested command groups with aliases work correctly."""
 
-    @click.group(cls=lib.AliasedGroup)
+    @click.group(cls=AliasedGroup)
     def cli():
         """Main CLI."""
         pass
 
-    @cli.group(cls=lib.AliasedGroup, aliases=["db"])
+    @cli.group(cls=AliasedGroup, aliases=["db"])
     def database():
         """Database operations."""
         pass
 
-    @database.command(cls=lib.AliasCommand, aliases=["mig", "m"])
+    @database.command(cls=AliasCommand, aliases=["mig", "m"])
     def migrate():
         """Run database migrations."""
         click.echo("Running migrations")
@@ -180,11 +207,11 @@ def test_complex_cli_with_nested_commands(cli_runner):
 def test_command_with_options_and_aliases(cli_runner):
     """Aliased commands work correctly with options and arguments."""
 
-    @click.group(cls=lib.AliasedGroup)
+    @click.group(cls=AliasedGroup)
     def cli():
         pass
 
-    @cli.command(cls=lib.AliasCommand, aliases=["proc"])
+    @cli.command(cls=AliasCommand, aliases=["proc"])
     @click.option("--verbose", "-v", is_flag=True, help="Verbose output")
     @click.argument("name")
     def process(verbose: bool, name: str):
@@ -207,11 +234,11 @@ def test_command_with_options_and_aliases(cli_runner):
 
 def test_empty_aliases_list():
     """Command with empty aliases list converts to empty tuple."""
-    cmd = lib.AliasCommand(name="test", aliases=[])
+    cmd = AliasCommand(name="test", aliases=[])
     assert cmd.aliases == ()
 
 
 def test_tuple_aliases():
     """Command accepts tuple aliases and preserves them correctly."""
-    cmd = lib.AliasCommand(name="test", aliases=("a", "b", "c"))
+    cmd = AliasCommand(name="test", aliases=("a", "b", "c"))
     assert cmd.aliases == ("a", "b", "c")
