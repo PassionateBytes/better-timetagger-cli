@@ -85,7 +85,7 @@ def start_cmd(
         "st": 0,
         "ds": description,
         "_running": True,
-        "_duration": 0,
+        "_duration": now - start_t,
     }
 
     running_records = get_running_records()["records"]
