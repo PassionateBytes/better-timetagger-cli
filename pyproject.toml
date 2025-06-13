@@ -89,6 +89,10 @@ convention = "google"
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+addopts = [
+    "--cov=better_timetagger_cli",
+    "--cov-report=term-missing",
+] 
 
 # ===[ Bump My Version Config ]===
 [tool.bumpversion]
