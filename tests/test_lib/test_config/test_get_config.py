@@ -17,7 +17,7 @@ def test_return_cached_config_when_cache_exists(monkeypatch, clear_config_cache,
     # Mock file operations to ensure they're not called
     file_exists_called = False
 
-    def mock_exists(path):
+    def mock_exists(path):  # pragma: no cover
         nonlocal file_exists_called
         file_exists_called = True
         return False
@@ -57,7 +57,7 @@ def test_create_default_config_when_file_missing(monkeypatch, clear_config_cache
     # Mock create_default_config to return the filepath
     create_called = False
 
-    def mock_create_default(filepath):
+    def mock_create_default(filepath):  # pragma: no cover
         nonlocal create_called
         create_called = True
         # Write a valid config
@@ -98,7 +98,7 @@ def test_abort_on_invalid_config_file(monkeypatch, clear_config_cache, patched_c
     # Mock abort to capture the error message
     abort_message = None
 
-    def mock_abort(msg):
+    def mock_abort(msg):  # pragma: no cover
         nonlocal abort_message
         abort_message = msg
         raise SystemExit(msg)
@@ -124,7 +124,7 @@ def test_abort_on_validation_error(monkeypatch, clear_config_cache, patched_conf
     # Mock abort
     abort_message = None
 
-    def mock_abort(msg):
+    def mock_abort(msg):  # pragma: no cover
         nonlocal abort_message
         abort_message = msg
         raise SystemExit(msg)
@@ -162,7 +162,7 @@ def test_cache_config_after_loading(monkeypatch, clear_config_cache, patched_con
     file_read_count = 0
     original_open = open
 
-    def count_file_reads(filepath, *args, **kwargs):
+    def count_file_reads(filepath, *args, **kwargs):  # pragma: no cover
         nonlocal file_read_count
         if str(filepath) == str(patched_config_file_path):
             file_read_count += 1
@@ -184,7 +184,7 @@ def test_handle_file_permission_error(monkeypatch, clear_config_cache, patched_c
     # Mock abort
     abort_message = None
 
-    def mock_abort(msg):
+    def mock_abort(msg):  # pragma: no cover
         nonlocal abort_message
         abort_message = msg
         raise SystemExit(msg)
@@ -194,7 +194,7 @@ def test_handle_file_permission_error(monkeypatch, clear_config_cache, patched_c
     # Mock open to raise PermissionError only for our specific config file using context manager
     original_open = open
 
-    def selective_mock_open(filepath, *args, **kwargs):
+    def selective_mock_open(filepath, *args, **kwargs):  # pragma: no cover
         if str(filepath) == str(patched_config_file_path):
             raise PermissionError("Permission denied")
         return original_open(filepath, *args, **kwargs)
