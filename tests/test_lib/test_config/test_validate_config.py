@@ -6,29 +6,6 @@ import tomlkit
 from better_timetagger_cli.lib.config import DEFAULT_CONFIG, validate_config
 
 
-# Fixtures
-@pytest.fixture
-def minimal_valid_toml():
-    """Return a minimal valid TOML document with on ly required fields."""
-    toml = tomlkit.document()
-    toml["base_url"] = "https://timetagger.io/timetagger/"
-    toml["api_token"] = "test-token-123"
-    return toml
-
-
-@pytest.fixture
-def full_valid_toml():
-    """Return a complete valid TOML document with all fields."""
-    toml = tomlkit.document()
-    toml["base_url"] = "https://custom.domain/timetagger/"
-    toml["api_token"] = "custom-token-456"
-    toml["ssl_verify"] = "/path/to/cert.pem"
-    toml["datetime_format"] = "%Y-%m-%d %H:%M:%S"
-    toml["weekday_format"] = "%A"
-    toml["running_records_search_window"] = -1
-    return toml
-
-
 # Tests for successful validation
 def test_validate_minimal_config_applies_defaults(minimal_valid_toml):
     """Apply default values for optional fields when not provided."""
