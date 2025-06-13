@@ -35,20 +35,41 @@ def parse_datetime(input: str) -> datetime:
     """
 
     cal = parsedatetime.Calendar()
-    time_struct, parse_status = cal.parse(input)
+    parsed, parse_status = cal.parse(input)
 
     # only date parsed -> set time to 00:00:00
     if parse_status == 1:
-        return datetime(*time_struct[:3])
+        return datetime(
+            year=parsed.tm_year,
+            month=parsed.tm_mon,
+            day=parsed.tm_mday,
+            hour=0,
+            minute=0,
+            second=0,
+        )
 
     # only time parsed -> set date to today
     elif parse_status == 2:
         today = datetime.today()
-        return datetime(today.year, today.month, today.day, *time_struct[:3])
+        return datetime(
+            year=today.year,
+            month=today.month,
+            day=today.day,
+            hour=parsed.tm_hour,
+            minute=parsed.tm_min,
+            second=parsed.tm_sec,
+        )
 
     # date and time parsed
     elif parse_status == 3:
-        return datetime(*time_struct[:6])
+        return datetime(
+            year=parsed.tm_year,
+            month=parsed.tm_mon,
+            day=parsed.tm_mday,
+            hour=parsed.tm_hour,
+            minute=parsed.tm_min,
+            second=parsed.tm_sec,
+        )
 
     else:
         abort(f"Could not parse input: {input}")
