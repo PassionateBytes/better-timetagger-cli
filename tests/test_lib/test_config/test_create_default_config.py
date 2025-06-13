@@ -6,10 +6,7 @@ from unittest.mock import patch
 import pytest
 import tomlkit
 
-from better_timetagger_cli.lib.config import (
-    DEFAULT_CONFIG,
-    create_default_config,
-)
+from better_timetagger_cli.lib.config import DEFAULT_CONFIG, create_default_config, load_legacy_config
 
 
 # Tests for creating new config without legacy
@@ -146,7 +143,7 @@ def test_abort_when_unable_to_create_directory(monkeypatch, tmp_path):
     read_only_path = tmp_path / "readonly" / "config.toml"
 
     # Mock makedirs to raise PermissionError
-    def mock_makedirs(*args, **kwargs):  #pragma: no cover
+    def mock_makedirs(*args, **kwargs):  # pragma: no cover
         raise PermissionError("Permission denied")
 
     monkeypatch.setattr("os.makedirs", mock_makedirs)
@@ -155,7 +152,7 @@ def test_abort_when_unable_to_create_directory(monkeypatch, tmp_path):
     abort_called = False
     abort_message = ""
 
-    def mock_abort(msg):  #pragma: no cover
+    def mock_abort(msg):  # pragma: no cover
         nonlocal abort_called, abort_message
         abort_called = True
         abort_message = msg
@@ -179,7 +176,7 @@ def test_abort_when_unable_to_write_file(config_file_path):
     # Mock abort
     abort_message = ""
 
-    def mock_abort(msg):  #pragma: no cover
+    def mock_abort(msg):  # pragma: no cover
         nonlocal abort_message
         abort_message = msg
         raise SystemExit(msg)
@@ -187,7 +184,7 @@ def test_abort_when_unable_to_write_file(config_file_path):
     # Mock open to raise IOError only for our specific config file using context manager
     original_open = open
 
-    def selective_mock_open(filepath, mode="r", *args, **kwargs):  #pragma: no cover
+    def selective_mock_open(filepath, mode="r", *args, **kwargs):  # pragma: no cover
         if mode == "w" and str(filepath) == str(config_file_path):
             raise IOError("Disk full")  # noqa: UP024
         return original_open(filepath, mode, *args, **kwargs)
@@ -205,7 +202,7 @@ def test_abort_when_unable_to_set_permissions(monkeypatch, config_file_path):
     """Abort with error message when chmod fails."""
 
     # Mock chmod to raise exception
-    def mock_chmod(path, mode):  #pragma: no cover
+    def mock_chmod(path, mode):  # pragma: no cover
         raise OSError("Operation not permitted")
 
     monkeypatch.setattr("os.chmod", mock_chmod)
@@ -213,7 +210,7 @@ def test_abort_when_unable_to_set_permissions(monkeypatch, config_file_path):
     # Mock abort
     abort_message = ""
 
-    def mock_abort(msg):  #pragma: no cover
+    def mock_abort(msg):  # pragma: no cover
         nonlocal abort_message
         abort_message = msg
         raise SystemExit(msg)
@@ -249,3 +246,31 @@ def test_handle_existing_file_overwrite(config_file_path):
 
     assert "old content" not in content
     assert "Configuration for Better-TimeTagger-CLI" in content
+
+
+def test_load_legacy_config_raises_valueerror_for_invalid_values(monkeypatch, config_file_path):
+    """Test that load_legacy_config raises ValueError when legacy config has invalid values."""
+
+    # Note: This test mostly just exists to get code-coverage for the ValueError case in load_legacy_config.
+
+    # Create a legacy config file with invalid values (missing api_url)
+    invalid_legacy_config = {
+        "api_token": "some-token"
+        # Missing api_url - this should trigger ValueError
+    }
+
+    # Mock the file reading to return our invalid config
+    def mock_open_invalid_config(*args, **kwargs):  # pragma: no cover
+        if "config.txt" in str(args[0]):
+            from io import StringIO
+
+            import tomlkit
+
+            return StringIO(tomlkit.dumps(invalid_legacy_config))
+        return open(*args, **kwargs)
+
+    monkeypatch.setattr("builtins.open", mock_open_invalid_config)
+
+    # This should raise ValueError due to missing api_url
+    with pytest.raises(ValueError, match="Invalid configuration values"):
+        load_legacy_config(str(config_file_path.parent / "config.txt"))
