@@ -103,7 +103,7 @@ def start_cmd(
 
         # Stop running tasks, unless in 'keep' mode
         if not keep:
-            r["t2"] = now
+            r["t2"] = start_t
             r["mt"] = now
             stopped_records.append(r)
             running_records.remove(r)
