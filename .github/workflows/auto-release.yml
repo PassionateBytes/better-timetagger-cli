@@ -84,7 +84,7 @@ jobs:
         with:
           tag_name: v${{ needs.check-release.outputs.version }}
           name: Release v${{ needs.check-release.outputs.version }}
-          files: dist/*
+          files: dist/*.whl
           generate_release_notes: true
           append_body: true
           body: |
