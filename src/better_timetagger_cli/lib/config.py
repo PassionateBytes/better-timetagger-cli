@@ -5,14 +5,14 @@ Utility functions to interact with configuration files for the application.
 """
 
 # Developer's Note:
-# This module heavily relies on `tomlkit`, because other than most
-# toml serialization libraries it preserves comments and layout of
-# the in the toml file. This allows us to define the default config
-# file content along with explanatory comments here, parse and modify
-# it as a dictionary for programmatic use, then dump it to the
-# filesystem with all its comments intact. We can also modify the
-# user's configuration file in place, without impacting their config
-# file layout.
+#   This module heavily relies on `tomlkit`, because other than most
+#   toml serialization libraries it preserves comments and layout of
+#   the in the toml file. This allows us to define the default config
+#   file content along with explanatory comments here, parse and modify
+#   it as a dictionary for programmatic use, then dump it to the
+#   filesystem with all its comments intact. We can also modify the
+#   user's configuration file in place, without impacting their config
+#   file layout.
 
 import os
 from datetime import datetime
