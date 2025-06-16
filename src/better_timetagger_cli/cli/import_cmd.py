@@ -4,7 +4,7 @@ from typing import Literal, TextIO
 import click
 
 from better_timetagger_cli.lib.api import put_records
-from better_timetagger_cli.lib.misc import abort
+from better_timetagger_cli.lib.console import abort
 from better_timetagger_cli.lib.output import print_records_with_summary
 from better_timetagger_cli.lib.parsers import parse_start_end, tags_callback
 from better_timetagger_cli.lib.records import post_process_records, records_from_csv

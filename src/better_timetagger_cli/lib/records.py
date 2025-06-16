@@ -9,7 +9,8 @@ from collections.abc import Generator, Iterable
 from datetime import datetime, timezone
 from typing import Literal, TypeVar
 
-from .misc import abort, now_timestamp, round_timestamp
+from .console import abort
+from .misc import now_timestamp, round_timestamp
 from .types import Record, Settings
 
 

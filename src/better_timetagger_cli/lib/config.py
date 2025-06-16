@@ -26,8 +26,7 @@ from tomlkit import TOMLDocument
 
 from better_timetagger_cli import __author__
 
-from .console import stderr
-from .misc import abort
+from .console import abort, stderr
 from .types import ConfigDict, LegacyConfigDict
 
 CONFIG_FILE = "config.toml"
