@@ -1,3 +1,9 @@
+"""
+### Input Parsing & Validation
+
+Functions that parse user input and validate data
+"""
+
 from datetime import datetime
 
 import click

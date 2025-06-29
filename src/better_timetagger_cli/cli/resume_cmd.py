@@ -9,7 +9,7 @@ from better_timetagger_cli.lib.cli import AliasCommand
 from better_timetagger_cli.lib.console import abort
 from better_timetagger_cli.lib.misc import now_timestamp
 from better_timetagger_cli.lib.output import print_records
-from better_timetagger_cli.lib.parsers import tags_callback
+from better_timetagger_cli.lib.parsing import tags_callback
 from better_timetagger_cli.lib.types import Record
 
 from .start_cmd import start_cmd

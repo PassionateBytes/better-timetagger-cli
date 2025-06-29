@@ -6,7 +6,7 @@ from better_timetagger_cli.lib.cli import AliasCommand
 from better_timetagger_cli.lib.console import abort
 from better_timetagger_cli.lib.misc import now_timestamp
 from better_timetagger_cli.lib.output import print_records, render_records
-from better_timetagger_cli.lib.parsers import parse_at, tags_callback
+from better_timetagger_cli.lib.parsing import parse_at, tags_callback
 from better_timetagger_cli.lib.records import create_record_key
 from better_timetagger_cli.lib.types import Record
 
