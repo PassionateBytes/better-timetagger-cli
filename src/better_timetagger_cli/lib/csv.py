@@ -1,3 +1,9 @@
+"""
+### CSV Import/Export
+
+Functions to load or save records in CSV format.
+"""
+
 import re
 import sys
 from collections.abc import Generator, Iterable
