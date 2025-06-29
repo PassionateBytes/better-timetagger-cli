@@ -75,7 +75,7 @@ def start_cmd(
     description = f"{' '.join(tags)} {description}".strip()
 
     if not description and not empty:
-        abort("No tags or description provided. Use '--empty' to start a task without tags or description.")
+        abort("No tags or description provided. Use '--empty' to start a task without tags or description. Or use 't resume' to continue a previous task.")
 
     now = now_timestamp()
     start_t = parse_at(at) or now
