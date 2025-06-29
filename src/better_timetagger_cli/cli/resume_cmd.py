@@ -69,7 +69,7 @@ def resume_cmd(
     tags_match: Literal["any", "all"],
 ) -> None:
     """
-    Start time tracking, using the same tags and description a recent record.
+    Start time tracking, using the same tags and description of a recent record.
 
     You may specify a tag, to only resume the most recent record that matches the tag.
 
