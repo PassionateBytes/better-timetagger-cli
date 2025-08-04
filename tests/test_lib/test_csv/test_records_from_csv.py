@@ -135,7 +135,7 @@ def test_filter_records_excludes_records_outside_range(csv_with_mixed_records):
 def test_abort_on_missing_required_headers(malformed_csv_missing_header, monkeypatch):
     """Abort parsing when required header fields are missing."""
     mock_now = 1641000000
-    monkeypatch.setattr("better_timetagger_cli.lib.misc.now_timestamp", lambda: mock_now)
+    monkeypatch.setattr("better_timetagger_cli.lib.timestamps.now_timestamp", lambda: mock_now)
 
     with pytest.raises(SystemExit) as exc_info:
         list(records_from_csv(iter(malformed_csv_missing_header)))
@@ -144,7 +144,7 @@ def test_abort_on_missing_required_headers(malformed_csv_missing_header, monkeyp
 def test_abort_on_inconsistent_column_count(malformed_csv_wrong_column_count, monkeypatch):
     """Abort parsing when line has wrong number of columns."""
     mock_now = 1641000000
-    monkeypatch.setattr("better_timetagger_cli.lib.misc.now_timestamp", lambda: mock_now)
+    monkeypatch.setattr("better_timetagger_cli.lib.timestamps.now_timestamp", lambda: mock_now)
 
     with pytest.raises(SystemExit):
         list(records_from_csv(iter(malformed_csv_wrong_column_count)))
@@ -153,7 +153,7 @@ def test_abort_on_inconsistent_column_count(malformed_csv_wrong_column_count, mo
 def test_abort_on_invalid_date_format(malformed_csv_invalid_date, monkeypatch):
     """Abort parsing when date format is invalid."""
     mock_now = 1641000000
-    monkeypatch.setattr("better_timetagger_cli.lib.misc.now_timestamp", lambda: mock_now)
+    monkeypatch.setattr("better_timetagger_cli.lib.timestamps.now_timestamp", lambda: mock_now)
 
     with pytest.raises(SystemExit):
         list(records_from_csv(iter(malformed_csv_invalid_date)))
