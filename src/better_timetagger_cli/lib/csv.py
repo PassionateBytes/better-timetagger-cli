@@ -10,7 +10,7 @@ from collections.abc import Generator, Iterable
 from datetime import datetime, timezone
 
 from .console import abort
-from .misc import now_timestamp
+from .timestamps import now_timestamp
 from .records import get_tags_from_description
 from .types import Record
 

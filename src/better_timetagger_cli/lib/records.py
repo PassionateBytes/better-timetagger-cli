@@ -8,7 +8,7 @@ from collections.abc import Iterable
 from datetime import datetime
 from typing import Literal, TypeVar
 
-from .misc import now_timestamp, round_timestamp
+from .timestamps import now_timestamp, round_timestamp
 from .types import Record, Settings
 
 

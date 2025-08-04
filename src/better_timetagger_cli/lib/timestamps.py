@@ -1,5 +1,7 @@
 """
-# Miscellaneous utilities.
+### Timestamp Utilities
+
+Functions for working with record timestamps.
 """
 
 from time import time
