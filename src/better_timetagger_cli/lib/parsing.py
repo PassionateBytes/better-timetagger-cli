@@ -31,7 +31,7 @@ def tags_callback(ctx: click.Context, param: click.Parameter, tags: list[str]) -
 
 def parse_datetime(input: str) -> datetime:
     """
-    Parse nartural language date and time input.
+    Parse natural language date and time input.
 
     Args:
         input: A string representing the date and time.
