@@ -6,10 +6,10 @@ from rich.live import Live
 from better_timetagger_cli.lib.api import continuous_updates, get_records, get_running_records
 from better_timetagger_cli.lib.cli import AliasCommand
 from better_timetagger_cli.lib.console import abort, console
-from better_timetagger_cli.lib.timestamps import now_timestamp
 from better_timetagger_cli.lib.output import render_records_with_summary
 from better_timetagger_cli.lib.parsing import parse_start_end, tags_callback
 from better_timetagger_cli.lib.records import round_records
+from better_timetagger_cli.lib.timestamps import now_timestamp
 
 
 @click.command(
