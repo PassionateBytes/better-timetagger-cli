@@ -1,5 +1,7 @@
 """
-# Types and interfaces.
+### Type Definitions
+
+All TypedDict classes and type definitions for the better-timetagger-cli.
 """
 
 from typing import TypedDict
