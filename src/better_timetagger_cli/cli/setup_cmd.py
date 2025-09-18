@@ -50,7 +50,10 @@ def setup_cmd(editor: str | None, list: Literal[True] | str) -> None:
 
     elif list:
         key = list
-        value = config.get(key, DEFAULT_CONFIG.get(key, None))
+        if isinstance(key, str):
+            value = config.get(key, DEFAULT_CONFIG.get(key, None))
+        else:
+            value = None
         if value is None:
             abort(f"[bold]Unknown configuration key: {key}[/bold]\nAvailable keys: {', '.join(config.keys())}")
         console.print(f"[cyan]{key}[/cyan] [magenta]{escape(str(value))}[/magenta]")
