@@ -72,7 +72,7 @@ def mock_parsedatetime(monkeypatch):
         VERSION_CONTEXT_STYLE = 1  # Mock constant
 
         @staticmethod
-        def Calendar(version=None):
+        def Calendar(version=None):  # noqa: N802
             return mock_cal
 
     monkeypatch.setattr("better_timetagger_cli.lib.parsing.parsedatetime", MockParsedatetime)

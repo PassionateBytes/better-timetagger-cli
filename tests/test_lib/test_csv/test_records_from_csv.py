@@ -137,7 +137,7 @@ def test_abort_on_missing_required_headers(malformed_csv_missing_header, monkeyp
     mock_now = 1641000000
     monkeypatch.setattr("better_timetagger_cli.lib.timestamps.now_timestamp", lambda: mock_now)
 
-    with pytest.raises(SystemExit) as exc_info:
+    with pytest.raises(SystemExit):
         list(records_from_csv(iter(malformed_csv_missing_header)))
 
 

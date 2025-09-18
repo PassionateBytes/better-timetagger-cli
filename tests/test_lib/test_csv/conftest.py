@@ -29,7 +29,7 @@ def completed_records() -> list[dict[str, Any]]:
 
 
 @pytest.fixture
-def running_records() -> dict[str, Any]:
+def running_records() -> list[dict[str, Any]]:
     """Provide running records for testing."""
     return [
         {
