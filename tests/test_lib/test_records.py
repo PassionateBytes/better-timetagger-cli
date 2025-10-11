@@ -5,6 +5,7 @@ from datetime import datetime
 from better_timetagger_cli.lib.records import (
     check_record_tags_match,
     create_record_key,
+    get_tag_stats,
     get_tags_from_description,
     get_total_time,
     merge_by_key,
@@ -778,3 +779,133 @@ def test_get_total_time_excludes_records_outside_range():
     total = get_total_time(records, start=1640995200, end=1640996000)
 
     assert total == 600  # Only first record
+
+
+def test_get_tag_stats_counts_occurrences_and_duration():
+    """Calculate occurrence count and total duration for each tag."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995800,
+            "ds": "#work #project",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 600,
+        },
+        {
+            "key": "def456",
+            "mt": 1640995200,
+            "t1": 1640995800,
+            "t2": 1640996100,
+            "ds": "#work",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 300,
+        },
+    ]
+
+    stats = get_tag_stats(records)
+
+    assert stats["#work"] == (2, 900)  # 2 occurrences, 900 seconds total
+    assert stats["#project"] == (1, 600)  # 1 occurrence, 600 seconds
+
+
+def test_get_tag_stats_sorts_by_duration():
+    """Return tags sorted by total duration in descending order."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995500,
+            "ds": "#low-priority",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 300,
+        },
+        {
+            "key": "def456",
+            "mt": 1640995200,
+            "t1": 1640995800,
+            "t2": 1640996400,
+            "ds": "#high-priority",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 600,
+        },
+    ]
+
+    stats = get_tag_stats(records)
+
+    keys = list(stats.keys())
+    assert keys[0] == "#high-priority"  # Higher duration first
+    assert keys[1] == "#low-priority"
+
+
+def test_get_tag_stats_with_no_tags():
+    """Return empty dict when no tags present."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995800,
+            "ds": "no tags here",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 600,
+        }
+    ]
+
+    stats = get_tag_stats(records)
+
+    assert stats == {}
+
+
+def test_get_tag_stats_with_empty_records():
+    """Return empty dict for empty record list."""
+    stats = get_tag_stats([])
+
+    assert stats == {}
+
+
+def test_get_tag_stats_aggregates_same_tag():
+    """Aggregate stats for same tag across multiple records."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995500,
+            "ds": "#work meeting",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 300,
+        },
+        {
+            "key": "def456",
+            "mt": 1640995200,
+            "t1": 1640995500,
+            "t2": 1640995800,
+            "ds": "#work coding",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 300,
+        },
+        {
+            "key": "ghi789",
+            "mt": 1640995200,
+            "t1": 1640995800,
+            "t2": 1640996400,
+            "ds": "#work review",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 600,
+        },
+    ]
+
+    stats = get_tag_stats(records)
+
+    assert stats["#work"] == (3, 1200)  # 3 occurrences, 1200 seconds total
