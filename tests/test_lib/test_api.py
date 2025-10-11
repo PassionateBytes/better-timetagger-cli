@@ -5,7 +5,16 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from better_timetagger_cli.lib.api import api_request, get_records, get_running_records, get_settings, get_updates, put_records, put_settings
+from better_timetagger_cli.lib.api import (
+    api_request,
+    continuous_updates,
+    get_records,
+    get_running_records,
+    get_settings,
+    get_updates,
+    put_records,
+    put_settings,
+)
 from better_timetagger_cli.lib.types import Record, Settings
 
 
@@ -574,3 +583,229 @@ def test_api_request_handles_leading_slash_in_path(mock_get_config, mock_request
 
     url = mock_request.call_args[0][1]
     assert url == "https://example.com/api/v2/test/path"
+
+
+@patch("better_timetagger_cli.lib.api.sleep")
+@patch("better_timetagger_cli.lib.api.get_updates")
+def test_continuous_updates_yields_initial_response(mock_get_updates, mock_sleep):
+    """Yield initial response from continuous_updates."""
+    mock_get_updates.return_value = {
+        "records": [
+            {
+                "key": "key1",
+                "mt": 1640995200,
+                "t1": 1640995200,
+                "t2": 1640995800,
+                "ds": "#work",
+                "st": 1640995200.0,
+            }
+        ],
+        "settings": [],
+        "server_time": 1640995800,
+        "reset": 0,
+    }
+
+    generator = continuous_updates()
+    result = next(generator)
+
+    assert "records" in result
+    assert len(result["records"]) == 1
+    assert result["server_time"] == 1640995800
+    # Sleep is called after yield, so hasn't been called yet
+    assert mock_sleep.call_count == 0
+
+
+@patch("better_timetagger_cli.lib.api.sleep")
+@patch("better_timetagger_cli.lib.api.get_updates")
+def test_continuous_updates_uses_server_time_for_next_request(mock_get_updates, mock_sleep):
+    """Use previous server_time as since parameter for next request."""
+    mock_get_updates.side_effect = [
+        {
+            "records": [],
+            "settings": [],
+            "server_time": 1000,
+            "reset": 0,
+        },
+        {
+            "records": [],
+            "settings": [],
+            "server_time": 2000,
+            "reset": 0,
+        },
+    ]
+
+    generator = continuous_updates(since=0)
+    next(generator)
+    next(generator)
+
+    # First call uses the provided since=0
+    assert mock_get_updates.call_args_list[0][0][0] == 0
+    # Second call uses server_time from first response
+    assert mock_get_updates.call_args_list[1][0][0] == 1000
+
+
+@patch("better_timetagger_cli.lib.api.sleep")
+@patch("better_timetagger_cli.lib.api.get_updates")
+def test_continuous_updates_merges_records_when_not_reset(mock_get_updates, mock_sleep):
+    """Merge new records with cached records when reset is False."""
+    # First update has key1, second update has key2
+    # Both should be merged in the cache
+    mock_get_updates.side_effect = [
+        {
+            "records": [
+                {
+                    "key": "key1",
+                    "mt": 1640995200,
+                    "t1": 1640995200,
+                    "t2": 1640995800,
+                    "ds": "#work",
+                    "st": 1640995200.0,
+                }
+            ],
+            "settings": [],
+            "server_time": 1000,
+            "reset": 0,
+        },
+        {
+            "records": [
+                {
+                    "key": "key2",
+                    "mt": 1640995800,
+                    "t1": 1640995800,
+                    "t2": 1640996100,
+                    "ds": "#meeting",
+                    "st": 1640995800.0,
+                }
+            ],
+            "settings": [],
+            "server_time": 2000,
+            "reset": 0,
+        },
+    ]
+
+    generator = continuous_updates()
+    first = next(generator)
+
+    # First response has one record (key1)
+    assert len(first["records"]) == 1
+    record_keys = [r["key"] for r in first["records"]]
+    assert "key1" in record_keys
+
+    second = next(generator)
+
+    # Second response merges both records (key1 + key2)
+    assert len(second["records"]) == 2
+    record_keys = [r["key"] for r in second["records"]]
+    assert "key1" in record_keys
+    assert "key2" in record_keys
+
+
+@patch("better_timetagger_cli.lib.api.sleep")
+@patch("better_timetagger_cli.lib.api.get_updates")
+def test_continuous_updates_replaces_cache_on_reset(mock_get_updates, mock_sleep):
+    """Replace entire cache when reset is True."""
+    mock_get_updates.side_effect = [
+        {
+            "records": [
+                {
+                    "key": "key1",
+                    "mt": 1640995200,
+                    "t1": 1640995200,
+                    "t2": 1640995800,
+                    "ds": "#work",
+                    "st": 1640995200.0,
+                }
+            ],
+            "settings": [],
+            "server_time": 1000,
+            "reset": 0,
+        },
+        {
+            "records": [
+                {
+                    "key": "key2",
+                    "mt": 1640995800,
+                    "t1": 1640995800,
+                    "t2": 1640996100,
+                    "ds": "#meeting",
+                    "st": 1640995800.0,
+                }
+            ],
+            "settings": [],
+            "server_time": 2000,
+            "reset": 1,
+        },
+    ]
+
+    generator = continuous_updates()
+    first = next(generator)
+    second = next(generator)
+
+    # First response has one record
+    assert len(first["records"]) == 1
+    assert first["records"][0]["key"] == "key1"
+
+    # Second response replaces cache due to reset
+    assert len(second["records"]) == 1
+    assert second["records"][0]["key"] == "key2"
+
+
+@patch("better_timetagger_cli.lib.api.sleep")
+@patch("better_timetagger_cli.lib.api.get_updates")
+def test_continuous_updates_uses_custom_delay(mock_get_updates, mock_sleep):
+    """Use custom delay parameter for sleep."""
+    mock_get_updates.return_value = {
+        "records": [],
+        "settings": [],
+        "server_time": 1000,
+        "reset": 0,
+    }
+
+    generator = continuous_updates(delay=10)
+    next(generator)
+
+    # Sleep happens after yield, so advance generator one more time
+    try:
+        next(generator)
+    except StopIteration:
+        pass
+
+    # Should have called sleep with custom delay
+    assert mock_sleep.call_count >= 1
+    mock_sleep.assert_any_call(10)
+
+
+@patch("better_timetagger_cli.lib.api.sleep")
+@patch("better_timetagger_cli.lib.api.get_updates")
+def test_continuous_updates_filters_running_records(mock_get_updates, mock_sleep):
+    """Filter for running records when running=True."""
+    mock_get_updates.return_value = {
+        "records": [
+            {
+                "key": "key1",
+                "mt": 1640995200,
+                "t1": 1640995200,
+                "t2": 1640995200,  # Running record (t1 == t2)
+                "ds": "#work",
+                "st": 1640995200.0,
+            },
+            {
+                "key": "key2",
+                "mt": 1640995200,
+                "t1": 1640995200,
+                "t2": 1640995800,  # Stopped record
+                "ds": "#meeting",
+                "st": 1640995200.0,
+            },
+        ],
+        "settings": [],
+        "server_time": 1000,
+        "reset": 0,
+    }
+
+    generator = continuous_updates(running=True)
+    result = next(generator)
+
+    # Should only have the running record
+    assert len(result["records"]) == 1
+    assert result["records"][0]["key"] == "key1"
