@@ -1,9 +1,12 @@
 """Tests for record processing and analysis functions."""
 
+from datetime import datetime
+
 from better_timetagger_cli.lib.records import (
     check_record_tags_match,
     create_record_key,
     get_tags_from_description,
+    get_total_time,
     merge_by_key,
     post_process_records,
     round_records,
@@ -650,3 +653,128 @@ def test_round_records_preserves_other_fields():
     assert result[0]["ds"] == "#work #project"
     assert result[0]["st"] == 1640995200.0
     assert result[0]["_running"] is False
+
+
+def test_get_total_time_calculates_duration_in_range():
+    """Calculate total time for records within time range."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,  # 00:00:00
+            "t2": 1640995800,  # 00:10:00
+            "ds": "#work",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 600,
+        }
+    ]
+
+    total = get_total_time(records, start=1640995200, end=1640996000)
+
+    assert total == 600  # 10 minutes
+
+
+def test_get_total_time_with_partial_overlap():
+    """Calculate time only for overlapping portion."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,  # 00:00:00
+            "t2": 1640995800,  # 00:10:00
+            "ds": "#work",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 600,
+        }
+    ]
+
+    # Range only covers first 5 minutes
+    total = get_total_time(records, start=1640995200, end=1640995500)
+
+    assert total == 300  # 5 minutes
+
+
+def test_get_total_time_with_datetime_inputs():
+    """Accept datetime objects as start and end."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995800,
+            "ds": "#work",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 600,
+        }
+    ]
+
+    start = datetime.fromtimestamp(1640995200)
+    end = datetime.fromtimestamp(1640996000)
+
+    total = get_total_time(records, start=start, end=end)
+
+    assert total == 600
+
+
+def test_get_total_time_with_multiple_records():
+    """Sum time across multiple records."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995800,
+            "ds": "#work",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 600,
+        },
+        {
+            "key": "def456",
+            "mt": 1640995200,
+            "t1": 1640995800,
+            "t2": 1640996100,
+            "ds": "#meeting",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 300,
+        },
+    ]
+
+    total = get_total_time(records, start=1640995200, end=1640996200)
+
+    assert total == 900  # 15 minutes total
+
+
+def test_get_total_time_excludes_records_outside_range():
+    """Exclude records that don't overlap with range."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995800,
+            "ds": "#work",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 600,
+        },
+        {
+            "key": "def456",
+            "mt": 1640995200,
+            "t1": 1640996000,  # Starts after range ends
+            "t2": 1640996300,
+            "ds": "#meeting",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 300,
+        },
+    ]
+
+    # Range ends before second record starts
+    total = get_total_time(records, start=1640995200, end=1640996000)
+
+    assert total == 600  # Only first record
