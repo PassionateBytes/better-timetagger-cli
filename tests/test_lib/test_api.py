@@ -1,9 +1,11 @@
 """Tests for API communication functions."""
 
 from datetime import datetime
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
-from better_timetagger_cli.lib.api import get_records, get_running_records, get_settings, get_updates, put_records, put_settings
+import pytest
+
+from better_timetagger_cli.lib.api import api_request, get_records, get_running_records, get_settings, get_updates, put_records, put_settings
 from better_timetagger_cli.lib.types import Record, Settings
 
 
@@ -432,3 +434,143 @@ def test_get_settings_handles_empty_list(mock_api_request):
 
     mock_api_request.assert_called_once_with("GET", "settings", [])
     assert result["settings"] == []
+
+
+@patch("better_timetagger_cli.lib.api.requests.request")
+@patch("better_timetagger_cli.lib.api.get_config")
+def test_api_request_success(mock_get_config, mock_request):
+    """Make successful API request and return JSON response."""
+    mock_get_config.return_value = {
+        "base_url": "https://example.com",
+        "api_token": "test_token",
+        "ssl_verify": True,
+    }
+
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"data": "test"}
+    mock_request.return_value = mock_response
+
+    result = api_request("GET", "test/path")
+
+    assert result == {"data": "test"}
+    mock_request.assert_called_once_with(
+        "GET",
+        "https://example.com/api/v2/test/path",
+        json=None,
+        headers={"authtoken": "test_token"},
+        verify=True,
+    )
+
+
+@patch("better_timetagger_cli.lib.api.requests.request")
+@patch("better_timetagger_cli.lib.api.get_config")
+def test_api_request_with_body(mock_get_config, mock_request):
+    """Send request body as JSON."""
+    mock_get_config.return_value = {
+        "base_url": "https://example.com",
+        "api_token": "test_token",
+        "ssl_verify": False,
+    }
+
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"success": True}
+    mock_request.return_value = mock_response
+
+    body = {"key": "value"}
+    result = api_request("POST", "endpoint", body)
+
+    assert result == {"success": True}
+    call_kwargs = mock_request.call_args[1]
+    assert call_kwargs["json"] == body
+
+
+@patch("better_timetagger_cli.lib.api.abort")
+@patch("better_timetagger_cli.lib.api.requests.request")
+@patch("better_timetagger_cli.lib.api.get_config")
+def test_api_request_handles_http_error(mock_get_config, mock_request, mock_abort):
+    """Call abort on non-200 status code."""
+    mock_get_config.return_value = {
+        "base_url": "https://example.com",
+        "api_token": "test_token",
+        "ssl_verify": True,
+    }
+
+    mock_response = Mock()
+    mock_response.status_code = 404
+    mock_response.text = "Not found"
+    mock_response.json.return_value = {"error": "Not found"}
+    mock_request.return_value = mock_response
+    mock_abort.side_effect = SystemExit(1)
+
+    with pytest.raises(SystemExit):
+        api_request("GET", "nonexistent")
+
+    assert mock_abort.called
+    abort_message = mock_abort.call_args[0][0]
+    assert "404" in abort_message
+
+
+@patch("better_timetagger_cli.lib.api.abort")
+@patch("better_timetagger_cli.lib.api.requests.request")
+@patch("better_timetagger_cli.lib.api.get_config")
+def test_api_request_handles_request_exception(mock_get_config, mock_request, mock_abort):
+    """Call abort when request raises exception."""
+    mock_get_config.return_value = {
+        "base_url": "https://example.com",
+        "api_token": "test_token",
+        "ssl_verify": True,
+    }
+
+    mock_request.side_effect = ConnectionError("Connection failed")
+    mock_abort.side_effect = SystemExit(1)
+
+    with pytest.raises(SystemExit):
+        api_request("GET", "test")
+
+    assert mock_abort.called
+    abort_message = mock_abort.call_args[0][0]
+    assert "ConnectionError" in abort_message
+
+
+@patch("better_timetagger_cli.lib.api.requests.request")
+@patch("better_timetagger_cli.lib.api.get_config")
+def test_api_request_strips_token_whitespace(mock_get_config, mock_request):
+    """Strip whitespace from API token."""
+    mock_get_config.return_value = {
+        "base_url": "https://example.com",
+        "api_token": "  test_token  ",
+        "ssl_verify": True,
+    }
+
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {}
+    mock_request.return_value = mock_response
+
+    api_request("GET", "test")
+
+    headers = mock_request.call_args[1]["headers"]
+    assert headers["authtoken"] == "test_token"
+
+
+@patch("better_timetagger_cli.lib.api.requests.request")
+@patch("better_timetagger_cli.lib.api.get_config")
+def test_api_request_handles_leading_slash_in_path(mock_get_config, mock_request):
+    """Remove leading slash from path."""
+    mock_get_config.return_value = {
+        "base_url": "https://example.com",
+        "api_token": "test_token",
+        "ssl_verify": True,
+    }
+
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {}
+    mock_request.return_value = mock_response
+
+    api_request("GET", "/test/path")
+
+    url = mock_request.call_args[0][1]
+    assert url == "https://example.com/api/v2/test/path"
