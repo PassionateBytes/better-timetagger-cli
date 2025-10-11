@@ -3,8 +3,8 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from better_timetagger_cli.lib.api import get_records, get_running_records, get_updates, put_records
-from better_timetagger_cli.lib.types import Record
+from better_timetagger_cli.lib.api import get_records, get_running_records, get_settings, get_updates, put_records, put_settings
+from better_timetagger_cli.lib.types import Record, Settings
 
 
 @patch("better_timetagger_cli.lib.api.api_request")
@@ -368,3 +368,67 @@ def test_get_updates_returns_response_with_data(mock_api_request):
     assert "settings" in result
     assert result["server_time"] == 1640995800
     assert result["reset"] == 0
+
+
+@patch("better_timetagger_cli.lib.api.api_request")
+def test_put_settings_sends_settings_dict(mock_api_request):
+    """Send settings dictionary via PUT request."""
+    mock_api_request.return_value = {"accepted": ["setting1"], "failed": [], "errors": []}
+
+    settings = {"setting1": "value1", "setting2": "value2"}
+    result = put_settings(settings)
+
+    mock_api_request.assert_called_once_with("PUT", "settings", settings)
+    assert result["accepted"] == ["setting1"]
+
+
+@patch("better_timetagger_cli.lib.api.api_request")
+def test_put_settings_handles_empty_dict(mock_api_request):
+    """Handle empty settings dictionary."""
+    mock_api_request.return_value = {"accepted": [], "failed": [], "errors": []}
+
+    result = put_settings({})
+
+    mock_api_request.assert_called_once_with("PUT", "settings", {})
+    assert result["accepted"] == []
+
+
+@patch("better_timetagger_cli.lib.api.api_request")
+def test_get_settings_sends_settings_list(mock_api_request):
+    """Send settings list via GET request."""
+    mock_api_request.return_value = {
+        "settings": [
+            {
+                "key": "setting1",
+                "mt": 1640995200,
+                "st": 1640995200,
+                "value": "value1",
+            }
+        ]
+    }
+
+    settings: list[Settings] = [
+        {
+            "key": "setting1",
+            "mt": 1640995200,
+            "st": 1640995200,
+            "value": "value1",
+        }
+    ]
+
+    result = get_settings(settings)
+
+    mock_api_request.assert_called_once_with("GET", "settings", settings)
+    assert "settings" in result
+    assert len(result["settings"]) == 1
+
+
+@patch("better_timetagger_cli.lib.api.api_request")
+def test_get_settings_handles_empty_list(mock_api_request):
+    """Handle empty settings list."""
+    mock_api_request.return_value = {"settings": []}
+
+    result = get_settings([])
+
+    mock_api_request.assert_called_once_with("GET", "settings", [])
+    assert result["settings"] == []
