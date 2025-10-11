@@ -3,7 +3,7 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from better_timetagger_cli.lib.api import get_records, get_running_records, put_records
+from better_timetagger_cli.lib.api import get_records, get_running_records, get_updates, put_records
 from better_timetagger_cli.lib.types import Record
 
 
@@ -303,3 +303,68 @@ def test_get_running_records_passes_filter_parameters(mock_get_config, mock_get_
     assert call_kwargs["sort_reverse"] is False
     assert call_kwargs["hidden"] is True
     assert call_kwargs["running"] is True
+
+
+@patch("better_timetagger_cli.lib.api.api_request")
+def test_get_updates_converts_datetime_to_timestamp(mock_api_request):
+    """Convert datetime objects to integer timestamps."""
+    mock_api_request.return_value = {"records": [], "settings": [], "server_time": 0, "reset": 0}
+
+    since = datetime(2022, 1, 1, 0, 0, 0)
+    since_ts = int(since.timestamp())
+
+    get_updates(since)
+
+    call_args = mock_api_request.call_args[0]
+    assert call_args[0] == "GET"
+    assert f"updates?since={since_ts}" in call_args[1]
+
+
+@patch("better_timetagger_cli.lib.api.api_request")
+def test_get_updates_uses_integer_timestamp_directly(mock_api_request):
+    """Use integer timestamps directly without conversion."""
+    mock_api_request.return_value = {"records": [], "settings": [], "server_time": 0, "reset": 0}
+
+    get_updates(1640995200)
+
+    call_args = mock_api_request.call_args[0]
+    assert "updates?since=1640995200" in call_args[1]
+
+
+@patch("better_timetagger_cli.lib.api.api_request")
+def test_get_updates_uses_default_since_value(mock_api_request):
+    """Use default since value of 0 when not specified."""
+    mock_api_request.return_value = {"records": [], "settings": [], "server_time": 0, "reset": 0}
+
+    get_updates()
+
+    call_args = mock_api_request.call_args[0]
+    assert "updates?since=0" in call_args[1]
+
+
+@patch("better_timetagger_cli.lib.api.api_request")
+def test_get_updates_returns_response_with_data(mock_api_request):
+    """Return response containing processed records and settings."""
+    mock_api_request.return_value = {
+        "records": [
+            {
+                "key": "key1",
+                "mt": 1640995200,
+                "t1": 1640995200,
+                "t2": 1640995800,
+                "ds": "#work",
+                "st": 1640995200.0,
+            }
+        ],
+        "settings": [],
+        "server_time": 1640995800,
+        "reset": 0,
+    }
+
+    result = get_updates(1640995200)
+
+    assert "records" in result
+    assert len(result["records"]) == 1
+    assert "settings" in result
+    assert result["server_time"] == 1640995800
+    assert result["reset"] == 0
