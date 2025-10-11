@@ -5,6 +5,7 @@ from better_timetagger_cli.lib.records import (
     create_record_key,
     get_tags_from_description,
     merge_by_key,
+    post_process_records,
 )
 from better_timetagger_cli.lib.types import Record
 
@@ -364,3 +365,185 @@ def test_merge_by_key_preserves_order():
     assert result[0]["key"] == "first"
     assert result[1]["key"] == "second"
     assert result[2]["key"] == "third"
+
+
+def test_post_process_records_sorts_by_t2():
+    """Sort records by t2 in descending order by default."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995300,
+            "ds": "#work",
+            "st": 1640995200.0,
+        },
+        {
+            "key": "def456",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995500,
+            "ds": "#meeting",
+            "st": 1640995200.0,
+        },
+    ]
+
+    result = post_process_records(records)
+
+    assert len(result) == 2
+    assert result[0]["key"] == "def456"  # Higher t2 first
+    assert result[1]["key"] == "abc123"
+
+
+def test_post_process_records_filters_by_tags_any():
+    """Filter records by tags using 'any' mode."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995300,
+            "ds": "#work #project",
+            "st": 1640995200.0,
+        },
+        {
+            "key": "def456",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995500,
+            "ds": "#meeting",
+            "st": 1640995200.0,
+        },
+    ]
+
+    result = post_process_records(records, tags=["#work"], tags_match="any")
+
+    assert len(result) == 1
+    assert result[0]["key"] == "abc123"
+
+
+def test_post_process_records_filters_by_tags_all():
+    """Filter records by tags using 'all' mode."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995300,
+            "ds": "#work #project",
+            "st": 1640995200.0,
+        },
+        {
+            "key": "def456",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995500,
+            "ds": "#work",
+            "st": 1640995200.0,
+        },
+    ]
+
+    result = post_process_records(records, tags=["#work", "#project"], tags_match="all")
+
+    assert len(result) == 1
+    assert result[0]["key"] == "abc123"
+
+
+def test_post_process_records_excludes_hidden_by_default():
+    """Exclude hidden records by default."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995300,
+            "ds": "#work",
+            "st": 1640995200.0,
+        },
+        {
+            "key": "def456",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995500,
+            "ds": "HIDDEN #work",
+            "st": 1640995200.0,
+        },
+    ]
+
+    result = post_process_records(records)
+
+    assert len(result) == 1
+    assert result[0]["key"] == "abc123"
+
+
+def test_post_process_records_includes_hidden_when_requested():
+    """Include hidden records when hidden=True."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995300,
+            "ds": "#work",
+            "st": 1640995200.0,
+        },
+        {
+            "key": "def456",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995500,
+            "ds": "HIDDEN #work",
+            "st": 1640995200.0,
+        },
+    ]
+
+    result = post_process_records(records, hidden=True)
+
+    assert len(result) == 1
+    assert result[0]["key"] == "def456"
+
+
+def test_post_process_records_filters_running_records():
+    """Filter to show only running records."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995300,
+            "ds": "#work",
+            "st": 1640995200.0,
+        },
+        {
+            "key": "def456",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995200,  # Running: t1 == t2
+            "ds": "#meeting",
+            "st": 1640995200.0,
+        },
+    ]
+
+    result = post_process_records(records, running=True)
+
+    assert len(result) == 1
+    assert result[0]["key"] == "def456"
+
+
+def test_post_process_records_computes_running_and_duration():
+    """Compute _running and _duration fields."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995800,
+            "ds": "#work",
+            "st": 1640995200.0,
+        }
+    ]
+
+    result = post_process_records(records)
+
+    assert result[0]["_running"] is False
+    assert result[0]["_duration"] == 600  # 10 minutes
