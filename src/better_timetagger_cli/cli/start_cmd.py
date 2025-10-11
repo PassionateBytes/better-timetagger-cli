@@ -2,7 +2,7 @@ import click
 from rich.console import Group
 
 from better_timetagger_cli.lib.api import get_running_records, put_records
-from better_timetagger_cli.lib.cli import AliasCommand
+from better_timetagger_cli.lib.cli import AliasedCommand
 from better_timetagger_cli.lib.console import abort
 from better_timetagger_cli.lib.output import print_records, render_records
 from better_timetagger_cli.lib.parsing import parse_at, tags_callback
@@ -14,7 +14,7 @@ from better_timetagger_cli.lib.types import Record
 @click.command(
     "start",
     aliases=("in", "i"),
-    cls=AliasCommand,
+    cls=AliasedCommand,
 )
 @click.argument(
     "tags",

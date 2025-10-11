@@ -4,7 +4,7 @@ import click
 from rich.prompt import IntPrompt
 
 from better_timetagger_cli.lib.api import get_running_records, put_records
-from better_timetagger_cli.lib.cli import AliasCommand
+from better_timetagger_cli.lib.cli import AliasedCommand
 from better_timetagger_cli.lib.console import abort
 from better_timetagger_cli.lib.output import print_records
 from better_timetagger_cli.lib.parsing import parse_at, tags_callback
@@ -12,7 +12,7 @@ from better_timetagger_cli.lib.records import check_record_tags_match, post_proc
 from better_timetagger_cli.lib.timestamps import now_timestamp
 
 
-@click.command("stop", aliases=("out", "o"), cls=AliasCommand)
+@click.command("stop", aliases=("out", "o"), cls=AliasedCommand)
 @click.argument(
     "tags",
     type=click.STRING,

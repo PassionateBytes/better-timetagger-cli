@@ -5,7 +5,7 @@ import click
 from rich.prompt import IntPrompt
 
 from better_timetagger_cli.lib.api import get_records
-from better_timetagger_cli.lib.cli import AliasCommand
+from better_timetagger_cli.lib.cli import AliasedCommand
 from better_timetagger_cli.lib.console import abort
 from better_timetagger_cli.lib.output import print_records
 from better_timetagger_cli.lib.parsing import tags_callback
@@ -18,7 +18,7 @@ from .start_cmd import start_cmd
 @click.command(
     "resume",
     aliases=("r",),
-    cls=AliasCommand,
+    cls=AliasedCommand,
 )
 @click.argument(
     "tags",

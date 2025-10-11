@@ -3,7 +3,7 @@ from typing import Literal
 import click
 
 from better_timetagger_cli.lib.api import get_records, get_running_records
-from better_timetagger_cli.lib.cli import AliasCommand
+from better_timetagger_cli.lib.cli import AliasedCommand
 from better_timetagger_cli.lib.console import abort, console
 from better_timetagger_cli.lib.csv import records_to_csv
 from better_timetagger_cli.lib.parsing import parse_start_end, tags_callback
@@ -13,7 +13,7 @@ from better_timetagger_cli.lib.records import round_records
 @click.command(
     "export",
     aliases=("csv",),
-    cls=AliasCommand,
+    cls=AliasedCommand,
 )
 @click.argument(
     "tags",

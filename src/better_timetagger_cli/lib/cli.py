@@ -9,10 +9,24 @@ from collections.abc import Iterable
 import click
 
 
-class AliasesMixin(click.Command):
+class AliasedCommand(click.Command):
     """
-    Mixin class that provides alias functionality for Click commands and groups.
+    A custom click command that supports aliases.
+
+    Use in conjunction with `AliasedGroup` to allow commands to be invoked by multiple names.
+
+    Example:
+    ```python
+        @click.group(cls=AliasedGroup)
+        def cli():
+            pass
+
+        @cli.command(cls=AliasedCommand, aliases=['report', 'list', 'ls'])
+        def show():
+            pass
+    ```
     """
+
 
     def __init__(self, *args, aliases: Iterable[str] | str | None = None, **kwargs):
         """
@@ -41,33 +55,12 @@ class AliasesMixin(click.Command):
                 formatter.write_dl((a, "") for a in name_and_aliases)
 
 
-class AliasCommand(AliasesMixin):
-    """
-    A custom click command that supports aliases.
-
-    Use in conjunction with `AliasedGroup` to allow commands to be invoked by multiple names.
-
-    Example:
-    ```python
-        @click.group(cls=AliasedGroup)
-        def cli():
-            pass
-
-        @cli.command(cls=AliasCommand, aliases=['report', 'list', 'ls'])
-        def show():
-            pass
-    ```
-    """
-
-    pass
-
-
-class AliasedGroup(AliasesMixin, click.Group):
+class AliasedGroup(AliasedCommand, click.Group):
     """
     A Click group that resolves command aliases defined on the command objects.
     Also supports aliases for the group itself.
 
-    Use in conjunction with `AliasCommand` to allow commands to be invoked by multiple names.
+    Use in conjunction with `AliasedCommand` to allow commands to be invoked by multiple names.
 
     Example:
     ```python
@@ -75,7 +68,7 @@ class AliasedGroup(AliasesMixin, click.Group):
         def database():
             pass
 
-        @database.command(cls=AliasCommand, aliases=['report', 'list', 'ls'])
+        @database.command(cls=AliasedCommand, aliases=['report', 'list', 'ls'])
         def show():
             pass
     ```
