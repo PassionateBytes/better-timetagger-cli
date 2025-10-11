@@ -6,6 +6,7 @@ from better_timetagger_cli.lib.records import (
     get_tags_from_description,
     merge_by_key,
     post_process_records,
+    round_records,
 )
 from better_timetagger_cli.lib.types import Record
 
@@ -547,3 +548,105 @@ def test_post_process_records_computes_running_and_duration():
 
     assert result[0]["_running"] is False
     assert result[0]["_duration"] == 600  # 10 minutes
+
+
+def test_round_records_rounds_timestamps():
+    """Round record timestamps to specified interval."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995320,  # 00:02:00
+            "t2": 1640995920,  # 00:12:00
+            "ds": "#work",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 600,  # 10 minutes
+        }
+    ]
+
+    result = round_records(records, round_to=5)
+
+    assert result[0]["t1"] == 1640995200  # Rounded to 00:00:00
+    assert result[0]["t2"] == 1640995800  # t1 + rounded duration (10 min)
+    assert result[0]["_duration"] == 600  # Duration rounded to 10 minutes
+
+
+def test_round_records_preserves_duration_logic():
+    """Round duration separately then apply to rounded start time."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995260,  # 00:01:00
+            "t2": 1640995560,  # 00:06:00
+            "ds": "#work",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 300,  # 5 minutes
+        }
+    ]
+
+    result = round_records(records, round_to=15)
+
+    assert result[0]["t1"] == 1640995200  # Rounded to 00:00:00
+    assert result[0]["t2"] == 1640995200  # t1 + 0 (duration rounds to 0)
+    assert result[0]["_duration"] == 0  # 5 min rounds to 0 with 15-min interval
+
+
+def test_round_records_with_multiple_records():
+    """Round multiple records independently."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995800,
+            "ds": "#work",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 600,
+        },
+        {
+            "key": "def456",
+            "mt": 1640995200,
+            "t1": 1640995920,
+            "t2": 1640996820,
+            "ds": "#meeting",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 900,
+        },
+    ]
+
+    result = round_records(records, round_to=5)
+
+    assert len(result) == 2
+    assert result[0]["t1"] == 1640995200
+    assert result[0]["_duration"] == 600
+    assert result[1]["t1"] == 1640995800  # Rounded from 1640995920
+    assert result[1]["_duration"] == 900
+
+
+def test_round_records_preserves_other_fields():
+    """Preserve all fields except t1, t2, and _duration."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995320,
+            "t2": 1640995920,
+            "ds": "#work #project",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 600,
+        }
+    ]
+
+    result = round_records(records, round_to=5)
+
+    assert result[0]["key"] == "abc123"
+    assert result[0]["mt"] == 1640995200
+    assert result[0]["ds"] == "#work #project"
+    assert result[0]["st"] == 1640995200.0
+    assert result[0]["_running"] is False
