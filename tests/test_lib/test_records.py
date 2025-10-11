@@ -382,6 +382,8 @@ def test_post_process_records_sorts_by_t2():
             "t2": 1640995300,
             "ds": "#work",
             "st": 1640995200.0,
+            "_running": False,
+            "_duration": 0,
         },
         {
             "key": "def456",
@@ -390,6 +392,8 @@ def test_post_process_records_sorts_by_t2():
             "t2": 1640995500,
             "ds": "#meeting",
             "st": 1640995200.0,
+            "_running": False,
+            "_duration": 0,
         },
     ]
 
@@ -410,6 +414,8 @@ def test_post_process_records_filters_by_tags_any():
             "t2": 1640995300,
             "ds": "#work #project",
             "st": 1640995200.0,
+            "_running": False,
+            "_duration": 0,
         },
         {
             "key": "def456",
@@ -418,6 +424,8 @@ def test_post_process_records_filters_by_tags_any():
             "t2": 1640995500,
             "ds": "#meeting",
             "st": 1640995200.0,
+            "_running": False,
+            "_duration": 0,
         },
     ]
 
@@ -437,6 +445,8 @@ def test_post_process_records_filters_by_tags_all():
             "t2": 1640995300,
             "ds": "#work #project",
             "st": 1640995200.0,
+            "_running": False,
+            "_duration": 0,
         },
         {
             "key": "def456",
@@ -445,6 +455,8 @@ def test_post_process_records_filters_by_tags_all():
             "t2": 1640995500,
             "ds": "#work",
             "st": 1640995200.0,
+            "_running": False,
+            "_duration": 0,
         },
     ]
 
@@ -464,6 +476,8 @@ def test_post_process_records_excludes_hidden_by_default():
             "t2": 1640995300,
             "ds": "#work",
             "st": 1640995200.0,
+            "_running": False,
+            "_duration": 0,
         },
         {
             "key": "def456",
@@ -472,6 +486,8 @@ def test_post_process_records_excludes_hidden_by_default():
             "t2": 1640995500,
             "ds": "HIDDEN #work",
             "st": 1640995200.0,
+            "_running": False,
+            "_duration": 0,
         },
     ]
 
@@ -491,6 +507,8 @@ def test_post_process_records_includes_hidden_when_requested():
             "t2": 1640995300,
             "ds": "#work",
             "st": 1640995200.0,
+            "_running": False,
+            "_duration": 0,
         },
         {
             "key": "def456",
@@ -499,6 +517,8 @@ def test_post_process_records_includes_hidden_when_requested():
             "t2": 1640995500,
             "ds": "HIDDEN #work",
             "st": 1640995200.0,
+            "_running": False,
+            "_duration": 0,
         },
     ]
 
@@ -518,6 +538,8 @@ def test_post_process_records_filters_running_records():
             "t2": 1640995300,
             "ds": "#work",
             "st": 1640995200.0,
+            "_running": False,
+            "_duration": 0,
         },
         {
             "key": "def456",
@@ -526,6 +548,8 @@ def test_post_process_records_filters_running_records():
             "t2": 1640995200,  # Running: t1 == t2
             "ds": "#meeting",
             "st": 1640995200.0,
+            "_running": False,
+            "_duration": 0,
         },
     ]
 
@@ -545,6 +569,8 @@ def test_post_process_records_computes_running_and_duration():
             "t2": 1640995800,
             "ds": "#work",
             "st": 1640995200.0,
+            "_running": False,
+            "_duration": 0,
         }
     ]
 
