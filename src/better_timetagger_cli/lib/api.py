@@ -51,7 +51,7 @@ def api_request(
         response_text = response.text
         try:
             response_text = json.dumps(response.json(), indent=2)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError:  # pragma: no cover
             pass
         abort(f"API request failed with status code: {response.status_code}\n[dim]{response_text}[/dim]")
 
