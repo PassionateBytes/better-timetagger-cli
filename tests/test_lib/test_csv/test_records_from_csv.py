@@ -215,3 +215,16 @@ def test_calculate_duration_for_running_records(csv_with_running_record, mock_no
     assert record["_running"] is True
     expected_duration = mock_now - record["t1"]
     assert record["_duration"] == expected_duration
+
+
+def test_filter_records_excludes_records_after_end(csv_with_mixed_records):
+    """Filter records excluding those that start after the end time."""
+
+    # Set end filter to before the second and third records start
+    end_filter = 1640998800  # 2022-01-01T01:00:00Z
+
+    records = records_from_csv(iter(csv_with_mixed_records), end=end_filter)
+
+    # Only the first record (00:00–01:00) should remain; others start later
+    assert len(records) == 1
+    assert all(record["t1"] <= end_filter for record in records)
