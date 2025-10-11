@@ -162,7 +162,7 @@ def test_check_record_tags_match_all_with_no_match():
 
 def test_get_tags_from_description_with_multiple_tags():
     """Extract multiple tags from description."""
-    description = "#work #project documentation for #client"
+    description = "#work #project documentation for #client xyz"
 
     result = get_tags_from_description(description)
 
