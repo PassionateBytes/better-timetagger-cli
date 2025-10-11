@@ -8,7 +8,7 @@ from better_timetagger_cli.lib.cli import AliasCommand
 from better_timetagger_cli.lib.console import abort
 from better_timetagger_cli.lib.output import print_records
 from better_timetagger_cli.lib.parsing import parse_at, tags_callback
-from better_timetagger_cli.lib.records import check_record_tags_match
+from better_timetagger_cli.lib.records import check_record_tags_match, post_process_records
 from better_timetagger_cli.lib.timestamps import now_timestamp
 
 
@@ -83,6 +83,8 @@ def stop_cmd(
 
         if not stopped_records:
             abort("No running records match.")
+
+        stopped_records = post_process_records(stopped_records)
 
         put_records(stopped_records)
         print_records(running_records, (stopped_records, "red"), show_keys=show_keys)
