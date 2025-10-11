@@ -3,7 +3,7 @@
 from datetime import datetime
 from unittest.mock import patch
 
-from better_timetagger_cli.lib.api import get_records, put_records
+from better_timetagger_cli.lib.api import get_records, get_running_records, put_records
 from better_timetagger_cli.lib.types import Record
 
 
@@ -236,3 +236,70 @@ def test_get_records_returns_response_with_records(mock_api_request):
 
     assert "records" in result
     assert len(result["records"]) == 1
+
+
+@patch("better_timetagger_cli.lib.api.get_updates")
+@patch("better_timetagger_cli.lib.api.get_config")
+def test_get_running_records_calls_get_updates_when_search_window_disabled(mock_get_config, mock_get_updates):
+    """Call get_updates when search window is negative (disabled)."""
+    mock_get_config.return_value = {"running_records_search_window": -1}
+    mock_get_updates.return_value = {"records": []}
+
+    result = get_running_records(tags=["#work"], tags_match="all")
+
+    mock_get_updates.assert_called_once_with(
+        tags=["#work"],
+        tags_match="all",
+        sort_by="t2",
+        sort_reverse=True,
+        hidden=False,
+        running=True,
+    )
+    assert "records" in result
+
+
+@patch("better_timetagger_cli.lib.api.get_records")
+@patch("better_timetagger_cli.lib.api.get_config")
+@patch("better_timetagger_cli.lib.api.datetime")
+def test_get_running_records_calls_get_records_when_search_window_enabled(mock_datetime, mock_get_config, mock_get_records):
+    """Call get_records with time window when search window is enabled."""
+    mock_get_config.return_value = {"running_records_search_window": 2}
+    mock_get_records.return_value = {"records": []}
+
+    # Mock datetime.now() to return a fixed time
+    fixed_now = datetime(2022, 1, 15, 12, 0, 0)
+    mock_datetime.now.return_value = fixed_now
+    mock_datetime.side_effect = lambda *args, **kwargs: datetime(*args, **kwargs)
+
+    result = get_running_records()
+
+    # Should call get_records with start=now-2weeks, end=now+1day
+    assert mock_get_records.call_count == 1
+    call_kwargs = mock_get_records.call_args[1]
+    assert call_kwargs["include_partial_match"] is True
+    assert call_kwargs["running"] is True
+    assert "records" in result
+
+
+@patch("better_timetagger_cli.lib.api.get_records")
+@patch("better_timetagger_cli.lib.api.get_config")
+def test_get_running_records_passes_filter_parameters(mock_get_config, mock_get_records):
+    """Pass all filter parameters to underlying get_records call."""
+    mock_get_config.return_value = {"running_records_search_window": 1}
+    mock_get_records.return_value = {"records": []}
+
+    get_running_records(
+        tags=["#work", "#meeting"],
+        tags_match="all",
+        sort_by="t1",
+        sort_reverse=False,
+        hidden=True,
+    )
+
+    call_kwargs = mock_get_records.call_args[1]
+    assert call_kwargs["tags"] == ["#work", "#meeting"]
+    assert call_kwargs["tags_match"] == "all"
+    assert call_kwargs["sort_by"] == "t1"
+    assert call_kwargs["sort_reverse"] is False
+    assert call_kwargs["hidden"] is True
+    assert call_kwargs["running"] is True
