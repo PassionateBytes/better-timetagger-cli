@@ -1,5 +1,7 @@
 """
-# Utilities for handling TimeTagger records.
+### Record Processing & Analysis
+
+Functions to manipulate, analyse and process time tracking records.
 """
 
 import re
@@ -28,63 +30,6 @@ def create_record_key(length: int = 8) -> str:
     """
     chars = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
     return "".join([secrets.choice(chars) for _ in range(length)])
-
-
-def get_total_time(records: Iterable[Record], start: int | datetime, end: int | datetime) -> int:
-    """
-    Calculate the total time spent on records within a given time range.
-
-    Args:
-        records: A list of records, each containing 't1' and 't2' timestamps.
-        start: The start datetime of the time range.
-        end: The end datetime of the time range.
-
-    Returns:
-        The total time in seconds spent on the records within the time range.
-    """
-    total = 0
-    now = now_timestamp()
-
-    if isinstance(start, datetime):
-        start = int(start.timestamp())
-    if isinstance(end, datetime):
-        end = int(end.timestamp())
-
-    for r in records:
-        t1 = r["t1"]
-        t2 = r["t2"] if not r["_running"] else now
-        total += min(end, t2) - max(start, t1)
-
-    return total
-
-
-def get_tag_stats(records: Iterable[Record]) -> dict[str, tuple[int, int]]:
-    """
-    Get statistics for each tag in the records. Results are sorted by tag's total duration.
-
-    Args:
-        records: A list of records.
-
-    Returns:
-        A tuple with 1) the number of occurrences of the tag and 2) the total duration for that tag.
-    """
-    now = now_timestamp()
-    tag_stats: dict[str, tuple[int, int]] = {}
-
-    for r in records:
-        for tag in get_tags_from_description(r["ds"]):
-            stats = tag_stats.get(tag, (0, 0))
-            t1 = r["t1"]
-            t2 = r["t2"] if not r["_running"] else now
-            duration = t2 - t1
-            tag_stats[tag] = (
-                stats[0] + 1,
-                stats[1] + duration,
-            )
-
-    tag_stats = dict(sorted(tag_stats.items(), key=lambda x: x[1][1], reverse=True))
-
-    return tag_stats
 
 
 def post_process_records(
@@ -232,3 +177,60 @@ def round_records(records: list[Record], round_to: int) -> list[Record]:
         )
 
     return rounded_records
+
+
+def get_total_time(records: Iterable[Record], start: int | datetime, end: int | datetime) -> int:
+    """
+    Calculate the total time spent on records within a given time range.
+
+    Args:
+        records: A list of records, each containing 't1' and 't2' timestamps.
+        start: The start datetime of the time range.
+        end: The end datetime of the time range.
+
+    Returns:
+        The total time in seconds spent on the records within the time range.
+    """
+    total = 0
+    now = now_timestamp()
+
+    if isinstance(start, datetime):
+        start = int(start.timestamp())
+    if isinstance(end, datetime):
+        end = int(end.timestamp())
+
+    for r in records:
+        t1 = r["t1"]
+        t2 = r["t2"] if not r["_running"] else now
+        total += min(end, t2) - max(start, t1)
+
+    return total
+
+
+def get_tag_stats(records: Iterable[Record]) -> dict[str, tuple[int, int]]:
+    """
+    Get statistics for each tag in the records. Results are sorted by tag's total duration.
+
+    Args:
+        records: A list of records.
+
+    Returns:
+        A tuple with 1) the number of occurrences of the tag and 2) the total duration for that tag.
+    """
+    now = now_timestamp()
+    tag_stats: dict[str, tuple[int, int]] = {}
+
+    for r in records:
+        for tag in get_tags_from_description(r["ds"]):
+            stats = tag_stats.get(tag, (0, 0))
+            t1 = r["t1"]
+            t2 = r["t2"] if not r["_running"] else now
+            duration = t2 - t1
+            tag_stats[tag] = (
+                stats[0] + 1,
+                stats[1] + duration,
+            )
+
+    tag_stats = dict(sorted(tag_stats.items(), key=lambda x: x[1][1], reverse=True))
+
+    return tag_stats
