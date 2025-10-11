@@ -4,6 +4,7 @@ from better_timetagger_cli.lib.records import (
     check_record_tags_match,
     create_record_key,
     get_tags_from_description,
+    merge_by_key,
 )
 from better_timetagger_cli.lib.types import Record
 
@@ -194,3 +195,172 @@ def test_get_tags_from_description_with_special_characters():
     result = get_tags_from_description(description)
 
     assert result == ["#project_123", "#work-2024", "#test_case"]
+
+
+def test_merge_by_key_updates_existing_records():
+    """Replace existing records with updated versions."""
+    original: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640998800,
+            "ds": "#work original",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 3600,
+        },
+        {
+            "key": "def456",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640998800,
+            "ds": "#meeting original",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 3600,
+        },
+    ]
+
+    updated: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640999000,
+            "t1": 1640995200,
+            "t2": 1640998800,
+            "ds": "#work updated",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 3600,
+        }
+    ]
+
+    result = merge_by_key(updated, original)
+
+    assert len(result) == 2
+    assert result[0]["key"] == "abc123"
+    assert result[0]["ds"] == "#work updated"
+    assert result[1]["key"] == "def456"
+    assert result[1]["ds"] == "#meeting original"
+
+
+def test_merge_by_key_adds_new_records():
+    """Add new records that weren't in original list."""
+    original: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640998800,
+            "ds": "#work",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 3600,
+        }
+    ]
+
+    updated: list[Record] = [
+        {
+            "key": "xyz999",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640998800,
+            "ds": "#new",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 3600,
+        }
+    ]
+
+    result = merge_by_key(updated, original)
+
+    assert len(result) == 2
+    assert result[0]["key"] == "abc123"
+    assert result[1]["key"] == "xyz999"
+
+
+def test_merge_by_key_with_empty_updates():
+    """Return original records when no updates provided."""
+    original: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640998800,
+            "ds": "#work",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 3600,
+        }
+    ]
+
+    result = merge_by_key([], original)
+
+    assert len(result) == 1
+    assert result[0]["key"] == "abc123"
+
+
+def test_merge_by_key_with_empty_original():
+    """Return updated records when original is empty."""
+    updated: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640998800,
+            "ds": "#work",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 3600,
+        }
+    ]
+
+    result = merge_by_key(updated, [])
+
+    assert len(result) == 1
+    assert result[0]["key"] == "abc123"
+
+
+def test_merge_by_key_preserves_order():
+    """Preserve order of original list with updates appended."""
+    original: list[Record] = [
+        {
+            "key": "first",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640998800,
+            "ds": "#1",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 3600,
+        },
+        {
+            "key": "second",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640998800,
+            "ds": "#2",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 3600,
+        },
+    ]
+
+    updated: list[Record] = [
+        {
+            "key": "third",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640998800,
+            "ds": "#3",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 3600,
+        }
+    ]
+
+    result = merge_by_key(updated, original)
+
+    assert result[0]["key"] == "first"
+    assert result[1]["key"] == "second"
+    assert result[2]["key"] == "third"
