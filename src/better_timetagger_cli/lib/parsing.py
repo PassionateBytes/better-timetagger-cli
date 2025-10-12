@@ -9,7 +9,7 @@ from datetime import datetime
 import click
 import parsedatetime  # type: ignore[import-untyped]
 
-from .console import abort
+from .output import abort
 
 
 def tags_callback(ctx: click.Context, param: click.Parameter, tags: list[str]) -> list[str]:

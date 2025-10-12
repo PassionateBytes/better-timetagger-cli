@@ -4,7 +4,7 @@ from urllib.parse import urljoin
 import click
 
 from better_timetagger_cli.lib.config import get_config
-from better_timetagger_cli.lib.console import console
+from better_timetagger_cli.lib.output import console
 
 
 @click.command("app")

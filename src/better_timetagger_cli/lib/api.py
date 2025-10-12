@@ -13,7 +13,7 @@ from typing import Literal, cast
 import requests
 
 from .config import get_config
-from .console import abort
+from .output import abort
 from .records import merge_by_key, post_process_records
 from .types import GetRecordsResponse, GetSettingsResponse, GetUpdatesResponse, PutRecordsResponse, PutSettingsResponse, Record, Settings
 

@@ -7,7 +7,7 @@ from rich.table import Table
 
 from better_timetagger_cli.lib.cli import AliasedCommand
 from better_timetagger_cli.lib.config import CONFIG_FILE, DEFAULT_CONFIG, get_config, get_config_filepath
-from better_timetagger_cli.lib.console import abort, console, open_in_editor
+from better_timetagger_cli.lib.output import abort, console, open_in_editor
 
 
 @click.command(

@@ -2,7 +2,7 @@
 
 import pytest
 
-from better_timetagger_cli.lib.console import open_in_editor
+from better_timetagger_cli.lib.output import open_in_editor
 
 
 # Fixtures
@@ -27,7 +27,7 @@ def mock_stderr(monkeypatch):
     def mock_print(msg, *args, **kwargs):
         messages.append({"msg": msg, "style": kwargs.get("style")})
 
-    monkeypatch.setattr("better_timetagger_cli.lib.console.stderr.print", mock_print)
+    monkeypatch.setattr("better_timetagger_cli.lib.output.stderr.print", mock_print)
     return messages
 
 

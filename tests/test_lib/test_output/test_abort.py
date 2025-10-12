@@ -1,6 +1,6 @@
 import pytest
 
-from better_timetagger_cli.lib.console import abort
+from better_timetagger_cli.lib.output import abort
 
 
 def test_abort(capsys):
