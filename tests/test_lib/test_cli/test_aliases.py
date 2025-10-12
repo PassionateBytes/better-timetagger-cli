@@ -167,6 +167,24 @@ def test_resolve_command_with_alias(cli_with_aliases):
     assert args == []
 
 
+def test_resolve_command_with_nonexistent(cli_with_aliases):
+    """Command resolution raises UsageError for non-existent commands."""
+    ctx = click.Context(cli_with_aliases)
+
+    # Test resolving with non-existent command should raise UsageError
+    with pytest.raises(click.exceptions.UsageError, match="No such command"):
+        cli_with_aliases.resolve_command(ctx, ["nonexistent"])
+
+
+def test_resolve_command_with_empty_args(cli_with_aliases):
+    """Command resolution with empty args raises IndexError from Click."""
+    ctx = click.Context(cli_with_aliases)
+
+    # Test resolving with empty args raises IndexError (from Click's parent implementation)
+    with pytest.raises(IndexError):
+        cli_with_aliases.resolve_command(ctx, [])
+
+
 def test_invalid_alias_command_execution(cli_runner, cli_with_aliases):
     """Invalid commands return error with appropriate message."""
     result = cli_runner.invoke(cli_with_aliases, ["invalid"])
