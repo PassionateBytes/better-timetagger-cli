@@ -194,3 +194,23 @@ def test_render_records_with_styled_records():
     output = render_to_string(result)
 
     assert "#work" in output
+
+
+def test_render_records_with_single_dict():
+    """Accept a single record as a dict instead of a list."""
+    record: Record = {
+        "key": "abc123",
+        "mt": 1640995200,
+        "t1": 1640995200,
+        "t2": 1640995800,
+        "ds": "#work",
+        "st": 1640995200.0,
+        "_running": False,
+        "_duration": 600,
+    }
+
+    result = render_records(record)
+    output = render_to_string(result)
+
+    assert "#work" in output
+    assert "10m" in output

@@ -767,7 +767,7 @@ def test_continuous_updates_uses_custom_delay(mock_get_updates, mock_sleep):
     # Sleep happens after yield, so advance generator one more time
     try:
         next(generator)
-    except StopIteration:
+    except StopIteration:  # pragma: no cover
         pass
 
     # Should have called sleep with custom delay
