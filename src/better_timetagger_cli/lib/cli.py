@@ -27,7 +27,6 @@ class AliasedCommand(click.Command):
     ```
     """
 
-
     def __init__(self, *args, aliases: Iterable[str] | str | None = None, **kwargs):
         """
         Initialize with optional aliases.
