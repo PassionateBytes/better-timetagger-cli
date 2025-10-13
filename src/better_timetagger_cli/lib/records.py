@@ -1,72 +1,35 @@
 """
-# Utilities for handling TimeTagger records.
+### Record Processing & Analysis
+
+Functions to manipulate, analyse and process time tracking records.
 """
 
 import re
-import sys
-from collections.abc import Generator, Iterable
-from datetime import datetime, timezone
+import secrets
+from collections.abc import Iterable
+from datetime import datetime
 from typing import Literal, TypeVar
 
-from .misc import abort, now_timestamp, round_timestamp
+from .timestamps import now_timestamp, round_timestamp
 from .types import Record, Settings
 
 
-def get_total_time(records: Iterable[Record], start: int | datetime, end: int | datetime) -> int:
+def create_record_key(length: int = 8) -> str:
     """
-    Calculate the total time spent on records within a given time range.
+    Generate a unique id for records, in the form of an 8-character string.
+
+    The value is used to uniquely identify the record of one user.
+    Assuming a user who has been creating 100 records a day, for 20 years (about 1M records),
+    the chance of a collision for a new record is about 1 in 50 milion.
 
     Args:
-        records: A list of records, each containing 't1' and 't2' timestamps.
-        start: The start datetime of the time range.
-        end: The end datetime of the time range.
+        length: The length of the random string to generate. Default is 8.
 
     Returns:
-        The total time in seconds spent on the records within the time range.
+        A string of 8 random characters.
     """
-    total = 0
-    now = now_timestamp()
-
-    if isinstance(start, datetime):
-        start = int(start.timestamp())
-    if isinstance(end, datetime):
-        end = int(end.timestamp())
-
-    for r in records:
-        t1 = r["t1"]
-        t2 = r["t2"] if not r["_running"] else now
-        total += min(end, t2) - max(start, t1)
-
-    return total
-
-
-def get_tag_stats(records: Iterable[Record]) -> dict[str, tuple[int, int]]:
-    """
-    Get statistics for each tag in the records. Results are sorted by tag's total duration.
-
-    Args:
-        records: A list of records.
-
-    Returns:
-        A tuple with 1) the number of occurrences of the tag and 2) the total duration for that tag.
-    """
-    now = now_timestamp()
-    tag_stats: dict[str, tuple[int, int]] = {}
-
-    for r in records:
-        for tag in get_tags_from_description(r["ds"]):
-            stats = tag_stats.get(tag, (0, 0))
-            t1 = r["t1"]
-            t2 = r["t2"] if not r["_running"] else now
-            duration = t2 - t1
-            tag_stats[tag] = (
-                stats[0] + 1,
-                stats[1] + duration,
-            )
-
-    tag_stats = dict(sorted(tag_stats.items(), key=lambda x: x[1][1], reverse=True))
-
-    return tag_stats
+    chars = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    return "".join([secrets.choice(chars) for _ in range(length)])
 
 
 def post_process_records(
@@ -216,113 +179,58 @@ def round_records(records: list[Record], round_to: int) -> list[Record]:
     return rounded_records
 
 
-def records_to_csv(records: Iterable[Record]) -> str:
+def get_total_time(records: Iterable[Record], start: int | datetime, end: int | datetime) -> int:
     """
-    Convert records to CSV.
-
-    This produces the same CSV format as the TimeTagger web app.
+    Calculate the total time spent on records within a given time range.
 
     Args:
-        records: A list of records to convert.
+        records: A list of records, each containing 't1' and 't2' timestamps.
+        start: The start datetime of the time range.
+        end: The end datetime of the time range.
 
     Returns:
-        A string representing the records in CSV format.
+        The total time in seconds spent on the records within the time range.
     """
-    header = ("key", "start", "stop", "tags", "description")
-    newline = "\n" if not sys.platform.startswith("win") else "\r\n"
-    separator = "\t"
+    total = 0
+    now = now_timestamp()
 
-    lines = [
-        (
-            r.get("key", ""),
-            datetime.fromtimestamp(r.get("t1", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z"),
-            datetime.fromtimestamp(r.get("t2", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z") if not r["_running"] else "",
-            " ".join(get_tags_from_description(r.get("ds", ""))),
-            r.get("ds", ""),
-        )
-        for r in records
-    ]
-    lines = [header, *lines]
-
-    # - substitute unsafe whitespace
-    # - join fields with separator
-    # - join lines with newline
-    return newline.join(separator.join(re.sub(r"\s+", " ", str(field)) for field in line) for line in lines)
-
-
-def records_from_csv(
-    file: Generator[str],
-    *,
-    start: int | datetime | None = None,
-    end: int | datetime | None = None,
-) -> list[Record]:
-    """
-    Load records from a CSV file.
-
-    Args:
-        file: An iterable of lines from a CSV file.
-        start: The start time to filter records. Can be a timestamp or a datetime object.
-        end: The end time to filter records. Can be a timestamp or a datetime object.
-
-    Returns:
-        A list of records loaded from the CSV file.
-    """
     if isinstance(start, datetime):
         start = int(start.timestamp())
     if isinstance(end, datetime):
         end = int(end.timestamp())
 
-    header = ("key", "start", "stop", "tags", "description")
+    for r in records:
+        t1 = r["t1"]
+        t2 = r["t2"] if not r["_running"] else now
+        total += min(end, t2) - max(start, t1)
+
+    return total
+
+
+def get_tag_stats(records: Iterable[Record]) -> dict[str, tuple[int, int]]:
+    """
+    Get statistics for each tag in the records. Results are sorted by tag's total duration.
+
+    Args:
+        records: A list of records.
+
+    Returns:
+        A tuple with 1) the number of occurrences of the tag and 2) the total duration for that tag.
+    """
     now = now_timestamp()
-    records = []
+    tag_stats: dict[str, tuple[int, int]] = {}
 
-    header_line = next(file)
-    for separator in ("\t", ",", ";"):
-        header_fields = header_line.strip().split(separator)
-        if all(required in header_fields for required in header):
-            break
-    else:
-        abort(
-            f"Failed to import CSV: Missing fields in header.\n"
-            f"[dim]First line must contain each of: {', '.join(header)}"
-            f"\nLine 1: \\[{header_line.strip()}][/dim]"
-        )
-
-    header_map = {field: header_fields.index(field) for field in header}
-
-    for i, line in enumerate(file, start=2):
-        fields = line.strip("\r\n").split(separator)
-        if len(fields) != len(header_fields):
-            abort(
-                f"Failed to import CSV: Inconsistent number of columns.\n"
-                f"[dim]Header has {len(header_fields)} columns, line {i} has {len(fields)} columns.\n"
-                f"Line {i}: \\[{line.strip()}][/dim]"
+    for r in records:
+        for tag in get_tags_from_description(r["ds"]):
+            stats = tag_stats.get(tag, (0, 0))
+            t1 = r["t1"]
+            t2 = r["t2"] if not r["_running"] else now
+            duration = t2 - t1
+            tag_stats[tag] = (
+                stats[0] + 1,
+                stats[1] + duration,
             )
 
-        try:
-            t1_import = fields[header_map["start"]].strip().replace("Z", "+00:00")
-            t2_import = fields[header_map["stop"]].strip().replace("Z", "+00:00") or t1_import
-            t1 = int(datetime.fromisoformat(t1_import).timestamp())
-            t2 = int(datetime.fromisoformat(t2_import).timestamp())
-            record: Record = {
-                "key": fields[header_map["key"]].strip(),
-                "t1": t1,
-                "t2": t2,
-                "ds": fields[header_map["description"]].strip(),
-                "mt": now,
-                "st": 0,
-                "_running": t1 == t2,  # determine running state
-                "_duration": (t2 if t1 != t2 else now) - t1,  # determine duration
-            }
-        except Exception as e:
-            abort(f"Failed to import CSV: {e.__class__.__name__}\n[dim]{e}\nLine {i}: \\[{line.strip()}][/dim]")
+    tag_stats = dict(sorted(tag_stats.items(), key=lambda x: x[1][1], reverse=True))
 
-        # filter by date/time range
-        if start is not None and t2 < start:
-            continue
-        if end is not None and t1 > end:
-            continue
-
-        records.append(record)
-
-    return records
+    return tag_stats

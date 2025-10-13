@@ -1,9 +1,10 @@
 """
-# Utilities to interact with the TimeTagger API.
+### API Communication
+
+Functions that handle communication with the TimeTagger API.
 """
 
 import json
-import secrets
 from collections.abc import Generator
 from datetime import datetime, timedelta
 from time import sleep
@@ -11,8 +12,8 @@ from typing import Literal, cast
 
 import requests
 
-from .config import load_config
-from .misc import abort
+from .config import get_config
+from .output import abort
 from .records import merge_by_key, post_process_records
 from .types import GetRecordsResponse, GetSettingsResponse, GetUpdatesResponse, PutRecordsResponse, PutSettingsResponse, Record, Settings
 
@@ -33,8 +34,9 @@ def api_request(
     Returns:
         The JSON-decoded response from the API.
     """
+    config = get_config()
+
     try:
-        config = load_config()
         url = config["base_url"].rstrip("/") + "/api/v2/" + path.lstrip("/")
         token = config["api_token"].strip()
         ssl_verify = config["ssl_verify"]
@@ -49,7 +51,7 @@ def api_request(
         response_text = response.text
         try:
             response_text = json.dumps(response.json(), indent=2)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError:  # pragma: no cover
             pass
         abort(f"API request failed with status code: {response.status_code}\n[dim]{response_text}[/dim]")
 
@@ -132,7 +134,7 @@ def get_running_records(
     Returns:
         A dictionary containing the running records from the API.
     """
-    config = load_config()
+    config = get_config()
 
     # search window disabled, search all records for running state
     if config["running_records_search_window"] < 0:
@@ -323,21 +325,3 @@ def continuous_updates(
 
         yield response_cache
         sleep(delay)
-
-
-def create_record_key(length: int = 8) -> str:
-    """
-    Generate a unique id for records, in the form of an 8-character string.
-
-    The value is used to uniquely identify the record of one user.
-    Assuming a user who has been creating 100 records a day, for 20 years (about 1M records),
-    the chance of a collision for a new record is about 1 in 50 milion.
-
-    Args:
-        length: The length of the random string to generate. Default is 8.
-
-    Returns:
-        A string of 8 random characters.
-    """
-    chars = "1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    return "".join([secrets.choice(chars) for i in range(length)])

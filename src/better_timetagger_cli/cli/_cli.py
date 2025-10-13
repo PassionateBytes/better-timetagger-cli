@@ -1,7 +1,7 @@
 import click
 
 from better_timetagger_cli import __version__
-from better_timetagger_cli.lib.click import AliasedGroup
+from better_timetagger_cli.lib.cli import AliasedGroup
 
 from .app_cmd import app_cmd
 from .diagnose_cmd import diagnose_cmd

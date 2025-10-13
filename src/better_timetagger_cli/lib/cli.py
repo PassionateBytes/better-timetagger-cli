@@ -1,9 +1,15 @@
+"""
+### CLI Framework Extensions
+
+Custom classes and utilities to extend the `click` library.
+"""
+
 from collections.abc import Iterable
 
 import click
 
 
-class AliasCommand(click.Command):
+class AliasedCommand(click.Command):
     """
     A custom click command that supports aliases.
 
@@ -15,7 +21,7 @@ class AliasCommand(click.Command):
         def cli():
             pass
 
-        @cli.command(cls=AliasCommand, aliases=['report', 'list', 'ls'])
+        @cli.command(cls=AliasedCommand, aliases=['report', 'list', 'ls'])
         def show():
             pass
     ```
@@ -23,7 +29,7 @@ class AliasCommand(click.Command):
 
     def __init__(self, *args, aliases: Iterable[str] | str | None = None, **kwargs):
         """
-        Initialize the command with optional aliases.
+        Initialize with optional aliases.
         """
         super().__init__(*args, **kwargs)
 
@@ -38,7 +44,7 @@ class AliasCommand(click.Command):
 
     def format_help(self, ctx, formatter) -> None:
         """
-        Add alias section to the command's help output.
+        Add alias section to the help output.
         """
         super().format_help(ctx, formatter)
 
@@ -48,19 +54,20 @@ class AliasCommand(click.Command):
                 formatter.write_dl((a, "") for a in name_and_aliases)
 
 
-class AliasedGroup(click.Group):
+class AliasedGroup(AliasedCommand, click.Group):
     """
     A Click group that resolves command aliases defined on the command objects.
+    Also supports aliases for the group itself.
 
-    Use in conjunction with `AliasCommand` to allow commands to be invoked by multiple names.
+    Use in conjunction with `AliasedCommand` to allow commands to be invoked by multiple names.
 
     Example:
     ```python
-        @click.group(cls=AliasedGroup)
-        def cli():
+        @click.group(cls=AliasedGroup, aliases=['db'])
+        def database():
             pass
 
-        @cli.command(cls=AliasCommand, aliases=['report', 'list', 'ls'])
+        @database.command(cls=AliasedCommand, aliases=['report', 'list', 'ls'])
         def show():
             pass
     ```
@@ -70,7 +77,6 @@ class AliasedGroup(click.Group):
         """
         Retrieve a command by its name or alias.
         """
-
         # Retrieve command the regular way
         command = super().get_command(ctx, cmd_name)
         if command:
@@ -78,7 +84,7 @@ class AliasedGroup(click.Group):
 
         # If not found, retrieve by alias
         for cmd in self.commands.values():
-            if isinstance(cmd, AliasCommand) and cmd_name in getattr(cmd, "aliases", ()):
+            if hasattr(cmd, "aliases") and cmd_name in getattr(cmd, "aliases", ()):
                 return cmd
 
         return None

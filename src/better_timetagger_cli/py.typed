@@ -1,2 +1,5 @@
-# This is a PEP-561 marker file, indicating that this package has full type-annotations.
-# See: https://peps.python.org/pep-0561/
+### PEP-561 Marker File
+
+The presence of this file indicates that this package has full type-annotations.
+
+See: https://peps.python.org/pep-0561/

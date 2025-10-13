@@ -5,10 +5,10 @@ import click
 from rich.prompt import IntPrompt
 
 from better_timetagger_cli.lib.api import get_records
-from better_timetagger_cli.lib.click import AliasCommand
-from better_timetagger_cli.lib.misc import abort, now_timestamp
-from better_timetagger_cli.lib.output import print_records
-from better_timetagger_cli.lib.parsers import tags_callback
+from better_timetagger_cli.lib.cli import AliasedCommand
+from better_timetagger_cli.lib.output import abort, print_records
+from better_timetagger_cli.lib.parsing import tags_callback
+from better_timetagger_cli.lib.timestamps import now_timestamp
 from better_timetagger_cli.lib.types import Record
 
 from .start_cmd import start_cmd
@@ -17,7 +17,7 @@ from .start_cmd import start_cmd
 @click.command(
     "resume",
     aliases=("r",),
-    cls=AliasCommand,
+    cls=AliasedCommand,
 )
 @click.argument(
     "tags",
@@ -68,7 +68,7 @@ def resume_cmd(
     tags_match: Literal["any", "all"],
 ) -> None:
     """
-    Start time tracking, using the same tags and description a recent record.
+    Start time tracking, using the same tags and description of a recent record.
 
     You may specify a tag, to only resume the most recent record that matches the tag.
 

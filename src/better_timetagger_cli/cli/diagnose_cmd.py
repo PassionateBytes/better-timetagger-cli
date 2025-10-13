@@ -7,9 +7,7 @@ from rich.live import Live
 from rich.table import Table
 
 from better_timetagger_cli.lib.api import get_updates, put_records
-from better_timetagger_cli.lib.console import console
-from better_timetagger_cli.lib.misc import abort
-from better_timetagger_cli.lib.output import readable_date_time
+from better_timetagger_cli.lib.output import abort, console, readable_date_time
 from better_timetagger_cli.lib.types import Record
 
 

@@ -4,14 +4,14 @@ import click
 from rich.prompt import IntPrompt
 
 from better_timetagger_cli.lib.api import get_running_records, put_records
-from better_timetagger_cli.lib.click import AliasCommand
-from better_timetagger_cli.lib.misc import abort, now_timestamp
-from better_timetagger_cli.lib.output import print_records
-from better_timetagger_cli.lib.parsers import parse_at, tags_callback
-from better_timetagger_cli.lib.records import check_record_tags_match
+from better_timetagger_cli.lib.cli import AliasedCommand
+from better_timetagger_cli.lib.output import abort, print_records
+from better_timetagger_cli.lib.parsing import parse_at, tags_callback
+from better_timetagger_cli.lib.records import check_record_tags_match, post_process_records
+from better_timetagger_cli.lib.timestamps import now_timestamp
 
 
-@click.command("stop", aliases=("out", "o"), cls=AliasCommand)
+@click.command("stop", aliases=("out", "o"), cls=AliasedCommand)
 @click.argument(
     "tags",
     type=click.STRING,
@@ -82,6 +82,8 @@ def stop_cmd(
 
         if not stopped_records:
             abort("No running records match.")
+
+        stopped_records = post_process_records(stopped_records)
 
         put_records(stopped_records)
         print_records(running_records, (stopped_records, "red"), show_keys=show_keys)

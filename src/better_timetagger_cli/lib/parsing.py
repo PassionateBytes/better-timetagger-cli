@@ -1,9 +1,15 @@
+"""
+### Input Parsing & Validation
+
+Functions that parse user input and validate data
+"""
+
 from datetime import datetime
 
 import click
 import parsedatetime  # type: ignore[import-untyped]
 
-from .misc import abort
+from .output import abort
 
 
 def tags_callback(ctx: click.Context, param: click.Parameter, tags: list[str]) -> list[str]:
@@ -25,7 +31,7 @@ def tags_callback(ctx: click.Context, param: click.Parameter, tags: list[str]) -
 
 def parse_datetime(input: str) -> datetime:
     """
-    Parse nartural language date and time input.
+    Parse natural language date and time input.
 
     Args:
         input: A string representing the date and time.
@@ -34,11 +40,11 @@ def parse_datetime(input: str) -> datetime:
         A datetime object representing the parsed date and time.
     """
 
-    cal = parsedatetime.Calendar()
-    parsed, parse_status = cal.parse(input)
+    cal = parsedatetime.Calendar(version=parsedatetime.VERSION_CONTEXT_STYLE)
+    parsed, parse_ctx = cal.parse(input)
 
     # only date parsed -> set time to 00:00:00
-    if parse_status == 1:
+    if parse_ctx.hasDate and not parse_ctx.hasTime:
         return datetime(
             year=parsed.tm_year,
             month=parsed.tm_mon,
@@ -49,7 +55,7 @@ def parse_datetime(input: str) -> datetime:
         )
 
     # only time parsed -> set date to today
-    elif parse_status == 2:
+    elif not parse_ctx.hasDate and parse_ctx.hasTime:
         today = datetime.today()
         return datetime(
             year=today.year,
@@ -61,7 +67,7 @@ def parse_datetime(input: str) -> datetime:
         )
 
     # date and time parsed
-    elif parse_status == 3:
+    elif parse_ctx.hasDate and parse_ctx.hasTime:
         return datetime(
             year=parsed.tm_year,
             month=parsed.tm_mon,

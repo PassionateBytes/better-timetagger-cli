@@ -1,10 +1,9 @@
 [project]
 name = "better-timetagger-cli"
 version = "0.5.2"
-description = "A command line tool for TimeTagger. This is a more feature-rich and ergonomic fork of the original timetagger-cli, providing better user experience and additional features."
+description = "A command line tool for TimeTagger. This is a more feature-rich and ergonomic fork of the original timetagger-cli (by Almar Klein), providing better user experience and additional features."
 authors = [
     { name = "Paul Bütof", email = "paul@passionate-bytes.com" },
-    { name = "Almar Klein" },
 ]
 maintainers = [{ name = "Paul Bütof", email = "paul@passionate-bytes.com" }]
 license-files = ["LICENSE"]
@@ -24,9 +23,10 @@ requires-python = ">=3.10"
 dependencies = [
     "click>=8.2.0",
     "parsedatetime>=2.6",
+    "platformdirs>=4.3.8",
     "requests>=2.32.3",
     "rich>=14.0.0",
-    "toml>=0.10.2",
+    "tomlkit>=0.13.2",
 ]
 
 [project.urls]
@@ -89,6 +89,30 @@ convention = "google"
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+addopts = [
+    "--cov=better_timetagger_cli",
+    "--cov-report=term-missing",
+]
+
+# ===[ Coverage Config ]===
+[tool.coverage.run]
+source = ["src/better_timetagger_cli"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+] 
 
 # ===[ Bump My Version Config ]===
 [tool.bumpversion]
