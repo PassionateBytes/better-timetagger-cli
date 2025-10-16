@@ -1,6 +1,6 @@
 [project]
 name = "better-timetagger-cli"
-version = "0.5.2"
+version = "0.6.0"
 description = "A command line tool for TimeTagger. This is a more feature-rich and ergonomic fork of the original timetagger-cli (by Almar Klein), providing better user experience and additional features."
 authors = [
     { name = "Paul Bütof", email = "paul@passionate-bytes.com" },
@@ -116,7 +116,7 @@ exclude_lines = [
 
 # ===[ Bump My Version Config ]===
 [tool.bumpversion]
-current_version = "0.5.2"
+current_version = "0.6.0"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 search = "{current_version}"
