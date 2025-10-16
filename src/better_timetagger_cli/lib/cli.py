@@ -56,7 +56,7 @@ class AliasedCommand(click.Command):
         """
         Format the aliases section in the help output.
         """
-        if self.aliases:
+        if self.name and self.aliases:
             with formatter.section("Aliases"):
                 name_and_aliases = (self.name, *self.aliases)
                 formatter.write_text(", ".join(name_and_aliases))
