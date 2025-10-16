@@ -44,14 +44,22 @@ class AliasedCommand(click.Command):
 
     def format_help(self, ctx, formatter) -> None:
         """
-        Add alias section to the help output.
+        Format the help output, including custom alias section.
         """
-        super().format_help(ctx, formatter)
+        self.format_usage(ctx, formatter)
+        self.format_help_text(ctx, formatter)
+        self.format_aliases(ctx, formatter)
+        self.format_options(ctx, formatter)
+        self.format_epilog(ctx, formatter)
 
+    def format_aliases(self, ctx, formatter) -> None:
+        """
+        Format the aliases section in the help output.
+        """
         if self.aliases:
             with formatter.section("Aliases"):
                 name_and_aliases = (self.name, *self.aliases)
-                formatter.write_dl((a, "") for a in name_and_aliases)
+                formatter.write_text(", ".join(name_and_aliases))
 
 
 class AliasedGroup(AliasedCommand, click.Group):
