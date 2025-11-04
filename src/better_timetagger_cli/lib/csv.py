@@ -7,7 +7,7 @@ Functions to load or save records in CSV format.
 import re
 import sys
 from collections.abc import Generator, Iterable
-from datetime import datetime, timezone
+from datetime import datetime, timezone, tzinfo
 
 from .output import abort
 from .records import get_tags_from_description
@@ -15,7 +15,27 @@ from .timestamps import now_timestamp
 from .types import Record
 
 
-def records_to_csv(records: Iterable[Record]) -> str:
+def render_csv_timestamp(timestamp: int, *, utc: bool = False) -> str:
+    """
+    Render a timestamp as an ISO 8601 string in local time.
+
+    Args:
+        timestamp: The timestamp to render.
+        utc: Whether to render the timestamp in UTC. Defaults to local time.
+    Returns:
+        The ISO 8601 string representation of the timestamp in local time.
+    """
+
+    if utc:
+        tz: timezone | tzinfo = timezone.utc
+    else:
+        local_tz = datetime.now().astimezone().tzinfo
+        tz = local_tz or timezone.utc
+
+    return datetime.fromtimestamp(timestamp, tz=tz).isoformat().replace("+00:00", "Z")
+
+
+def records_to_csv(records: Iterable[Record], *, utc: bool = False) -> str:
     """
     Convert records to CSV.
 
@@ -23,6 +43,7 @@ def records_to_csv(records: Iterable[Record]) -> str:
 
     Args:
         records: A list of records to convert.
+        utc: Whether to render timestamps in UTC. Uses local time by default.
 
     Returns:
         A string representing the records in CSV format.
@@ -34,8 +55,8 @@ def records_to_csv(records: Iterable[Record]) -> str:
     lines = [
         (
             r.get("key", ""),
-            datetime.fromtimestamp(r.get("t1", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z"),
-            datetime.fromtimestamp(r.get("t2", 0), tz=timezone.utc).isoformat().replace("+00:00", "Z") if not r["_running"] else "",
+            render_csv_timestamp(r.get("t1", 0), utc=utc),
+            render_csv_timestamp(r.get("t2", 0), utc=utc) if not r["_running"] else "",
             " ".join(get_tags_from_description(r.get("ds", ""))),
             r.get("ds", ""),
         )
