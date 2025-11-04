@@ -90,6 +90,7 @@ def resume_cmd(
         tomorrow,
         tags=tags,
         tags_match=tags_match,
+        sort_desc=False,
     )["records"]
 
     if not records:

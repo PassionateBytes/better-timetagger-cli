@@ -372,8 +372,8 @@ def test_merge_by_key_preserves_order():
     assert result[2]["key"] == "third"
 
 
-def test_post_process_records_sorts_by_t2():
-    """Sort records by t2 in descending order by default."""
+def test_post_process_records_sorts_by_t1():
+    """Sort records by t1 in ascending order by default."""
     records: list[Record] = [
         {
             "key": "abc123",
@@ -400,8 +400,8 @@ def test_post_process_records_sorts_by_t2():
     result = post_process_records(records)
 
     assert len(result) == 2
-    assert result[0]["key"] == "def456"  # Higher t2 first
-    assert result[1]["key"] == "abc123"
+    assert result[0]["key"] == "abc123"  # Lower t1 first
+    assert result[1]["key"] == "def456"
 
 
 def test_post_process_records_filters_by_tags_any():

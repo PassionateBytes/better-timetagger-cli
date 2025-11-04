@@ -65,8 +65,7 @@ def get_records(
     include_partial_match: bool = True,
     tags: list[str] | None = None,
     tags_match: Literal["any", "all"] = "any",
-    sort_by: Literal["t1", "t2", "st", "mt", "ds"] = "t2",
-    sort_reverse: bool = True,
+    sort_desc: bool = False,
     hidden: bool = False,
     running: bool = False,
 ) -> GetRecordsResponse:
@@ -79,8 +78,7 @@ def get_records(
         include_partial: Whether to include partial matches, i.e. records that are not fully contained in the range. Defaults to True.
         tags: A list of tags to filter records by. Defaults to None.
         tags_match: The mode to match tags. Can be "any" or "all". Defaults to "any".
-        sort_by: The field to sort the records by. Can be "t1", "t2", "st", "mt", or "ds". Defaults to "t2".
-        sort_reverse: Whether to sort in reverse order. Defaults to True.
+        sort_desc: Whether to sort in descending order. Defaults to True.
         hidden: Whether to include hidden (i.e. deleted) records. Defaults to False.
         running: If True, only return currently running records (i.e. records where t1 == t2). Defaults to False.
 
@@ -100,8 +98,7 @@ def get_records(
         response["records"],
         tags=tags,
         tags_match=tags_match,
-        sort_by=sort_by,
-        sort_reverse=sort_reverse,
+        sort_desc=sort_desc,
         hidden=hidden,
         running=running,
     )
@@ -113,8 +110,7 @@ def get_running_records(
     *,
     tags: list[str] | None = None,
     tags_match: Literal["any", "all"] = "any",
-    sort_by: Literal["t1", "t2", "st", "mt", "ds"] = "t2",
-    sort_reverse: bool = True,
+    sort_desc: bool = True,
     hidden: bool = False,
 ) -> GetRecordsResponse | GetRecordsResponse:
     """
@@ -126,8 +122,7 @@ def get_running_records(
     Args:
         tags: A list of tags to filter records by. Defaults to None.
         tags_match: The mode to match tags. Can be "any" or "all". Defaults to "any".
-        sort_by: The field to sort the records by. Can be "t1", "t2", "st", "mt", or "ds". Defaults to "t2".
-        sort_reverse: Whether to sort in reverse order. Defaults to True.
+        sort_desc: Whether to sort in descending order. Defaults to True.
         hidden: Whether to include hidden (i.e. deleted) records. Defaults to False.
         running: If True, only return currently running records (i.e. records where t1 == t2). Defaults to False.
 
@@ -141,8 +136,7 @@ def get_running_records(
         return get_updates(
             tags=tags,
             tags_match=tags_match,
-            sort_by=sort_by,
-            sort_reverse=sort_reverse,
+            sort_desc=sort_desc,
             hidden=hidden,
             running=True,
         )
@@ -155,8 +149,7 @@ def get_running_records(
             include_partial_match=True,
             tags=tags,
             tags_match=tags_match,
-            sort_by=sort_by,
-            sort_reverse=sort_reverse,
+            sort_desc=sort_desc,
             hidden=hidden,
             running=True,
         )
@@ -213,8 +206,7 @@ def get_updates(
     *,
     tags: list[str] | None = None,
     tags_match: Literal["any", "all"] = "any",
-    sort_by: Literal["t1", "t2", "st", "mt", "ds"] = "t2",
-    sort_reverse: bool = True,
+    sort_desc: bool = False,
     hidden: bool = False,
     running: bool = False,
 ) -> GetUpdatesResponse:
@@ -225,8 +217,7 @@ def get_updates(
         since: The timestamp to get updates since. Defaults to 0. Should typically use the last call's `server_time` value.
         tags: A list of tags to filter records by. Defaults to None.
         tags_match: The mode to match tags. Can be "any" or "all". Defaults to "any".
-        sort_by: The field to sort the records by. Can be "t1", "t2", "st", "mt", or "ds". Defaults to "t2".
-        sort_reverse: Whether to sort in reverse order. Defaults to True.
+        sort_desc: Whether to sort in descending order. Defaults to True.
         hidden: Whether to include hidden (i.e. deleted) records. Defaults to False.
         running: If True, only return currently running records (i.e. records where t1 == t2). Defaults to False.
 
@@ -242,8 +233,7 @@ def get_updates(
         response["records"],
         tags=tags,
         tags_match=tags_match,
-        sort_by=sort_by,
-        sort_reverse=sort_reverse,
+        sort_desc=sort_desc,
         hidden=hidden,
         running=running,
     )
@@ -257,8 +247,7 @@ def continuous_updates(
     delay: int = 5,
     tags: list[str] | None = None,
     tags_match: Literal["any", "all"] = "any",
-    sort_by: Literal["t1", "t2", "st", "mt", "ds"] = "t2",
-    sort_reverse: bool = True,
+    sort_desc: bool = True,
     hidden: bool = False,
     running: bool = False,
 ) -> Generator[GetUpdatesResponse, None]:
@@ -272,8 +261,7 @@ def continuous_updates(
         delay: The minimul delay in seconds between requests. Defaults to 2 second.
         tags: A list of tags to filter records by. Defaults to None.
         tags_match: The mode to match tags. Can be "any" or "all". Defaults to "any".
-        sort_by: The field to sort the records by. Can be "t1", "t2", "st", "mt", or "ds". Defaults to "t2".
-        sort_reverse: Whether to sort in reverse order. Defaults to True.
+        sort_desc: Whether to sort in descending order. Defaults to True.
         hidden: Whether to include hidden (i.e. deleted) records. Defaults to False.
         running: If True, only return currently running records (i.e. records where t1 == t2). Defaults to False.
 
@@ -287,8 +275,7 @@ def continuous_updates(
             response_cache.get("server_time", since),
             tags=tags,
             tags_match=tags_match,
-            sort_by=sort_by,
-            sort_reverse=sort_reverse,
+            sort_desc=sort_desc,
             hidden=hidden,
             # Must set this to False, otherwise we never notice when a record
             # that's previously been running is stopped. Stopped records are
@@ -315,8 +302,7 @@ def continuous_updates(
             response_cache.get("records", []),
             tags=tags,
             tags_match=tags_match,
-            sort_by=sort_by,
-            sort_reverse=sort_reverse,
+            sort_desc=sort_desc,
             hidden=hidden,
             # Now that we have all data on records, even ones that became stopped,
             # we can filter for running records accoringly.

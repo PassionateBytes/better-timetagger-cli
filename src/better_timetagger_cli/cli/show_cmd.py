@@ -83,6 +83,12 @@ from better_timetagger_cli.lib.timestamps import now_timestamp
     help="List each record's unique key. Useful to when you want to remove or restore records.",
 )
 @click.option(
+    "-d",
+    "--desc",
+    is_flag=True,
+    help="Descending order (newest first). By default, records are sorted in ascending order (oldest first).",
+)
+@click.option(
     "-x",
     "--match",
     "tags_match",
@@ -100,6 +106,7 @@ def show_cmd(
     summary: bool | None,
     follow: bool,
     show_keys: bool,
+    desc: bool,
     tags_match: Literal["any", "all"],
 ) -> None:
     """
@@ -126,12 +133,14 @@ def show_cmd(
                 tags=tags,
                 tags_match=tags_match,
                 hidden=hidden,
+                sort_desc=desc,
             )["records"]
         else:
             records = get_running_records(
                 tags=tags,
                 tags_match=tags_match,
                 hidden=hidden,
+                sort_desc=desc,
             )["records"]
 
         if not records:
@@ -146,7 +155,14 @@ def show_cmd(
     # In 'follow' mode, monitor continuously for changes
     else:
         with Live(console=console) as live:
-            for update in continuous_updates(start_dt, tags=tags, tags_match=tags_match, hidden=hidden, running=running):
+            for update in continuous_updates(
+                start_dt,
+                tags=tags,
+                tags_match=tags_match,
+                hidden=hidden,
+                running=running,
+                sort_desc=desc,
+            ):
                 # Re-evaluate time frame and filter cached records accordingly to support "floating" time frames
                 start_dt, end_dt = parse_start_end(start, end)
                 start_timestamp = start_dt.timestamp()

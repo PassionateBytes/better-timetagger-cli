@@ -31,7 +31,6 @@ from better_timetagger_cli.lib.records import round_records
 @click.option(
     "-u",
     "--utc",
-    "utc",
     is_flag=True,
     help="Export timestamps in UTC instead of local time.",
 )
@@ -68,6 +67,12 @@ from better_timetagger_cli.lib.records import round_records
     help="Include only running records in the output.",
 )
 @click.option(
+    "-d",
+    "--desc",
+    is_flag=True,
+    help="Descending order (newest first). By default, records are sorted in ascending order (oldest first).",
+)
+@click.option(
     "-x",
     "--match",
     "tags_match",
@@ -84,6 +89,7 @@ def export_cmd(
     round: int,
     hidden: bool,
     running: bool,
+    desc: bool,
     tags_match: Literal["any", "all"],
 ) -> None:
     """
@@ -107,16 +113,14 @@ def export_cmd(
             end_dt,
             tags=tags,
             tags_match=tags_match,
-            sort_by="t1",
-            sort_reverse=False,
+            sort_desc=desc,
             hidden=hidden,
         )["records"]
     else:
         records = get_running_records(
             tags=tags,
             tags_match=tags_match,
-            sort_by="t1",
-            sort_reverse=False,
+            sort_desc=desc,
             hidden=hidden,
         )["records"]
 
