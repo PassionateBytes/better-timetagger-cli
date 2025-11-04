@@ -404,6 +404,38 @@ def test_post_process_records_sorts_by_t1():
     assert result[1]["key"] == "def456"
 
 
+def test_post_process_records_sorts_by_t2_desc():
+    """Sort records by t2 in descending order when sort_desc=True."""
+    records: list[Record] = [
+        {
+            "key": "abc123",
+            "mt": 1640995200,
+            "t1": 1640995200,
+            "t2": 1640995300,
+            "ds": "#work",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 0,
+        },
+        {
+            "key": "def456",
+            "mt": 1640995200,
+            "t1": 1640995400,
+            "t2": 1640995600,
+            "ds": "#meeting",
+            "st": 1640995200.0,
+            "_running": False,
+            "_duration": 0,
+        },
+    ]
+
+    result = post_process_records(records, sort_desc=True)
+
+    assert len(result) == 2
+    assert result[0]["key"] == "def456"  # Higher t2 first
+    assert result[1]["key"] == "abc123"
+
+
 def test_post_process_records_filters_by_tags_any():
     """Filter records by tags using 'any' mode."""
     records: list[Record] = [
