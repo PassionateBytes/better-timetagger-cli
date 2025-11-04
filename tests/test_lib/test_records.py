@@ -376,21 +376,21 @@ def test_post_process_records_sorts_by_t1():
     """Sort records by t1 in ascending order by default."""
     records: list[Record] = [
         {
-            "key": "abc123",
+            "key": "def456",
             "mt": 1640995200,
-            "t1": 1640995200,
-            "t2": 1640995300,
-            "ds": "#work",
+            "t1": 1640995400,
+            "t2": 1640995500,
+            "ds": "#meeting",
             "st": 1640995200.0,
             "_running": False,
             "_duration": 0,
         },
         {
-            "key": "def456",
+            "key": "abc123",
             "mt": 1640995200,
             "t1": 1640995200,
-            "t2": 1640995500,
-            "ds": "#meeting",
+            "t2": 1640995300,
+            "ds": "#work",
             "st": 1640995200.0,
             "_running": False,
             "_duration": 0,
