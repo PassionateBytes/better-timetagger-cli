@@ -78,7 +78,7 @@ def get_records(
         include_partial: Whether to include partial matches, i.e. records that are not fully contained in the range. Defaults to True.
         tags: A list of tags to filter records by. Defaults to None.
         tags_match: The mode to match tags. Can be "any" or "all". Defaults to "any".
-        sort_desc: Whether to sort in descending order. Defaults to True.
+        sort_desc: Whether to sort in descending order. Defaults to False.
         hidden: Whether to include hidden (i.e. deleted) records. Defaults to False.
         running: If True, only return currently running records (i.e. records where t1 == t2). Defaults to False.
 
@@ -217,7 +217,7 @@ def get_updates(
         since: The timestamp to get updates since. Defaults to 0. Should typically use the last call's `server_time` value.
         tags: A list of tags to filter records by. Defaults to None.
         tags_match: The mode to match tags. Can be "any" or "all". Defaults to "any".
-        sort_desc: Whether to sort in descending order. Defaults to True.
+        sort_desc: Whether to sort in descending order. Defaults to False.
         hidden: Whether to include hidden (i.e. deleted) records. Defaults to False.
         running: If True, only return currently running records (i.e. records where t1 == t2). Defaults to False.
 
