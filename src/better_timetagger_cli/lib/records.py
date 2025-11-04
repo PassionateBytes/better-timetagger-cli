@@ -50,7 +50,7 @@ def post_process_records(
         records: A list of records to post-process.
         tags: A list of tags to filter records by. Defaults to None.
         tags_match: The mode to match tags. Can be "any" or "all". Defaults to "any".
-        sort_desc: Whether to sort in reverse order. Defaults to True.
+        sort_desc: Whether to sort in reverse order. Defaults to False.
         hidden: Whether to show hidden (i.e. deleted) records. Defaults to False.
         running: Whether to list only running records (where t1 == t2). Defaults to False.
 
