@@ -61,10 +61,7 @@ def stop_cmd(
     The '--at' parameter supports natural language to specify date and time.
     You can use phrases like 'yesterday', 'June 11', '5 minutes ago', or '05/12 3pm'.
     """
-    running_records = get_running_records(
-        sort_by="t1",
-        sort_reverse=False,
-    )["records"]
+    running_records = get_running_records(sort_desc=False)["records"]
 
     now = now_timestamp()
     stop_t = parse_at(at) or now

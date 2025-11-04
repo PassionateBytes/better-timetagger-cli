@@ -37,8 +37,7 @@ def post_process_records(
     *,
     tags: list[str] | None = None,
     tags_match: Literal["any", "all"] = "any",
-    sort_by: Literal["t1", "t2", "st", "mt", "ds"] = "t2",
-    sort_reverse: bool = True,
+    sort_desc: bool = False,
     hidden: bool = False,
     running: bool = False,
 ) -> list[Record]:
@@ -51,8 +50,7 @@ def post_process_records(
         records: A list of records to post-process.
         tags: A list of tags to filter records by. Defaults to None.
         tags_match: The mode to match tags. Can be "any" or "all". Defaults to "any".
-        sort_by: The field to sort the records by. Can be "t1", "t2", "st", "mt", or "ds". Defaults to "t2".
-        sort_reverse: Whether to sort in reverse order. Defaults to True.
+        sort_desc: Whether to sort in reverse order. Defaults to False.
         hidden: Whether to show hidden (i.e. deleted) records. Defaults to False.
         running: Whether to list only running records (where t1 == t2). Defaults to False.
 
@@ -77,7 +75,7 @@ def post_process_records(
         and r["ds"].startswith("HIDDEN") == hidden  # filter by hidden status
         and (not running or r["t1"] == r["t2"])  # filter by running status
     ]
-    records.sort(key=lambda r: r[sort_by], reverse=sort_reverse)
+    records.sort(key=lambda r: r["t2" if sort_desc else "t1"], reverse=sort_desc)
     return records
 
 
