@@ -29,6 +29,13 @@ from better_timetagger_cli.lib.records import round_records
     help="Output file. If not specified, print the output to stdout.",
 )
 @click.option(
+    "-u",
+    "--utc",
+    "utc",
+    is_flag=True,
+    help="Export timestamps in UTC instead of local time.",
+)
+@click.option(
     "-s",
     "--start",
     type=click.STRING,
@@ -70,6 +77,7 @@ from better_timetagger_cli.lib.records import round_records
 )
 def export_cmd(
     tags: list[str],
+    utc: bool,
     file: click.File | None,
     start: str | None,
     end: str | None,
@@ -118,7 +126,7 @@ def export_cmd(
     if round:
         records = round_records(records, round)
 
-    csv = records_to_csv(records)
+    csv = records_to_csv(records, utc=utc)
 
     click.echo(csv, file=file)  # type: ignore[arg-type]
 
