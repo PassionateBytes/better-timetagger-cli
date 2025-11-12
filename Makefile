@@ -3,7 +3,7 @@ TESTS   = ./tests
 REPORTS = ./.reports
 
 
-.PHONY: build format lint fix typecheck typecheck-report test test-report clean
+.PHONY: build format lint fix typecheck typecheck-report test test-report test-all-versions clean
 
 
 build: clean format lint typecheck-report test-report
@@ -41,8 +41,13 @@ test:
 
 
 test-report:
-	uv run pytest --cov=${PACKAGE} --cov-report=term-missing --cov-report=html:${REPORTS}/covreage --report=${REPORTS}/test/index.html --template=html1/index.html ${TESTS}
+	uv run pytest --cov=${PACKAGE} --cov-report=term-missing --cov-report=html:${REPORTS}/coverage --report=${REPORTS}/test/index.html --template=html1/index.html ${TESTS}
 
+test-all-versions:
+	uv run --python 3.10 pytest ${TESTS}
+	uv run --python 3.11 pytest ${TESTS}
+	uv run --python 3.12 pytest ${TESTS}
+	uv run --python 3.13 pytest ${TESTS}
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
