@@ -41,7 +41,7 @@ test:
 
 
 test-report:
-	uv run pytest --cov=${PACKAGE} --cov-report=term-missing --cov-report=html:${REPORTS}/covreage --report=${REPORTS}/test/index.html --template=html1/index.html ${TESTS}
+	uv run pytest --cov=${PACKAGE} --cov-report=term-missing --cov-report=html:${REPORTS}/coverage --report=${REPORTS}/test/index.html --template=html1/index.html ${TESTS}
 
 test-all-versions:
 	uv run --python 3.10 pytest ${TESTS}
