@@ -1,4 +1,5 @@
 # Python-generated files
+.python-version
 __pycache__/
 *.py[oc]
 build/
