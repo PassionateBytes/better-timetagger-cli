@@ -16,7 +16,7 @@ jobs:
 
       - name: Setup environment
         uses: ./.github/actions/setup-uv-python
-      
+
       - name: Check formatting
         run: |
           uv run ruff format --check ./src/better_timetagger_cli ./tests
@@ -27,10 +27,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-      
+
       - name: Setup environment
         uses: ./.github/actions/setup-uv-python
-      
+
       - name: Check linting
         run: |
           uv run ruff check ./src/better_timetagger_cli ./tests
@@ -40,10 +40,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
-      
+
       - name: Setup environment
         uses: ./.github/actions/setup-uv-python
-      
+
       - name: Check types
         run: |
           uv run mypy ./src/better_timetagger_cli ./tests
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
       - name: Checkout code
         uses: actions/checkout@v6

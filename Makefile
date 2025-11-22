@@ -48,6 +48,7 @@ test-all-versions:
 	uv run --python 3.11 pytest ${TESTS}
 	uv run --python 3.12 pytest ${TESTS}
 	uv run --python 3.13 pytest ${TESTS}
+	uv run --python 3.14 pytest ${TESTS}
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
