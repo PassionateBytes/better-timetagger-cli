@@ -117,7 +117,6 @@ name = "better-timetagger-cli"
 version = "0.6.1"
 source = { editable = "." }
 dependencies = [
-    { name = "bump-my-version" },
     { name = "click" },
     { name = "parsedatetime" },
     { name = "platformdirs" },
@@ -150,7 +149,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bump-my-version", specifier = ">=1.2.4" },
     { name = "click", specifier = ">=8.2.0" },
     { name = "parsedatetime", specifier = ">=2.6" },
     { name = "platformdirs", specifier = ">=4.3.8" },
@@ -161,7 +159,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "bump-my-version", specifier = ">=1.1.4" },
+    { name = "bump-my-version", specifier = ">=1.2.4" },
     { name = "mypy", extras = ["reports"], specifier = ">=1.15.0" },
     { name = "pytest", specifier = ">=8.3.5" },
     { name = "pytest-cov", specifier = ">=6.1.1" },

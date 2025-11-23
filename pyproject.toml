@@ -21,7 +21,6 @@ keywords = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "bump-my-version>=1.2.4",
     "click>=8.2.0",
     "parsedatetime>=2.6",
     "platformdirs>=4.3.8",
@@ -41,7 +40,7 @@ t = "better_timetagger_cli.cli:cli"
 
 [dependency-groups]
 dev = [
-    "bump-my-version>=1.1.4",
+    "bump-my-version>=1.2.4",
     "mypy[reports]>=1.15.0",
     "pytest>=8.3.5",
     "pytest-cov>=6.1.1",
@@ -113,7 +112,7 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
     "@abstractmethod",
-] 
+]
 
 # ===[ Bump My Version Config ]===
 [tool.bumpversion]
