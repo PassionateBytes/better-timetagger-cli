@@ -1,0 +1,22 @@
+name: Validate Renovate Config
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "renovate.json"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "renovate.json"
+  workflow_call:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Validate Renovate Config
+        uses: suzuki-shunsuke/github-action-renovate-config-validator@v1.1.1

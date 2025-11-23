@@ -1,6 +1,15 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
-  ]
+    "config:recommended",
+    "schedule:weekends",
+    "replacements:all",
+    "mergeConfidence:all-badges"
+  ],
+  "pep621": {
+    "enabled": true
+  },
+  "github-actions": {
+    "enabled": true
+  }
 }
